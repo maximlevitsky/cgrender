@@ -51,7 +51,6 @@ MaterialParams* MtlLoader::getMaterial(std::string name)
 
 ObjLoader::ObjLoader()
 {
-	currentModel = NULL;
 	currentObject = "";
 	currentGroup = "default";
 }
@@ -87,29 +86,16 @@ void ObjLoader::addVertexNormal(Vector3 normal)
 	normals.push_back(normal);
 }
 
-void ObjLoader::addFace(std::list<Face>& faces)
+void ObjLoader::addFace(std::list<Vertex>& faces)
 {
-	allocateModel();
-	/* go over all input faces, and create a list of vertexes for them */
 }
 
 /*********************************************************************************/
 
-void ObjLoader::allocateModel()
-{
-	if (currentModel)
-		return;
-
-	/* TODO */
-	currentModel = new Model(0,0);
-}
 
 void ObjLoader::finishCurrentModel()
 {
-	if (currentModel == NULL)
-		return;
-	models.push_back(currentModel);
-	currentModel = NULL;
+	/* TODO: go over all accumualated faces and create a model from them */
 }
 
 /*********************************************************************************/

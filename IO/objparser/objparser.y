@@ -79,9 +79,9 @@ VertexUVStatement:
 	};
 	
 FaceStatement:
-	TOK_FACE FaceItems
+	TOK_FACE VertexItems
 	{
-		loader->addFace($2.faces);
+		loader->addFace($2.vertices);
 	};
 	
 ObjectStatement:
@@ -110,24 +110,24 @@ MatrialLibStatement:
 	
  /*********************************************************************************/
 
-FaceItem:
+VertexItem:
 	/* only position*/
 	TOK_INTEGER 
 	{
-		$$.face = Face(loader->transVertexPosition($1.integer), -1, -1);
+		$$.vertex = Vertex(loader->transVertexPosition($1.integer), -1, -1);
 	} |
 
 	/* position/texcoord*/
 	TOK_INTEGER '/' TOK_INTEGER 
 	{
-		$$.face = Face(loader->transVertexPosition($1.integer), loader->transTexCoord($3.integer), -1);
+		$$.vertex = Vertex(loader->transVertexPosition($1.integer), loader->transTexCoord($3.integer), -1);
 		
 	} |
 	
 	/* position/texcoord/normal*/
 	TOK_INTEGER '/' TOK_INTEGER '/' TOK_INTEGER
 	{
-		$$.face = Face(loader->transVertexPosition($1.integer), 
+		$$.vertex = Vertex(loader->transVertexPosition($1.integer), 
 				loader->transTexCoord($3.integer), 
 				loader->transVertexNormal($5.integer));		
 	} |
@@ -135,20 +135,19 @@ FaceItem:
 	/* position//normal*/
 	TOK_INTEGER '/'  '/' TOK_INTEGER
 	{
-		$$.face = Face(loader->transVertexPosition($1.integer), -1, loader->transVertexNormal($4.integer));	
+		$$.vertex = Vertex(loader->transVertexPosition($1.integer), -1, loader->transVertexNormal($4.integer));	
 	};
 
-FaceItems:
-
-	FaceItem
+VertexItems:
+	VertexItem
 	{
-		$$.faces.push_back($1.face);
+		$$.vertices.push_back($1.vertex);
 	} |
 
-	FaceItems FaceItem
+	VertexItems VertexItem
 	{
-		$$.faces.swap($1.faces);
-		$$.faces.push_back($1.face);
+		$$.vertices.swap($1.vertices);
+		$$.vertices.push_back($2.vertex);
 	};
 	
  /*********************************************************************************/

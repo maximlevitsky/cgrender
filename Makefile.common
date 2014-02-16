@@ -41,6 +41,7 @@ $(OUT)/%.o:%.cpp
 	@echo -n "$(OUT)/" > $(OUT)/$*.d
 	@gcc $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
 	@gcc ${CXXFLAGS} -o $@  -c $< 
+	@objdump --disassembler-options=intel-mnemonic   -S $@ > $(OUT)/$*_dump.c
 
 
 ${TARGET}: $(OBJS_)

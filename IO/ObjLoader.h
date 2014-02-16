@@ -35,18 +35,18 @@ private:
 };
 
 
-class Face
+class Vertex
 {
 public:
-	Face(int position_index, int texcoord_index, int normal_index) :
+	Vertex(int position_index, int texcoord_index, int normal_index) :
 		position_index(position_index),
 		texcoord_index(texcoord_index),
 		normal_index(normal_index)
 	{}
 
-	Face() {}
+	Vertex() {}
 
-	bool operator<(const Face &other)
+	bool operator<(const Vertex &other)
 	{
 		if (position_index != other.position_index)
 			return position_index < other.position_index;
@@ -72,7 +72,7 @@ public:
 	void addVertexPosition(Vector3 pos);
 	void addTexCoord(Vector3 coord);
 	void addVertexNormal(Vector3 normal);
-	void addFace(std::list<Face>& faces);
+	void addFace(std::list<Vertex>& faces);
 
 	/**/
 	void setObjectName(std::string name);
@@ -97,11 +97,9 @@ public:
 private:
 
 	void finishCurrentModel();
-	void allocateModel();
 
 	// state
 	MaterialParams currenMaterial;
-	Model* currentModel;
 
 	std::string currentObject;
 	std::string currentGroup;
@@ -112,5 +110,4 @@ private:
 private:
 	MtlLoader matriallib;
 	std::list<Model*> models;
-	std::map<Face, Model::Vertex> loadedVertexes;
 };

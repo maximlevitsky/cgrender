@@ -25,8 +25,8 @@ struct myYYSTYPE
 	double num;
 	int integer;
 	std::string str;
-	Face face;
-	std::list<Face> faces;
+	Vertex vertex;
+	std::list<Vertex> vertices;
 };
 
 #define YYSTYPE myYYSTYPE
