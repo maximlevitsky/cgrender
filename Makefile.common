@@ -37,7 +37,7 @@ DEPS=$(patsubst %.o,%.d, $(OBJS_))
 
 $(OUT)/%.o:%.cpp
 	@echo  "Compiling $*.cpp...."
-	mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)
 	@echo -n "$(OUT)/" > $(OUT)/$*.d
 	@gcc $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
 	@gcc ${CXXFLAGS} -o $@  -c $< 
