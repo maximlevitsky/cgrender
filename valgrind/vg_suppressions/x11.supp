@@ -1,0 +1,79 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:uprv_malloc_48
+   fun:uprv_strdup_48
+   obj:/usr/lib/i386-linux-gnu/libicui18n.so.48.1.1
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_XlcCreateDefaultCharSet
+   obj:/usr/lib/i386-linux-gnu/libX11.so.6.3.0
+   obj:*
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_XlcCreateDefaultCharSet
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+	...
+   fun:XextAddDisplay
+	...
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+	...
+   obj:/usr/lib/i386-linux-gnu/libicuuc.so.48.1.1
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:_ZN19QApplicationPrivate9constructEP9_XDisplaymm
+   ...
+}
+
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   fun:_XlcCreateDefaultCharSet
+   obj:*
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:IceAuthFileName
+   fun:_IceGetPoValidAuthIndices
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:SmcOpenConnection
+   ...
+}

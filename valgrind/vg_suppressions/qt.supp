@@ -1,0 +1,100 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwj
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so*
+   fun:_ZN14QFactoryLoader9updateDirERK7QStringR9QSettings
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+	...
+   fun:_ZN7QObject7connectEPKS_PKcS1_S3_N2Qt14ConnectionTypeE
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_Z7qMallocj
+   fun:_ZN7QStringC1EPK5QChari
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_Z7qMallocj
+   fun:_ZN7QStringC1EPK5QChari
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/lib/i386-linux-gnu/ld-2.17.so
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_Z7qMallocj
+   fun:_ZN7QStringC1EPK5QChari
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/lib/i386-linux-gnu/ld-2.17.so
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_Z7qMallocj
+   fun:_ZN7QString17fromLatin1_helperEPKci
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   fun:_ZN14QLocalePrivate19updateSystemPrivateEv
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwj
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   fun:_ZN8QLibrary21setFileNameAndVersionERK7QStringi
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwj
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   fun:_ZN8QLibrary21setFileNameAndVersionERK7QStringS2_
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:_Znwj
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   fun:_ZN8QLibrary21setFileNameAndVersionERK7QStringS2_
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_Z7qMallocj
+   fun:_ZN7QStringC1EiN2Qt14InitializationE
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:/usr/lib/i386-linux-gnu/libQtCore.so.4.8.4
+   obj:*
+}
+
+
+

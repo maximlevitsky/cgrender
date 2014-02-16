@@ -1,0 +1,53 @@
+#################################################################################
+#
+#	This file is part of CG4.
+#
+#	Copyright (c) Inbar Donag and Maxim Levitsky
+#
+#    CG4 is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    CG4 is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with CG4.  If not, see <http://www.gnu.org/licenses/>.
+#
+##################################################################################
+
+OUT=.obj
+
+#CXXFLAGS += -g -O3 -mtune=core2 -march=core2 -mfpmath=sse \
+#	-ffast-math -ftree-vectorize -mssse3 -msse3 -msse2 -mno-ieee-fp  \
+#	-I. -I.. -std=c++11 -Wall -Wno-reorder -Wno-unused-function -malign-double  \
+#	-floop-interchange -ftree-loop-distribution -flto
+	
+CXXFLAGS += -g -O3 -mtune=core2 -march=core2 -mfpmath=sse \
+	-ftree-vectorize -mssse3 -msse3 -msse2  \
+	-I. -I.. -std=c++11 -Wall -Wno-reorder -Wno-unused-function -malign-double  \
+	-floop-interchange -ftree-loop-distribution -flto
+
+
+OBJS_=$(addprefix .obj/, ${OBJS})
+DEPS=$(patsubst %.o,%.d, $(OBJS_))
+
+$(OUT)/%.o:%.cpp
+	@echo  "Compiling $*.cpp...."
+	@echo -n "$(OUT)/" > $(OUT)/$*.d
+	@gcc $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
+	@gcc ${CXXFLAGS} -o $@  -c $< 
+
+
+${TARGET}: $(OBJS_)
+	@echo "Making lib $(TARGET)"
+	ar rcs ${TARGET} $(OBJS_)
+
+clean:
+	@rm -f $(TARGET) $(CLEAN_EXTRA)
+	@rm -rf $(OBJS_) $(DEPS)
+
+-include $(wildcard $(OUT)/*.d)

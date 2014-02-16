@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>741</width>
+    <height>530</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Software 3D renderer</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resources.qrc">
+    <normaloff>:/icon.ico</normaloff>:/icon.ico</iconset>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <widget class="DrawArea" name="drawArea">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="margin">
+     <number>0</number>
+    </property>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>741</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuModel">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad"/>
+    <addaction name="actionSave_screenshot"/>
+    <addaction name="actionResetModel"/>
+    <addaction name="actionLoad_debug_model"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionBounding_box"/>
+    <addaction name="actionAxes"/>
+    <addaction name="actionNormals"/>
+    <addaction name="actionFaces"/>
+    <addaction name="actionWireframe"/>
+    <addaction name="actionLight_sources"/>
+    <addaction name="actionBack_face_culling"/>
+    <addaction name="actionDepth_buffer_visualization"/>
+   </widget>
+   <widget class="QMenu" name="menuTransformation">
+    <property name="title">
+     <string>Transformation</string>
+    </property>
+    <addaction name="actionCamera"/>
+    <addaction name="actionWorld"/>
+    <addaction name="actionWorld_separate_objects"/>
+    <addaction name="separator"/>
+    <addaction name="actionMouse_sensivety"/>
+    <addaction name="actionTransformationsReset"/>
+   </widget>
+   <widget class="QMenu" name="menuShading_lighting">
+    <property name="title">
+     <string>Shading &amp;&amp; lighting</string>
+    </property>
+    <addaction name="actionFlat"/>
+    <addaction name="actionGourald"/>
+    <addaction name="actionPhong"/>
+    <addaction name="separator"/>
+    <addaction name="actionInvert_vertex_normals"/>
+    <addaction name="actionInvert_faces"/>
+    <addaction name="separator"/>
+    <addaction name="actionDual_face_lighting"/>
+    <addaction name="actionAll_face_lighting"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuScene">
+    <property name="title">
+     <string>Scene</string>
+    </property>
+    <addaction name="actionEnvironment"/>
+    <addaction name="actionMaterial"/>
+    <addaction name="actionCamera_properties"/>
+   </widget>
+   <addaction name="menuModel"/>
+   <addaction name="menuScene"/>
+   <addaction name="menuView"/>
+   <addaction name="menuTransformation"/>
+   <addaction name="menuShading_lighting"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <action name="actionLoad">
+   <property name="text">
+    <string>Load...</string>
+   </property>
+  </action>
+  <action name="actionLoadBackground">
+   <property name="icon">
+    <iconset theme="document-open"/>
+   </property>
+   <property name="text">
+    <string>Load...</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="icon">
+    <iconset theme="edit-clear"/>
+   </property>
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionStretch">
+   <property name="text">
+    <string>Stretch</string>
+   </property>
+  </action>
+  <action name="actionTile">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Tile</string>
+   </property>
+  </action>
+  <action name="actionBounding_box">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bounding box</string>
+   </property>
+  </action>
+  <action name="actionAxes">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Axes</string>
+   </property>
+  </action>
+  <action name="actionNormals">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Normals</string>
+   </property>
+  </action>
+  <action name="actionFaces">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Back/front faces</string>
+   </property>
+  </action>
+  <action name="actionLight_sources">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Light sources</string>
+   </property>
+  </action>
+  <action name="actionBack_face_culling">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Back face culling</string>
+   </property>
+  </action>
+  <action name="actionCamera">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Camera</string>
+   </property>
+  </action>
+  <action name="actionWorld">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>World</string>
+   </property>
+  </action>
+  <action name="actionPerspective">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Perspective</string>
+   </property>
+  </action>
+  <action name="actionOrthographic">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Orthographic</string>
+   </property>
+  </action>
+  <action name="actionFlat">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Flat</string>
+   </property>
+  </action>
+  <action name="actionGourald">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Gourald</string>
+   </property>
+  </action>
+  <action name="actionPhong">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Phong</string>
+   </property>
+  </action>
+  <action name="actionWireframe">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Wireframe</string>
+   </property>
+  </action>
+  <action name="actionLights">
+   <property name="text">
+    <string>Lights....</string>
+   </property>
+  </action>
+  <action name="actionMaterial">
+   <property name="text">
+    <string>Materials....</string>
+   </property>
+  </action>
+  <action name="actionInvert_vertex_normals">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Invert vertex normals</string>
+   </property>
+  </action>
+  <action name="actionInvert_faces">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Invert faces</string>
+   </property>
+  </action>
+  <action name="actionDual_face_lighting">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dual face lighting</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dual face lighting (invert normal for backfaces and then do lighting)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="actionAll_face_lighting">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>All face lighting</string>
+   </property>
+   <property name="toolTip">
+    <string>All face lighting (ignore front/back faces)</string>
+   </property>
+  </action>
+  <action name="actionResetModel">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionSave_screenshot">
+   <property name="text">
+    <string>Save screenshot...</string>
+   </property>
+  </action>
+  <action name="actionDepth_buffer_visualization">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Depth buffer visualization</string>
+   </property>
+  </action>
+  <action name="actionLoad_debug_model">
+   <property name="text">
+    <string>Load debug model...</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About....</string>
+   </property>
+  </action>
+  <action name="actionWorld_separate_objects">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>World (separate objects)</string>
+   </property>
+  </action>
+  <action name="actionTransformationsReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionMouse_sensivety">
+   <property name="text">
+    <string>Mouse sensivety...</string>
+   </property>
+  </action>
+  <action name="actionCamera_properties">
+   <property name="text">
+    <string>Camera...</string>
+   </property>
+  </action>
+  <action name="actionEnvironment">
+   <property name="text">
+    <string>Environment...</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DrawArea</class>
+   <extends>QWidget</extends>
+   <header>DrawArea.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

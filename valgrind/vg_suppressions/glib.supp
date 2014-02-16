@@ -1,0 +1,139 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:g_type_register_static
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:g_type_register_fundamental
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+	...
+   fun:g_param_type_register_static
+   ...
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+	...
+   fun:g_value_register_transform_func
+	...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   ...
+   fun:_ZN9QGtkStyleC1Ev
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   obj:/lib/i386-linux-gnu/libglib-2.0*
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/i386-linux-gnu/libgobject-2.0.so.0.3600.0
+   fun:call_init
+   fun:_dl_init
+   obj:/lib/i386-linux-gnu/ld-2.17.so
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+   obj:/usr/lib/i386-linux-gnu/libgobject-2.0.so.0.3600.0
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/i386-linux-gnu/libgobject-2.0.so*
+   fun:call_init
+   fun:_dl_init
+}
+
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+   fun:g_malloc0
+   obj:/usr/lib/i386-linux-gnu/libgobject-2.0.so.0.3600.0
+   obj:/usr/lib/i386-linux-gnu/libgobject-2.0.so.0.3600.0
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+   fun:g_malloc0
+   fun:g_malloc0_n
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+   obj:/lib/i386-linux-gnu/libglib-2.0.so.0.3600.0
+   fun:g_intern_static_string
+   obj:/usr/lib/i386-linux-gnu/libgobject-2.0.so.0.3600.0
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/i386-linux-gnu/libglib-2.0*
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/i386-linux-gnu/libglib-2.0*
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/i386-linux-gnu/libglib-2.0*
+}
+
+
+

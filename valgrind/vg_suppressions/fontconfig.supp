@@ -1,0 +1,65 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:FcInitLoadConfig
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+	...
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   fun:FcDefaultSubstitute
+   obj:/usr/lib/i386-linux-gnu/libpangocairo-1.0.so*
+   obj:/usr/lib/i386-linux-gnu/libpangoft2-1.0.so.0*
+   obj:/usr/lib/i386-linux-gnu/libpangoft2-1.0.so.0*
+   fun:pango_font_map_load_fontset
+   obj:/usr/lib/i386-linux-gnu/libpango-1.0.so.0*
+   fun:pango_itemize_with_base_dir
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   obj:/usr/lib/i386-linux-gnu/libfontconfig.so*
+   fun:FcFontRenderPrepare
+   obj:/usr/lib/i386-linux-gnu/libpangoft2-1.0.so*
+   obj:/usr/lib/i386-linux-gnu/libpangoft2-1.0.so*
+   fun:pango_fontset_foreach
+   obj:/usr/lib/i386-linux-gnu/libpangoft2-1.0.so*
+   obj:*
+}
+
