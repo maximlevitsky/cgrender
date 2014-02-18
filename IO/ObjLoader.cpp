@@ -217,8 +217,8 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 		if (v->normal_index < 0)
 			continue;
 
-		//vertex_data_index.erase(*v);
-		//vertex_data_index.insert(std::make_pair(*v, index));
+		vertex_data_index.erase(*v);
+		vertex_data_index.insert(std::make_pair(*v, index));
 	}
 
 	geometry_buffer.push_back(vertexIndexes.size());
