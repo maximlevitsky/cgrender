@@ -120,35 +120,6 @@
     <string>Load...</string>
    </property>
   </action>
-  <action name="actionLoadBackground">
-   <property name="icon">
-    <iconset theme="document-open"/>
-   </property>
-   <property name="text">
-    <string>Load...</string>
-   </property>
-  </action>
-  <action name="actionReset">
-   <property name="icon">
-    <iconset theme="edit-clear"/>
-   </property>
-   <property name="text">
-    <string>Reset</string>
-   </property>
-  </action>
-  <action name="actionStretch">
-   <property name="text">
-    <string>Stretch</string>
-   </property>
-  </action>
-  <action name="actionTile">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Tile</string>
-   </property>
-  </action>
   <action name="actionBounding_box">
    <property name="checkable">
     <bool>true</bool>
@@ -213,22 +184,6 @@
     <string>World</string>
    </property>
   </action>
-  <action name="actionPerspective">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Perspective</string>
-   </property>
-  </action>
-  <action name="actionOrthographic">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Orthographic</string>
-   </property>
-  </action>
   <action name="actionFlat">
    <property name="checkable">
     <bool>true</bool>
@@ -259,11 +214,6 @@
    </property>
    <property name="text">
     <string>Wireframe</string>
-   </property>
-  </action>
-  <action name="actionLights">
-   <property name="text">
-    <string>Lights....</string>
    </property>
   </action>
   <action name="actionMaterial">

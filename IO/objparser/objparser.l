@@ -37,6 +37,8 @@
 %option bison-bridge
 %option prefix="obj_"
 
+%x IDENTIFER
+
 %%
  /************************************************************************************/
  /* rules section */
@@ -51,19 +53,19 @@
 
 
  /* ignored stuff - comments/etc */
-#[^\n]*\n								{}
-[ \t\n\r]+								{}
+<*>#[^\n]*\n								{}
+<*>[ \t\n\r]+								{}
 
 
  /* grouping of objects */
-o										{ return TOK_OBJECT; }
-g										{ return TOK_GROUP; }
-s										{ return TOK_SMOOTHGROUP; }
+o										{ BEGIN(IDENTIFER); return TOK_OBJECT; }
+g										{ BEGIN(IDENTIFER); return TOK_GROUP; }
+s										{ BEGIN(IDENTIFER); return TOK_SMOOTHGROUP; }
 
 
  /* commands*/
-usemtl									{  return TOK_USEMTL; }
-mtllib									{  return TOK_MTLLIB; }
+usemtl									{ BEGIN(IDENTIFER);  return TOK_USEMTL; }
+mtllib									{ BEGIN(IDENTIFER);  return TOK_MTLLIB; }
 
 
  /* mesh data declaration */
@@ -87,8 +89,9 @@ f										{ return TOK_FACE; }
 										}
 
  /* identifier */
-[a-zA-z]([a-zA-z0-9_.:+-]*)					{
-											yylval->str = yytext; 
+<IDENTIFER>[^\n]*[\n]?					{
+											yylval->str = yytext;
+											BEGIN(INITIAL);
 											return TOK_ID;
 										}
 
@@ -98,8 +101,7 @@ f										{ return TOK_FACE; }
 "/"										{ return '/'; }
 
 
-
-.										{ 
+<*>.										{ 
 											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
 										}
 %%

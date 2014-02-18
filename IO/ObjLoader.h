@@ -80,7 +80,7 @@ public:
 
 	/**/
 	void setObjectName(std::string name);
-	void setGroupName(std::string name);
+	void setGroupName(std::string name = "default");
 	void setMaterialName(std::string name);
 	void setMatrialLib(std::string name);
 

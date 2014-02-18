@@ -36,7 +36,7 @@ void Engine::resetBackground()
 		Texture::unloadCached(_backgroundTexture);
 		_backgroundTexture = NULL;
 	}
-	_backGroundColor = Color(60,60,60);
+	_backGroundColor = Color(100,100,100);
 }
 
 void Engine::setTileBackground( bool enable )

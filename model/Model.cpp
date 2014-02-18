@@ -181,6 +181,14 @@ void Model::finalize()
 			normal.z() += (v1.position.x() - v2.position.x()) * (v1.position.y()+v2.position.y());
 		}
 
+		for ( int j = 0 ; j < iter.vertexCount() ; j++)
+		{
+			Vertex &v1= vertices[iter[j]];
+			if (v1.normal.len() == 0)
+				v1.normal = normal;
+		}
+
+
 		centerPoint /= iter.vertexCount();
 		vertices[iter[0]].polygon->polygonCenter = centerPoint;
 		vertices[iter[0]].polygon->polygonNormal = normal;

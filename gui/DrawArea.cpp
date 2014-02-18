@@ -60,36 +60,39 @@ void DrawArea::paintEvent(QPaintEvent *)
 	 return;
 
 
-	int w = this->geometry().width();
-
-	// start measuring time
-	struct timeval t,t2,t3;
-	gettimeofday(&t, NULL);
-
 	// make engine render
 	if (!sceneValid) {
+
+		// start measuring time
+		struct timeval t,t2,t3;
+		gettimeofday(&t, NULL);
+
+		Color bkgcolor = mainWindow->getEngine()->getBackgroundColor();
+
+
 		mainWindow->getEngine()->render();
 		sceneValid = true;
+
+		// measure time again
+		gettimeofday(&t2, NULL);
+		timersub(&t2,&t,&t3);
+		int msec = t3.tv_sec * 1000 + t3.tv_usec / 1000;
+
+		// draw time report
+		QPainter imgpainter(_image);
+		int w = this->geometry().width();
+		QRect textRect(QPoint(w - 220, 0), QPoint(w,20));
+		imgpainter.fillRect(textRect, QBrush(QColor(bkgcolor[0],bkgcolor[1],bkgcolor[2])));
+		imgpainter.setPen(QColor(255,255,255));
+		imgpainter.drawText(textRect.bottomLeft(),
+		 QString("Rendering took %1 msec (%2 FPS)").
+		 arg(QString::number(msec), QString::number(1000.0/msec)));
+
+		//printf("Rendering took %i msec\n", msec);
 	}
 
 	// blit the _image
 	painter.drawImage(QPoint(0,0), *_image);
-
-	// measure time again
-	gettimeofday(&t2, NULL);
-	timersub(&t2,&t,&t3);
-	int msec = t3.tv_sec * 1000 + t3.tv_usec / 1000;
-
-
-	// draw time report
-	QRect textRect(QPoint(w - 220, 0), QPoint(w,20));
-	painter.fillRect(textRect, QBrush(QColor(0,0,0)));
-	painter.setPen(QColor(255,255,255));
-	painter.drawText(textRect.bottomLeft(),
-	 QString("Rendering took %1 msec (%2 FPS)").
-	 arg(QString::number(msec), QString::number(1000.0/msec)));
-
-	//printf("Rendering took %i msec\n", msec);
 }
 
 void DrawArea::resizeEvent (QResizeEvent * event)

@@ -70,6 +70,35 @@ public slots:
 
 	/* model menu*/
 	void onModelLoad();
+	void onSaveScreenShot();
+	void onReset();
+	void onLoadDebugModel();
+
+	/* scene menu */
+	void onCameraPropertiesDialog();
+	void onEnvironmentDialog();
+	void onMaterialDialog();
+
+	/* view menu*/
+	void onDrawBoundingBox();
+	void onDrawAxes();
+	void onDrawNormals();
+	void onDrawfaceNormals();
+	void onDrawWireframe();
+	void onDrawLightSources();
+	void onBackFaceCulling();
+	void onDrawDepthbuffer();
+
+	/* shading menu */
+	void onShadingFlat();
+	void onShadingGorald();
+	void onShadingPhong();
+	void onInvertNormals();
+	void onInvertFaces();
+	void onDualfaceLighting();
+	void onAllFaceLighting();
+
+
 
 	/* transformation mode*/
 	void onCameraTransformMode();
@@ -78,10 +107,6 @@ public slots:
 	void onTransformationsReset();
 	void onMouseSensivetyDialog();
 
-	/* scene menu */
-	void onCameraPropertiesDialog();
-	void onEnvironmentDialog();
-	void onMaterialDialog();
 
 	/* help menu */
 	void onAboutDialog();

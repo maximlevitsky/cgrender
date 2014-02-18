@@ -42,7 +42,6 @@ MainWindow::MainWindow()
 
 	/* Engine setup*/
 	engine = new Engine();
-	engine->loadDebugScene();
 	renderer = new Renderer();
 	engine->setRenderer(renderer);
 
@@ -51,6 +50,9 @@ MainWindow::MainWindow()
 
 	/* File menu */
 	connect(actionLoad, SIGNAL(triggered()), this, SLOT(onModelLoad()));
+	connect(actionResetModel, SIGNAL(triggered()), this, SLOT(onReset()));
+	connect(actionLoad_debug_model, SIGNAL(triggered()), this, SLOT(onLoadDebugModel()));
+	connect(actionSave_screenshot, SIGNAL(triggered()), this, SLOT(onSaveScreenShot()));
 
 
 	/* scene menu */
@@ -61,6 +63,24 @@ MainWindow::MainWindow()
 	connect(actionEnvironment, SIGNAL(triggered()), this, SLOT(onEnvironmentDialog()));
 	connect(actionMaterial, SIGNAL(triggered()), this, SLOT(onMaterialDialog()));
 
+	/* view menu*/
+	actionBounding_box->setChecked(engine->getDrawBoundingBox());
+	actionAxes->setChecked(engine->getDrawAxes());
+	actionNormals->setChecked(engine->getdrawVertexNormals());
+	actionFaces->setChecked(engine->getdrawPolygonNormals());
+	actionWireframe->setChecked(engine->getdrawWireFrame());
+	actionLight_sources->setChecked(engine->getDrawLightSources());
+	actionBack_face_culling->setChecked(engine->getBackfaceCulling());
+	actionDepth_buffer_visualization->setChecked(engine->getDepthRendering());
+
+	connect(actionBounding_box, SIGNAL(toggled(bool)), this, SLOT(onDrawBoundingBox()));
+	connect(actionAxes, SIGNAL(toggled(bool)), this, SLOT(onDrawAxes()));
+	connect(actionNormals, SIGNAL(toggled(bool)), this, SLOT(onDrawNormals()));
+	connect(actionFaces, SIGNAL(toggled(bool)), this, SLOT(onDrawfaceNormals()));
+	connect(actionWireframe, SIGNAL(toggled(bool)), this, SLOT(onDrawWireframe()));
+	connect(actionLight_sources, SIGNAL(toggled(bool)), this, SLOT(onDrawLightSources()));
+	connect(actionBack_face_culling, SIGNAL(toggled(bool)), this, SLOT(onBackFaceCulling()));
+	connect(actionDepth_buffer_visualization, SIGNAL(toggled(bool)), this, SLOT(onDrawDepthbuffer()));
 
 	/* Transformation menu */
 	QActionGroup* transformGroup = new QActionGroup( this );
@@ -77,19 +97,78 @@ MainWindow::MainWindow()
 	connect(actionMouse_sensivety, SIGNAL(triggered()), this, SLOT(onMouseSensivetyDialog()));
 	mouseSensivetyDialog = new MouseSensivetyDialog(this);
 
+	/* Shading menu*/
+	QActionGroup* shadingGroup = new QActionGroup( this );
+	actionFlat->setActionGroup(shadingGroup);
+	actionGourald->setActionGroup(shadingGroup);
+	actionPhong->setActionGroup(shadingGroup);
+	actionPhong->setChecked(true);
+	connect(actionFlat, SIGNAL(toggled(bool)), this, SLOT(onShadingFlat()));
+	connect(actionGourald, SIGNAL(toggled(bool)), this, SLOT(onShadingGorald()));
+	connect(actionPhong, SIGNAL(toggled(bool)), this, SLOT(onShadingPhong()));
+
+	actionInvert_vertex_normals->setChecked(engine->getInvertedVertexNormals());
+	actionInvert_faces->setChecked(engine->getInvertedPolygonNormals());
+	actionDual_face_lighting->setChecked(engine->getLightBackFaces());
+	actionAll_face_lighting->setChecked(engine->getForceAllFrontFaces());
+
+	connect(actionInvert_vertex_normals, SIGNAL(toggled(bool)), this, SLOT(onInvertNormals()));
+	connect(actionInvert_faces, SIGNAL(toggled(bool)), this, SLOT(onInvertFaces()));
+	connect(actionDual_face_lighting, SIGNAL(toggled(bool)), this, SLOT(onDualfaceLighting()));
+	connect(actionAll_face_lighting, SIGNAL(toggled(bool)), this, SLOT(onAllFaceLighting()));
+
 	/* Help menu */
 	connect(actionAbout, SIGNAL(triggered()), this, SLOT(onAboutDialog()));
 
 }
 
-/**************************************************************************************/
-void MainWindow::onMouseSensivetyDialog() {
-	mouseSensivetyDialog->show();
+MainWindow::~MainWindow()
+{
+	delete engine;
+	delete renderer;
 }
 
-void MainWindow::onCameraPropertiesDialog() {
-	cameraPropertiesDialog->show();
+
+
+/***************************************************************************************/
+/* FILE MENU */
+/***************************************************************************************/
+
+void MainWindow::onModelLoad() {
+	QFileDialog *dlg  = new QFileDialog(this);
+	dlg->setAcceptMode(QFileDialog::AcceptOpen);
+	if (!dlg->exec())
+		return;
+
+	QStringList fileNames = dlg->selectedFiles();
+	for (QString& filename : fileNames)
+		 engine->loadSceneFromOBJ(filename.toStdString().c_str());
+
+	drawArea->invalidateScene();
 }
+
+void MainWindow::onReset()
+{
+	engine->resetScene();
+	drawArea->invalidateScene();
+
+}
+
+void MainWindow::onLoadDebugModel()
+{
+	engine->loadDebugScene();
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onSaveScreenShot()
+{
+	/* TODO */
+}
+
+
+/***************************************************************************************/
+/* SCENE MENU */
+/***************************************************************************************/
 
 void MainWindow::onEnvironmentDialog() {
 	environmentDialog->show();
@@ -99,205 +178,113 @@ void MainWindow::onMaterialDialog() {
 	materialDialog->show();
 }
 
-void MainWindow::onAboutDialog() {
-	(new AboutDialog(this))->show();
-}
-
-/***************************************************************************************/
-
-
-MainWindow::~MainWindow()
-{
-	delete engine;
-	delete renderer;
+void MainWindow::onCameraPropertiesDialog() {
+	cameraPropertiesDialog->show();
 }
 
 
 /***************************************************************************************/
-
-void MainWindow::onModelLoad()
-{
-	QFileDialog *dlg  = new QFileDialog(this);
-	dlg->setAcceptMode(QFileDialog::AcceptOpen);
-
-	if (!dlg->exec())
-		return;
-
-	 QStringList fileNames = dlg->selectedFiles();
-
-	 for (QString& filename : fileNames) {
-		 engine->loadSceneFromOBJ(filename.toStdString().c_str());
-	 }
-
-	 drawArea->invalidateScene();
-}
-
+/* VIEW MENU */
 /***************************************************************************************/
 
-static double translateSensivety(double value)
+void MainWindow::onDrawBoundingBox()
 {
-	double result;
-
-	if (value >= 50)
-		result =  1+((double)value - 50) / 5;
-	else
-		result =  1.0 / (1.0 + (50-(value-1))/5);
-
-	return result;
-}
-
-/***************************************************************************************/
-
-
-void MainWindow::mouseMoveEvent(QMouseEvent* event)
-{
-	QPoint pos = event->pos() - drawArea->pos();
-	QPoint screenDist = pos - startMousePos;
-
-	if (event->buttons() & Qt::RightButton)
-	{
-		Vector3 dist =
-				engine->deviceToNDC(pos.x(), 0, 0) -
-				engine->deviceToNDC(startMousePos.x(), 0, 0);
-
-		switch(_transformMode)
-		{
-		case TRANSFORM_CAMERA:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveCamera(2, dist.x() * translateSensivety(movementSensivety));
-				break;
-			default:
-				engine->rotateCamera(2, screenDist.x() * translateSensivety(rotationSensivety));
-				break;
-			}
-			break;
-		case TRANSFORM_OBJECT:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveObject(2, dist.x() * translateSensivety(movementSensivety));
-				break;
-			case Qt::ControlModifier:
-				engine->scaleObject(2, dist.x() * translateSensivety(scaleSensivety));
-				break;
-			default:
-				engine->rotateObject(2, screenDist.x()  * translateSensivety(rotationSensivety));
-				break;
-			}
-			break;
-		}
-
-	} else
-	{
-		Vector3 dist =
-				engine->deviceToNDC(pos.x(), pos.y(), 0) -
-				engine->deviceToNDC(startMousePos.x(), startMousePos.y(), 0);
-
-		switch(_transformMode)
-		{
-		case TRANSFORM_CAMERA:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveCamera(0, dist.x() * translateSensivety(movementSensivety));
-				engine->moveCamera(1, dist.y() * translateSensivety(movementSensivety));
-				break;
-			default:
-				engine->rotateCamera(0, screenDist.y() * translateSensivety(rotationSensivety));
-				engine->rotateCamera(1, -screenDist.x() * translateSensivety(rotationSensivety));
-				break;
-			}
-			break;
-		case TRANSFORM_OBJECT:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveObject(0, dist.x() * translateSensivety(movementSensivety));
-				engine->moveObject(1, dist.y() * translateSensivety(movementSensivety));
-				break;
-			case Qt::ControlModifier:
-				engine->scaleObject(0, dist.x() * translateSensivety(scaleSensivety));
-				engine->scaleObject(1, dist.y() * translateSensivety(scaleSensivety));
-				break;
-			default:
-				engine->rotateObject(0, screenDist.y()  * translateSensivety(rotationSensivety));
-				engine->rotateObject(1, -screenDist.x() * translateSensivety(rotationSensivety));
-				break;
-			}
-			break;
-		}
-
-	}
-
-
-	startMousePos = pos;
+	engine->setDrawBoundingBox(!engine->getDrawBoundingBox());
 	drawArea->invalidateScene();
-
 }
 
-/***************************************************************************************/
-
-void MainWindow::wheelEvent (QWheelEvent * event )
+void MainWindow::onDrawAxes()
 {
-	int degrees = event->delta() / 8;
-
-	Vector3 p1 = engine->deviceToNDC(0, 0, 0);
-	Vector3 p2 = engine->deviceToNDC(0, 0, 0.05*(degrees));
-	double scaleDist = p1.z() - p2.z();
-
-	if (_transformMode == TRANSFORM_OBJECT) {
-		engine->scaleObject(0, scaleDist * translateSensivety(scaleSensivety));
-		engine->scaleObject(1, scaleDist * translateSensivety(scaleSensivety));
-		engine->scaleObject(2, scaleDist * translateSensivety(scaleSensivety));
-	}
-
+	engine->setDrawAxes(!engine->getDrawAxes());
 	drawArea->invalidateScene();
-
 }
 
-/***************************************************************************************/
-
-
-void MainWindow::mousePressEvent(QMouseEvent* event)
+void MainWindow::onDrawNormals()
 {
-	startMousePos = event->pos() - drawArea->pos();
-
-	if (engine->getDrawSeparateObjects() && (event->modifiers() == 0))
-	{
-		printf("selecting object at %i, %i\n", startMousePos.x(), startMousePos.y());
-
-		if (engine->selectObject(startMousePos.x(), startMousePos.y())) {
-			printf("selected some object...");
-			drawArea->invalidateScene();
-		}
-	}
+	engine->setDrawVertexNormals(!engine->getdrawVertexNormals());
+	drawArea->invalidateScene();
 }
-
-/***************************************************************************************/
-
-void MainWindow::keyPressEvent ( QKeyEvent * event )
+void MainWindow::onDrawfaceNormals()
 {
-	switch (event->modifiers()) {
-	case Qt::ShiftModifier:
-		/* move */
-		setCursor(Qt::ClosedHandCursor);
-		break;
-	case Qt::ControlModifier:
-		/* resize */
-		setCursor(Qt::SizeVerCursor);
-		break;
-	default:
-		setCursor(Qt::ArrowCursor);
-		break;
-	}
+	engine->setDrawPolygonNormals(!engine->getdrawPolygonNormals());
+	drawArea->invalidateScene();
 }
-
-/***************************************************************************************/
-
-void MainWindow::keyReleaseEvent ( QKeyEvent * event )
+void MainWindow::onDrawWireframe()
 {
-	setCursor(Qt::ArrowCursor);
+	engine->setDrawWireFrame(!engine->getdrawWireFrame());
+	drawArea->invalidateScene();
+}
+void MainWindow::onDrawLightSources()
+{
+	engine->setDrawLightSources(!engine->getDrawLightSources());
+	drawArea->invalidateScene();
+}
+void MainWindow::onBackFaceCulling()
+{
+	engine->setBackFaceCulling(!engine->getBackfaceCulling());
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onDrawDepthbuffer()
+{
+	engine->setDepthRendering(!engine->getDepthRendering());
+	drawArea->invalidateScene();
+}
+
+
+/***************************************************************************************/
+/* SHADING MENU */
+/***************************************************************************************/
+void MainWindow::onShadingFlat()
+{
+	engine->setShadingMode(Engine::SHADING_FLAT);
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onShadingGorald()
+{
+	engine->setShadingMode(Engine::SHADING_GOURAD);
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onShadingPhong()
+{
+	engine->setShadingMode(Engine::SHADING_PHONG);
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onInvertNormals()
+{
+	engine->invertVertexNormals(!engine->getInvertedVertexNormals());
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onInvertFaces()
+{
+	engine->invertPolygonNormals(!engine->getInvertedPolygonNormals());
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onDualfaceLighting()
+{
+	engine->setLightBackFaces(!engine->getLightBackFaces());
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onAllFaceLighting()
+{
+	engine->setForceAllFrontFaces(!engine->getForceAllFrontFaces());
+	drawArea->invalidateScene();
 }
 
 /***************************************************************************************/
+/* TRANSOFORMATIONS MENU */
+/***************************************************************************************/
+
+void MainWindow::onMouseSensivetyDialog()
+{
+	mouseSensivetyDialog->show();
+}
 
 void MainWindow::onCameraTransformMode()
 {
@@ -328,5 +315,10 @@ void MainWindow::onTransformationsReset()
 
 
 /***************************************************************************************/
+/* HELP MENU */
+/***************************************************************************************/
 
-
+void MainWindow::onAboutDialog()
+{
+	(new AboutDialog(this))->show();
+}

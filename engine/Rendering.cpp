@@ -25,19 +25,23 @@ static void flatVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 at
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const Model::Vertex& v = *(const Model::Vertex*)in;
 
-	const Vector4& position = (toHomoCoords(v.polygon->polygonCenter) * u->mat_objectToCameraSpace);
-	Vector3 normal = (v.polygon->polygonNormal * u->mat_objectToCameraSpaceNormalTransform).returnNormal();
+	if (v.polygon) {
 
-	Color c;
-	if (!u->textureSampler.isBound())
-		c = u->objectColor;
-	else if (u->sampleMode == TMS_NEARST)
-		c = u->textureSampler.sample(v.texCoord[0], v.texCoord[1]);
-	else
-		c = u->textureSampler.sampleBiLinear(v.texCoord[0], v.texCoord[1]);
+		const Vector4& position = (toHomoCoords(v.polygon->polygonCenter) * u->mat_objectToCameraSpace);
+		Vector3 normal = (v.polygon->polygonNormal * u->mat_objectToCameraSpaceNormalTransform).returnNormal();
 
-	attribs_out[0] = doLighting(u, c, position, normal, false);
-	attribs_out[1] = doLighting(u, c, position, normal, true);
+		Color c;
+		if (!u->textureSampler.isBound())
+			c = u->objectColor;
+		else if (u->sampleMode == TMS_NEARST)
+			c = u->textureSampler.sample(v.texCoord[0], v.texCoord[1]);
+		else
+			c = u->textureSampler.sampleBiLinear(v.texCoord[0], v.texCoord[1]);
+
+		attribs_out[0] = doLighting(u, c, position, normal, false);
+		attribs_out[1] = doLighting(u, c, position, normal, true);
+	}
+
 	pos_out = toHomoCoords(v.position) * u->mat_objectToClipSpaceTransform;
 }
 
@@ -77,11 +81,8 @@ static void gouraldVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3
 	else
 		c = u->textureSampler.sampleBiLinear(v.texCoord[0], v.texCoord[1]);
 
-	Vector4 n = toHomoCoords(v.polygon->polygonNormal) * u->projNormaltransform;
-	bool backface = n.z() < 0;
-
-	attribs_out[0] = doLighting(u, c, position, normal, backface);
-	//attribs_out[1] = doLighting(u, c, position, normal, true);
+	attribs_out[0] = doLighting(u, c, position, normal, false);
+	attribs_out[1] = doLighting(u, c, position, normal, true);
 	pos_out = toHomoCoords(v.position) * u->mat_objectToClipSpaceTransform;
 
 }
@@ -91,7 +92,7 @@ static Color gouraldPixelShader( void* priv, const PS_INPUTS &in)
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	bool frontFace = u->forceFrontFaces ? true : in.frontface ^ u->facesReversed;
 
-	Color c = in.attributes[0]; // frontFace ? in.attributes[0] : in.attributes[1]
+	Color c = frontFace ? in.attributes[0] : in.attributes[1];
 	return !u->fogParams.enabled ? c : applyFog(u, in.d, c);
 }
 

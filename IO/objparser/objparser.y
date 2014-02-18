@@ -106,6 +106,10 @@ GroupStatement:
 	TOK_GROUP IdList
 	{
 		loader->setGroupName($2.str);
+	} |
+	TOK_GROUP
+	{
+		loader->setGroupName();
 	};
 	
 MaterialStatement:
@@ -186,7 +190,7 @@ IdList : IdList TOK_ID
 	{
 		$$.str = $1.str;
 		
-	};	
+	};
 	
  /*********************************************************************************/
 

@@ -138,17 +138,6 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 {
 	std::list<int> vertexIndexes;
 
-/**
-	cout << "adding face:";
-
-	for (auto iter: vertexes)
-	{
-		cout << " " << iter.print();
-	}
-
-	cout << std::endl;
-**/
-
 	/* go over all new vertexes and try to reuse vertexes from vertex buffer */
 	for (auto iter: vertexes)
 	{
@@ -176,7 +165,7 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 	{
 		int index = vertexIndexes.front();
 
-		assert(index >= 0 && index <= vertex_build_buffer.size());
+		assert(index >= 0 && index <= (int)vertex_build_buffer.size());
 		RawVertex *v = &vertex_build_buffer[index];
 
 		if (v->first == false)
@@ -188,7 +177,7 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 
 
 	assert (vertexIndexes.size() > 0);
-	assert(vertexIndexes.front() >= 0 && vertexIndexes.front() < vertex_build_buffer.size());
+	assert(vertexIndexes.front() >= 0 && vertexIndexes.front() < (int)vertex_build_buffer.size());
 
 	if (vertex_build_buffer[vertexIndexes.front()].first)
 	{
@@ -212,6 +201,10 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 	{
 		int index = iter;
 		RawVertex *v = &vertex_build_buffer[index];
+
+		/* don't share vertexes with no given normal as it will be later calculated*/
+		if (v->normal_index < 0)
+			continue;
 
 		vertex_data_index.erase(*v);
 		vertex_data_index.insert(std::make_pair(*v, index));
@@ -238,7 +231,7 @@ void ObjLoader::finishCurrentModel()
 		Model::Vertex v;
 		v.position = vertex.pos_index >= 0 ? positions[vertex.pos_index] : Vector3(0,0,0);
 		v.texCoord = vertex.tex_index >= 0 ? texcoords[vertex.tex_index] : Vector3(0,0,0);
-		v.normal = vertex.normal_index >= 0 ? normals[vertex.normal_index].makeNormal() : Vector3(0,0,0);
+		v.normal = vertex.normal_index >= 0 ? normals[vertex.normal_index].returnNormal() : Vector3(0,0,0);
 		v.polygon = NULL;
 		m->allocateVertex(v);
 	}
@@ -276,6 +269,8 @@ void ObjLoader::finishCurrentModel()
 	vertex_build_buffer.clear();
 	vertex_data_index.clear();
 
+	m->finalize();
+
 	models.push_back(m);
 }
 
@@ -294,7 +289,7 @@ void ObjLoader::setGroupName(std::string name)
 
 void ObjLoader::setMaterialName(std::string name)
 {
-	finishCurrentModel();
+	//finishCurrentModel();
 	currenMaterial.reset();
 
 	MaterialParams* params = matriallib.getMaterial(name);

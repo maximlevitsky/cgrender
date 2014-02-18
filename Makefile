@@ -39,7 +39,7 @@ all:
 	$(CXX) $(LDFLAGS) -o cgrender \
 		renderer/librenderer.a engine/libengine.a model/libmodel.a  \
 		IO/libio.a IO/mtlparser/libmtlparser.a IO/objparser/libobjparser.a \
-		  gui/libgui.a -lQtGui -lQtCore -lpng
+		  gui/libgui.a gui/.objs/qrc_resources.o -lpng12 -lQtGui -lQtCore -lpthread
 	
 clean:
 	rm -f cgrender
