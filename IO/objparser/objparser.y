@@ -39,7 +39,7 @@
 	int yyerror(ObjLoader *loader, yyscan_t scanner, const char* p) 
 	{ 
 		std::cout << "syntax error at " << obj_get_lineno(scanner) << std::endl;
-		return 0;
+		return -1;
 	}
 %}
 
@@ -50,6 +50,8 @@
 %token TOK_USEMTL TOK_MTLLIB
 %token TOK_VERTEX TOK_VERTEX_NORMAL TOK_VERTEX_UV TOK_FACE
 %token TOK_NUMBER TOK_INTEGER TOK_ID
+%token NEWLINE
+%token END 0
 
 %%
 /************************************************************************************/
@@ -57,31 +59,34 @@
 /************************************************************************************/
 
 FILE : Statements;
-Statements : Statements Statement  | Statement;
-Statement : VertexPosStatement | VertexNormalStatement | VertexUVStatement | FaceStatement |
-	ObjectStatement | GroupStatement | MaterialStatement | MatrialLibStatement | SmoothGroupStmnt;
+Statements : Statements Statement | Statement;
 
+Statement : VertexPosStatement | VertexNormalStatement | 
+			VertexUVStatement | FaceStatement |
+			ObjectStatement | GroupStatement | MaterialStatement | MatrialLibStatement | 
+			SmoothGroupStmnt | NEWLINE;
 
 VertexPosStatement:
-	TOK_VERTEX TOK_NUMBER TOK_NUMBER TOK_NUMBER
+	TOK_VERTEX TOK_NUMBER TOK_NUMBER TOK_NUMBER Sep
 	{
 		loader->addVertexPosition(Vector3($2.real, $3.real, $4.real));
 	};
 	
 VertexNormalStatement:
-	TOK_VERTEX_NORMAL TOK_NUMBER TOK_NUMBER TOK_NUMBER
+	TOK_VERTEX_NORMAL TOK_NUMBER TOK_NUMBER TOK_NUMBER Sep
 	{
+		/* TODO */
 		loader->addVertexNormal(Vector3($2.real, $3.real, $4.real));
 	};
 	
 VertexUVStatement:
-	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER
+	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER Sep
 	{
 		loader->addTexCoord(Vector3($2.real, $3.real, 0));
 	};
 	
 VertexUVStatement:
-	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER TOK_NUMBER
+	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER TOK_NUMBER Sep
 	{
 		/* TODO */
 		loader->addTexCoord(Vector3($2.real, $3.real, 0));
@@ -89,7 +94,7 @@ VertexUVStatement:
 
 	
 FaceStatement:
-	TOK_FACE VertexItems
+	TOK_FACE VertexItems Sep
 	{
 		loader->addFace(*$2.vertices);
 		delete $2.vertices;
@@ -97,34 +102,43 @@ FaceStatement:
 	};
 	
 ObjectStatement:
-	TOK_OBJECT TOK_ID
+	TOK_OBJECT TOK_ID Sep
 	{
 		loader->setObjectName($2.str);
+		free($2.str);
 	};
 	
 GroupStatement:
-	TOK_GROUP IdList
+	TOK_GROUP IdList Sep
 	{
 		loader->setGroupName($2.str);
+		free($2.str);
 	} |
-	TOK_GROUP
+	TOK_GROUP Sep
 	{
 		loader->setGroupName();
 	};
 	
 MaterialStatement:
-	TOK_USEMTL TOK_ID
+	TOK_USEMTL TOK_ID Sep
 	{
 		loader->setMaterialName($2.str);
+		free($2.str);
 	};
 	
 MatrialLibStatement: 
-	TOK_MTLLIB TOK_ID
+	TOK_MTLLIB TOK_ID Sep
 	{
 		loader->setMatrialLib($2.str);
+		free($2.str);
 	};
 	
-SmoothGroupStmnt: TOK_SMOOTHGROUP TOK_INTEGER | TOK_SMOOTHGROUP TOK_ID;
+SmoothGroupStmnt: 
+	TOK_SMOOTHGROUP TOK_INTEGER Sep | 
+	TOK_SMOOTHGROUP TOK_ID Sep 
+	{
+		free($2.str);
+	};
 	/* ignore */
 
  /*********************************************************************************/
@@ -184,13 +198,15 @@ VertexItems:
 IdList : IdList TOK_ID 
 	{
 		$$.str = $1.str;
+		free($2.str);
 	}
 
 	| TOK_ID 
 	{
 		$$.str = $1.str;
-		
 	};
+	
+Sep: END | NEWLINE;
 	
  /*********************************************************************************/
 

@@ -66,6 +66,8 @@ bool ObjLoader::load(std::string file)
 	if (f == NULL)
 		return false;
 
+	cout << "Loading OBJ file from " << file << std::endl;
+
 	yyscan_t scanner;
 	obj_lex_init(&scanner);
 	obj_set_in(f, scanner);
@@ -137,7 +139,16 @@ int ObjLoader::allocateVertex(RawVertex &v)
 void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 {
 	std::list<int> vertexIndexes;
+#if 0
+	cout << "adding face:";
 
+	for (auto iter: vertexes)
+	{
+		cout << " " << iter.print();
+	}
+
+	cout << std::endl;
+#endif
 	/* go over all new vertexes and try to reuse vertexes from vertex buffer */
 	for (auto iter: vertexes)
 	{
@@ -155,6 +166,7 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 
 		vertexIndexes.push_back(newVertexIndex);
 	}
+
 
 	/* now we got list of indexes in vertex buffer
 	 * We need to find the one that is not first of other polygon
@@ -190,7 +202,6 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 
 	}
 
-
 	/* and now mark first vertex of our new face as front */
 	RawVertex *v = &vertex_build_buffer[vertexIndexes.front()];
 	assert(!v->first);
@@ -206,8 +217,8 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 		if (v->normal_index < 0)
 			continue;
 
-		vertex_data_index.erase(*v);
-		vertex_data_index.insert(std::make_pair(*v, index));
+		//vertex_data_index.erase(*v);
+		//vertex_data_index.insert(std::make_pair(*v, index));
 	}
 
 	geometry_buffer.push_back(vertexIndexes.size());
@@ -244,6 +255,8 @@ void ObjLoader::finishCurrentModel()
 		int count = geometry_buffer[i];
 		i++;
 
+		assert(count > 0);
+
 		/* get geometry data */
 		Model::PolygonData *p =  m->allocatePolygon();
 
@@ -279,27 +292,35 @@ void ObjLoader::setObjectName(std::string name)
 {
 	finishCurrentModel();
 	currentObject = name;
+
+	cout << "Loading object:" << currentObject << std::endl;
 }
 
 void ObjLoader::setGroupName(std::string name)
 {
 	finishCurrentModel();
 	currentGroup = name;
+
+	cout << "Loading group:" << currentGroup << std::endl;
 }
 
 void ObjLoader::setMaterialName(std::string name)
 {
-	//finishCurrentModel();
+	finishCurrentModel();
 	currenMaterial.reset();
 
 	MaterialParams* params = matriallib.getMaterial(name);
 	if (params)
 		currenMaterial = *params;
+
+	cout << "Using material:" << name << std::endl;
+
 }
 
 void ObjLoader::setMatrialLib(std::string name)
 {
 	matriallib.loadMaterials(name);
+	cout << "Using material library:" << name << std::endl;
 }
 
 /*********************************************************************************/

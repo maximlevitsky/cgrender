@@ -181,6 +181,8 @@ void Model::finalize()
 			normal.z() += (v1.position.x() - v2.position.x()) * (v1.position.y()+v2.position.y());
 		}
 
+		normal.makeNormal();
+
 		for ( int j = 0 ; j < iter.vertexCount() ; j++)
 		{
 			Vertex &v1= vertices[iter[j]];

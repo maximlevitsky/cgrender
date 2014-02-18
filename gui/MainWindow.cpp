@@ -62,25 +62,17 @@ MainWindow::MainWindow()
 	connect(actionCamera_properties, SIGNAL(triggered()), this, SLOT(onCameraPropertiesDialog()));
 	connect(actionEnvironment, SIGNAL(triggered()), this, SLOT(onEnvironmentDialog()));
 	connect(actionMaterial, SIGNAL(triggered()), this, SLOT(onMaterialDialog()));
+	connect(actionLeft_coordinate_system, SIGNAL(toggled(bool)), this, SLOT(onLeftCoordinateSystem(bool)));
 
 	/* view menu*/
-	actionBounding_box->setChecked(engine->getDrawBoundingBox());
-	actionAxes->setChecked(engine->getDrawAxes());
-	actionNormals->setChecked(engine->getdrawVertexNormals());
-	actionFaces->setChecked(engine->getdrawPolygonNormals());
-	actionWireframe->setChecked(engine->getdrawWireFrame());
-	actionLight_sources->setChecked(engine->getDrawLightSources());
-	actionBack_face_culling->setChecked(engine->getBackfaceCulling());
-	actionDepth_buffer_visualization->setChecked(engine->getDepthRendering());
-
-	connect(actionBounding_box, SIGNAL(toggled(bool)), this, SLOT(onDrawBoundingBox()));
-	connect(actionAxes, SIGNAL(toggled(bool)), this, SLOT(onDrawAxes()));
-	connect(actionNormals, SIGNAL(toggled(bool)), this, SLOT(onDrawNormals()));
-	connect(actionFaces, SIGNAL(toggled(bool)), this, SLOT(onDrawfaceNormals()));
-	connect(actionWireframe, SIGNAL(toggled(bool)), this, SLOT(onDrawWireframe()));
-	connect(actionLight_sources, SIGNAL(toggled(bool)), this, SLOT(onDrawLightSources()));
-	connect(actionBack_face_culling, SIGNAL(toggled(bool)), this, SLOT(onBackFaceCulling()));
-	connect(actionDepth_buffer_visualization, SIGNAL(toggled(bool)), this, SLOT(onDrawDepthbuffer()));
+	connect(actionBounding_box, SIGNAL(toggled(bool)), this, SLOT(onDrawBoundingBox(bool)));
+	connect(actionAxes, SIGNAL(toggled(bool)), this, SLOT(onDrawAxes(bool)));
+	connect(actionNormals, SIGNAL(toggled(bool)), this, SLOT(onDrawNormals(bool)));
+	connect(actionFaces, SIGNAL(toggled(bool)), this, SLOT(onDrawfaceNormals(bool)));
+	connect(actionWireframe, SIGNAL(toggled(bool)), this, SLOT(onDrawWireframe(bool)));
+	connect(actionLight_sources, SIGNAL(toggled(bool)), this, SLOT(onDrawLightSources(bool)));
+	connect(actionBack_face_culling, SIGNAL(toggled(bool)), this, SLOT(onBackFaceCulling(bool)));
+	connect(actionDepth_buffer_visualization, SIGNAL(toggled(bool)), this, SLOT(onDrawDepthbuffer(bool)));
 
 	/* Transformation menu */
 	QActionGroup* transformGroup = new QActionGroup( this );
@@ -102,24 +94,49 @@ MainWindow::MainWindow()
 	actionFlat->setActionGroup(shadingGroup);
 	actionGourald->setActionGroup(shadingGroup);
 	actionPhong->setActionGroup(shadingGroup);
-	actionPhong->setChecked(true);
-	connect(actionFlat, SIGNAL(toggled(bool)), this, SLOT(onShadingFlat()));
-	connect(actionGourald, SIGNAL(toggled(bool)), this, SLOT(onShadingGorald()));
-	connect(actionPhong, SIGNAL(toggled(bool)), this, SLOT(onShadingPhong()));
+
+	connect(actionFlat, SIGNAL(toggled(bool)), this, SLOT(onShadingFlat(bool)));
+	connect(actionGourald, SIGNAL(toggled(bool)), this, SLOT(onShadingGorald(bool)));
+	connect(actionPhong, SIGNAL(toggled(bool)), this, SLOT(onShadingPhong(bool)));
+
+	connect(actionInvert_vertex_normals, SIGNAL(toggled(bool)), this, SLOT(onInvertNormals(bool)));
+	connect(actionInvert_faces, SIGNAL(toggled(bool)), this, SLOT(onInvertFaces(bool)));
+	connect(actionDual_face_lighting, SIGNAL(toggled(bool)), this, SLOT(onDualfaceLighting(bool)));
+	connect(actionAll_face_lighting, SIGNAL(toggled(bool)), this, SLOT(onAllFaceLighting(bool)));
+
+	/* Help menu */
+	connect(actionAbout, SIGNAL(triggered()), this, SLOT(onAboutDialog()));
+
+	updateStatus();
+
+}
+
+void MainWindow::updateStatus()
+{
+	/* scene menu*/
+	actionLeft_coordinate_system->setChecked(engine->getInvertDepth());
+
+	/* view menu*/
+	actionBounding_box->setChecked(engine->getDrawBoundingBox());
+	actionAxes->setChecked(engine->getDrawAxes());
+	actionNormals->setChecked(engine->getdrawVertexNormals());
+	actionFaces->setChecked(engine->getdrawPolygonNormals());
+	actionWireframe->setChecked(engine->getdrawWireFrame());
+	actionLight_sources->setChecked(engine->getDrawLightSources());
+	actionBack_face_culling->setChecked(engine->getBackfaceCulling());
+	actionDepth_buffer_visualization->setChecked(engine->getDepthRendering());
+
+	/* Shading menu*/
+	actionPhong->setChecked(engine->getShadingMode() == Engine::SHADING_PHONG);
+	actionGourald->setChecked(engine->getShadingMode() == Engine::SHADING_GOURAD);
+	actionFlat->setChecked(engine->getShadingMode() == Engine::SHADING_FLAT);
 
 	actionInvert_vertex_normals->setChecked(engine->getInvertedVertexNormals());
 	actionInvert_faces->setChecked(engine->getInvertedPolygonNormals());
 	actionDual_face_lighting->setChecked(engine->getLightBackFaces());
 	actionAll_face_lighting->setChecked(engine->getForceAllFrontFaces());
 
-	connect(actionInvert_vertex_normals, SIGNAL(toggled(bool)), this, SLOT(onInvertNormals()));
-	connect(actionInvert_faces, SIGNAL(toggled(bool)), this, SLOT(onInvertFaces()));
-	connect(actionDual_face_lighting, SIGNAL(toggled(bool)), this, SLOT(onDualfaceLighting()));
-	connect(actionAll_face_lighting, SIGNAL(toggled(bool)), this, SLOT(onAllFaceLighting()));
-
-	/* Help menu */
-	connect(actionAbout, SIGNAL(triggered()), this, SLOT(onAboutDialog()));
-
+	/* TODO: update contents of all subdialogs here*/
 }
 
 MainWindow::~MainWindow()
@@ -137,20 +154,28 @@ MainWindow::~MainWindow()
 void MainWindow::onModelLoad() {
 	QFileDialog *dlg  = new QFileDialog(this);
 	dlg->setAcceptMode(QFileDialog::AcceptOpen);
+
+	QStringList filters;
+	filters << "OBJ files (*.obj)";
+	filters << "All files (*.*)";
+
+	dlg->setNameFilters(filters);
 	if (!dlg->exec())
 		return;
 
-	QStringList fileNames = dlg->selectedFiles();
-	for (QString& filename : fileNames)
-		 engine->loadSceneFromOBJ(filename.toStdString().c_str());
+	QString file = dlg->selectedFiles().first();
+	engine->loadSceneFromOBJ(file.toStdString().c_str());
+	this->setWindowTitle(file);
 
 	drawArea->invalidateScene();
+	updateStatus();
 }
 
 void MainWindow::onReset()
 {
 	engine->resetScene();
 	drawArea->invalidateScene();
+	updateStatus();
 
 }
 
@@ -158,6 +183,7 @@ void MainWindow::onLoadDebugModel()
 {
 	engine->loadDebugScene();
 	drawArea->invalidateScene();
+	updateStatus();
 }
 
 void MainWindow::onSaveScreenShot()
@@ -170,64 +196,74 @@ void MainWindow::onSaveScreenShot()
 /* SCENE MENU */
 /***************************************************************************************/
 
-void MainWindow::onEnvironmentDialog() {
+void MainWindow::onEnvironmentDialog()
+{
 	environmentDialog->show();
 }
 
-void MainWindow::onMaterialDialog() {
+void MainWindow::onMaterialDialog()
+{
 	materialDialog->show();
 }
 
-void MainWindow::onCameraPropertiesDialog() {
+void MainWindow::onCameraPropertiesDialog()
+{
 	cameraPropertiesDialog->show();
 }
+
+void MainWindow::onLeftCoordinateSystem(bool enable)
+{
+	engine->setInvertDepth(enable);
+	drawArea->invalidateScene();
+}
+
 
 
 /***************************************************************************************/
 /* VIEW MENU */
 /***************************************************************************************/
 
-void MainWindow::onDrawBoundingBox()
+void MainWindow::onDrawBoundingBox(bool checked)
 {
-	engine->setDrawBoundingBox(!engine->getDrawBoundingBox());
+	engine->setDrawBoundingBox(checked);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onDrawAxes()
+void MainWindow::onDrawAxes(bool checked)
 {
-	engine->setDrawAxes(!engine->getDrawAxes());
+	engine->setDrawAxes(checked);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onDrawNormals()
+void MainWindow::onDrawNormals(bool checked)
 {
-	engine->setDrawVertexNormals(!engine->getdrawVertexNormals());
+	engine->setDrawVertexNormals(checked);
 	drawArea->invalidateScene();
 }
-void MainWindow::onDrawfaceNormals()
+void MainWindow::onDrawfaceNormals(bool checked)
 {
-	engine->setDrawPolygonNormals(!engine->getdrawPolygonNormals());
+	engine->setDrawPolygonNormals(checked);
 	drawArea->invalidateScene();
 }
-void MainWindow::onDrawWireframe()
+void MainWindow::onDrawWireframe(bool checked)
 {
-	engine->setDrawWireFrame(!engine->getdrawWireFrame());
+	engine->setDrawWireFrame(checked);
 	drawArea->invalidateScene();
 }
-void MainWindow::onDrawLightSources()
+void MainWindow::onDrawLightSources(bool checked)
 {
-	engine->setDrawLightSources(!engine->getDrawLightSources());
+	engine->setDrawLightSources(checked);
 	drawArea->invalidateScene();
 }
-void MainWindow::onBackFaceCulling()
+void MainWindow::onBackFaceCulling(bool checked)
 {
-	engine->setBackFaceCulling(!engine->getBackfaceCulling());
+	engine->setBackFaceCulling(checked);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onDrawDepthbuffer()
+void MainWindow::onDrawDepthbuffer(bool checked)
 {
-	engine->setDepthRendering(!engine->getDepthRendering());
+	engine->setDepthRendering(checked);
 	drawArea->invalidateScene();
 }
 
@@ -235,45 +271,54 @@ void MainWindow::onDrawDepthbuffer()
 /***************************************************************************************/
 /* SHADING MENU */
 /***************************************************************************************/
-void MainWindow::onShadingFlat()
+void MainWindow::onShadingFlat(bool checked)
 {
+	if (!checked)
+		return;
+
 	engine->setShadingMode(Engine::SHADING_FLAT);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onShadingGorald()
+void MainWindow::onShadingGorald(bool checked)
 {
+	if (!checked)
+		return;
+
 	engine->setShadingMode(Engine::SHADING_GOURAD);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onShadingPhong()
+void MainWindow::onShadingPhong(bool checked)
 {
+	if (!checked)
+		return;
+
 	engine->setShadingMode(Engine::SHADING_PHONG);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onInvertNormals()
+void MainWindow::onInvertNormals(bool checked)
 {
-	engine->invertVertexNormals(!engine->getInvertedVertexNormals());
+	engine->invertVertexNormals(checked);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onInvertFaces()
+void MainWindow::onInvertFaces(bool checked)
 {
-	engine->invertPolygonNormals(!engine->getInvertedPolygonNormals());
+	engine->invertPolygonNormals(checked);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onDualfaceLighting()
+void MainWindow::onDualfaceLighting(bool checked)
 {
-	engine->setLightBackFaces(!engine->getLightBackFaces());
+	engine->setLightBackFaces(checked);
 	drawArea->invalidateScene();
 }
 
-void MainWindow::onAllFaceLighting()
+void MainWindow::onAllFaceLighting(bool checked)
 {
-	engine->setForceAllFrontFaces(!engine->getForceAllFrontFaces());
+	engine->setForceAllFrontFaces(checked);
 	drawArea->invalidateScene();
 }
 

@@ -26,6 +26,10 @@ int main(int argc, char** argv)
 	 MainWindow *mainwindow = new MainWindow();
 
 	 mainwindow->show();
+
+	 if (argc > 1)
+		 mainwindow->getEngine()->loadSceneFromOBJ(argv[1]);
+
 	 app->exec();
 
 	 delete mainwindow;

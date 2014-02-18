@@ -38,6 +38,8 @@
 %option prefix="obj_"
 
 %x IDENTIFER
+%s DOUBLE_NUMBERS_EXPECTED
+
 
 %%
  /************************************************************************************/
@@ -52,36 +54,44 @@
  */
 
 
- /* ignored stuff - comments/etc */
-<*>#[^\n]*\n								{}
-<*>[ \t\n\r]+								{}
+ /* ignored comment lines*/
+<*>#[^\n]*								{}
 
+ /* ignored non newline whitespace */
+<*>[ \t\r]+								{}
 
- /* grouping of objects */
-o										{ BEGIN(IDENTIFER); return TOK_OBJECT; }
-g										{ BEGIN(IDENTIFER); return TOK_GROUP; }
-s										{ BEGIN(IDENTIFER); return TOK_SMOOTHGROUP; }
+ /* ignored escaped newlines - why I have to go through this :-(*/
+<*>[\\][\r]?[\n]						{}
+
+ /* newline - this is importaint to grammar */
+<*>[\n]									{ BEGIN(INITIAL); return NEWLINE; }
 
 
  /* commands*/
+o										{ BEGIN(IDENTIFER);  return TOK_OBJECT; }
+g										{ BEGIN(IDENTIFER);  return TOK_GROUP; }
+s										{ BEGIN(IDENTIFER);  return TOK_SMOOTHGROUP; }
 usemtl									{ BEGIN(IDENTIFER);  return TOK_USEMTL; }
 mtllib									{ BEGIN(IDENTIFER);  return TOK_MTLLIB; }
 
-
  /* mesh data declaration */
-v										{ return TOK_VERTEX; }
-vn										{ return TOK_VERTEX_NORMAL; }
-vt										{ return TOK_VERTEX_UV; }
+v										{ BEGIN(DOUBLE_NUMBERS_EXPECTED); return TOK_VERTEX; }
+vn										{ BEGIN(DOUBLE_NUMBERS_EXPECTED); return TOK_VERTEX_NORMAL; }
+vt										{ BEGIN(DOUBLE_NUMBERS_EXPECTED); return TOK_VERTEX_UV; }
 f										{ return TOK_FACE; }
 
  /*********************************************************************************************/
 
+ /* integer in vertex data - have seen it in the wild :-(*/
+<DOUBLE_NUMBERS_EXPECTED>[+-]?[0-9]*	{
+											yylval->real = strtod(yytext, NULL); 
+											return TOK_NUMBER;
+										}
  /*integer number */
 [+-]?[0-9]*								{
 											yylval->integer = strtol(yytext, NULL, 10);
 											return TOK_INTEGER;
 										}
-
  /* double numbers */
 [+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?	{
 											yylval->real = strtod(yytext, NULL); 
@@ -89,9 +99,8 @@ f										{ return TOK_FACE; }
 										}
 
  /* identifier */
-<IDENTIFER>[^\n]*[\n]?					{
-											yylval->str = yytext;
-											BEGIN(INITIAL);
+<IDENTIFER>[^\n\r\t ]*					{
+											yylval->str = strndup(yytext, yyleng);
 											return TOK_ID;
 										}
 
@@ -100,8 +109,8 @@ f										{ return TOK_FACE; }
  /* used in face declarations */
 "/"										{ return '/'; }
 
-
-<*>.										{ 
+<*>.									{ 
 											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
+											return -1;
 										}
 %%

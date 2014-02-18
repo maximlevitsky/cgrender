@@ -10,8 +10,11 @@
     <height>530</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
-   <string>Software 3D renderer</string>
+   <string>OBJ viewer</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../resources.qrc">
@@ -102,6 +105,8 @@
     <addaction name="actionEnvironment"/>
     <addaction name="actionMaterial"/>
     <addaction name="actionCamera_properties"/>
+    <addaction name="separator"/>
+    <addaction name="actionLeft_coordinate_system"/>
    </widget>
    <addaction name="menuModel"/>
    <addaction name="menuScene"/>
@@ -313,6 +318,14 @@
   <action name="actionEnvironment">
    <property name="text">
     <string>Environment...</string>
+   </property>
+  </action>
+  <action name="actionLeft_coordinate_system">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Left coordinate system</string>
    </property>
   </action>
  </widget>

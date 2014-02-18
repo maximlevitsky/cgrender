@@ -129,7 +129,7 @@ void MainWindow::wheelEvent (QWheelEvent * event )
 	int degrees = event->delta() / 8;
 
 	Vector3 p1 = engine->deviceToNDC(0, 0, 0);
-	Vector3 p2 = engine->deviceToNDC(0, 0, 0.05*(degrees));
+	Vector3 p2 = engine->deviceToNDC(0, 0, 0.01*(degrees));
 	double scaleDist = p1.z() - p2.z();
 
 	if (_transformMode == TRANSFORM_OBJECT) {

@@ -48,11 +48,12 @@ static void flatVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 at
 static Color flatPixelShader( void* priv, const PS_INPUTS &in)
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
-	bool frontFace = u->forceFrontFaces ? true : in.frontface ^ u->facesReversed;
 
-	if (u->fogParams.enabled)
-		return applyFog(u, in.d, frontFace  ? in.attributes[0] : in.attributes[1]);
-	return frontFace ? in.attributes[0] : in.attributes[1];
+	/* here no need to use u->facesReversed as polygonNormal that is used for lighting is reverserd too */
+	bool frontFace = u->forceFrontFaces ? true : in.frontface;
+
+	Color c = frontFace ? in.attributes[0] : in.attributes[1];
+		return !u->fogParams.enabled ? c : applyFog(u, in.d, c);
 }
 
 
@@ -90,7 +91,7 @@ static void gouraldVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3
 static Color gouraldPixelShader( void* priv, const PS_INPUTS &in)
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
-	bool frontFace = u->forceFrontFaces ? true : in.frontface ^ u->facesReversed;
+	bool frontFace = u->forceFrontFaces ? true : (in.frontface ^ u->facesReversed);
 
 	Color c = frontFace ? in.attributes[0] : in.attributes[1];
 	return !u->fogParams.enabled ? c : applyFog(u, in.d, c);
@@ -144,7 +145,7 @@ static Color phongPixelShader( void* priv, const PS_INPUTS &in)
 		c = u->textureSampler.sampleBiLinearMipmapped(in.attributes[2][0], in.attributes[2][1], lodX, lodY);
 	}
 
-	bool frontFace = u->forceFrontFaces ? true : in.frontface ^ u->facesReversed;
+	bool frontFace = u->forceFrontFaces ? true : (in.frontface ^ u->facesReversed);
 	c = doLighting(u, c, position, normal, !frontFace );
 	return !u->fogParams.enabled ? c : applyFog(u, in.d, c);
 }

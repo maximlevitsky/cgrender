@@ -78,25 +78,26 @@ public slots:
 	void onCameraPropertiesDialog();
 	void onEnvironmentDialog();
 	void onMaterialDialog();
+	void onLeftCoordinateSystem(bool);
 
 	/* view menu*/
-	void onDrawBoundingBox();
-	void onDrawAxes();
-	void onDrawNormals();
-	void onDrawfaceNormals();
-	void onDrawWireframe();
-	void onDrawLightSources();
-	void onBackFaceCulling();
-	void onDrawDepthbuffer();
+	void onDrawBoundingBox(bool);
+	void onDrawAxes(bool);
+	void onDrawNormals(bool);
+	void onDrawfaceNormals(bool);
+	void onDrawWireframe(bool);
+	void onDrawLightSources(bool);
+	void onBackFaceCulling(bool);
+	void onDrawDepthbuffer(bool);
 
 	/* shading menu */
-	void onShadingFlat();
-	void onShadingGorald();
-	void onShadingPhong();
-	void onInvertNormals();
-	void onInvertFaces();
-	void onDualfaceLighting();
-	void onAllFaceLighting();
+	void onShadingFlat(bool);
+	void onShadingGorald(bool);
+	void onShadingPhong(bool);
+	void onInvertNormals(bool);
+	void onInvertFaces(bool);
+	void onDualfaceLighting(bool);
+	void onAllFaceLighting(bool);
 
 
 
@@ -117,6 +118,8 @@ private:
 	CameraPropertiesDialog *cameraPropertiesDialog;
 	EnvironmentDialog *environmentDialog;
 	MaterialsDialog *materialDialog;
+
+	void updateStatus();
 };
 
 #endif /* MAINWINDOW_H_ */
