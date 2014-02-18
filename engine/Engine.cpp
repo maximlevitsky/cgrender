@@ -169,7 +169,7 @@ void Engine::loadDebugScene()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Engine::loadSceneFromOBJ( const char* file , int fineness)
+bool Engine::loadSceneFromOBJ( const char* file)
 {
 	// clear the existing model if already loaded once
 	resetScene();
@@ -177,24 +177,18 @@ bool Engine::loadSceneFromOBJ( const char* file , int fineness)
 	ObjLoader loader;
 	loader.load(file);
 
-#if 0
-	// load the models (result is model list, placed to modelsFromLoadedFile
-	bool result = CGSkelProcessIritDataFiles(&file, 1, fineness);
-	if (!result || !modelsFromLoadedFile.size())
-		return result;
 
 	// initialize our model array
-	_itemCount = modelsFromLoadedFile.size();
+	_itemCount = loader.models.size();
 	_sceneItems = new SceneItem[_itemCount];
 
 	// copy pointers to models to our array and calculate the box of the model
 	int i = 0;
-	for (auto it = modelsFromLoadedFile.begin() ; it !=  modelsFromLoadedFile.end() ; it++, i++)
+	for (auto it = loader.models.begin() ; it !=  loader.models.end() ; it++, i++)
 		_sceneItems[i]._mainModel = *it;
 
-	// and clear the global model list
-	modelsFromLoadedFile.clear();
 
+#if 0
 	/* load lights from IRIT
 	*/
 
@@ -210,10 +204,10 @@ bool Engine::loadSceneFromOBJ( const char* file , int fineness)
 
 		iritLights.clear();
 	}
+#endif
 
 	processScene();
 	resetTransformations();
-#endif
 	return true;
 }
 

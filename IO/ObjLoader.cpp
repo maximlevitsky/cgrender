@@ -18,9 +18,12 @@
 */
 
 #include <stdio.h>
+#include <iostream>
 #include <assert.h>
 #include "ObjLoader.h"
 #include "parsers.h"
+
+using std::cout;
 
 /*********************************************************************************/
 
@@ -66,8 +69,13 @@ bool ObjLoader::load(std::string file)
 	yyscan_t scanner;
 	obj_lex_init(&scanner);
 	obj_set_in(f, scanner);
+	obj_set_out(stdout, &scanner);
+	obj_set_debug(1, &scanner);
+	obj_debug = 0;
 	int retval = obj_parse(this, scanner);
 	obj_lex_destroy(scanner);
+
+	finishCurrentModel();
 	return retval;
 }
 /*********************************************************************************/
@@ -86,8 +94,131 @@ void ObjLoader::addVertexNormal(Vector3 normal)
 	normals.push_back(normal);
 }
 
-void ObjLoader::addFace(std::list<Vertex>& faces)
+/********************************************************************************/
+
+int ObjLoader::tRelIndex(int index, std::vector<Vector3>& data)
 {
+	if (index < 0)
+	{
+		/* if index is invalid, we will return negative value which is OK to mark invalid entry */
+		return data.size() + index;
+	}
+
+	if (index > (int)data.size())
+		return -1;
+
+	return index - 1;
+}
+
+int ObjLoader::tVPos(int index)
+{
+	return tRelIndex(index, positions);
+}
+
+int ObjLoader::tTexCoord(int index)
+{
+	return tRelIndex(index, texcoords);
+}
+
+int ObjLoader::tVNormal(int index)
+{
+	return tRelIndex(index, normals);
+}
+
+/********************************************************************************/
+
+int ObjLoader::allocateVertex(RawVertex &v)
+{
+	vertex_build_buffer.push_back(v);
+	int retval = vertex_build_buffer.size() - 1;
+	return retval;
+}
+
+void ObjLoader::addFace(std::list<RawVertex>& vertexes)
+{
+	std::list<int> vertexIndexes;
+
+/**
+	cout << "adding face:";
+
+	for (auto iter: vertexes)
+	{
+		cout << " " << iter.print();
+	}
+
+	cout << std::endl;
+**/
+
+	/* go over all new vertexes and try to reuse vertexes from vertex buffer */
+	for (auto iter: vertexes)
+	{
+		assert(!iter.first);
+
+		auto vertex_ptr = vertex_data_index.find(iter);
+		int newVertexIndex;
+
+		if (vertex_ptr != vertex_data_index.end())
+		{
+			newVertexIndex = vertex_ptr->second;
+		} else {
+			newVertexIndex = allocateVertex(iter);
+		}
+
+		vertexIndexes.push_back(newVertexIndex);
+	}
+
+	/* now we got list of indexes in vertex buffer
+	 * We need to find the one that is not first of other polygon
+	 * (all new vertexes we had received from parser are marked with first == false)
+	 */
+
+	for (int i = 0; i < (int)vertexIndexes.size() ; i++)
+	{
+		int index = vertexIndexes.front();
+
+		assert(index >= 0 && index <= vertex_build_buffer.size());
+		RawVertex *v = &vertex_build_buffer[index];
+
+		if (v->first == false)
+			break;
+
+		vertexIndexes.pop_front();
+		vertexIndexes.push_back(index);
+	}
+
+
+	assert (vertexIndexes.size() > 0);
+	assert(vertexIndexes.front() >= 0 && vertexIndexes.front() < vertex_build_buffer.size());
+
+	if (vertex_build_buffer[vertexIndexes.front()].first)
+	{
+		RawVertex v = vertex_build_buffer[vertexIndexes.front()];
+		v.first = false;
+		int newVertexIndex = allocateVertex(v);
+
+		vertexIndexes.pop_front();
+		vertexIndexes.push_front(newVertexIndex);
+
+	}
+
+
+	/* and now mark first vertex of our new face as front */
+	RawVertex *v = &vertex_build_buffer[vertexIndexes.front()];
+	assert(!v->first);
+	v->first = true;
+
+	/* now try to add all the vertexes to vertex cache map */
+	for (auto iter : vertexIndexes )
+	{
+		int index = iter;
+		RawVertex *v = &vertex_build_buffer[index];
+
+		vertex_data_index.erase(*v);
+		vertex_data_index.insert(std::make_pair(*v, index));
+	}
+
+	geometry_buffer.push_back(vertexIndexes.size());
+	geometry_buffer.insert(geometry_buffer.end(), std::begin(vertexIndexes), std::end(vertexIndexes));
 }
 
 /*********************************************************************************/
@@ -95,7 +226,57 @@ void ObjLoader::addFace(std::list<Vertex>& faces)
 
 void ObjLoader::finishCurrentModel()
 {
-	/* TODO: go over all accumualated faces and create a model from them */
+	if (!geometry_buffer.size())
+		return;
+
+	Model *m = new Model(vertex_build_buffer.size(), geometry_buffer.size() - vertex_build_buffer.size());
+	m->_defaultMaterial = currenMaterial;
+
+	/* add all vertexes to the model */
+	for (auto vertex: vertex_build_buffer)
+	{
+		Model::Vertex v;
+		v.position = vertex.pos_index >= 0 ? positions[vertex.pos_index] : Vector3(0,0,0);
+		v.texCoord = vertex.tex_index >= 0 ? texcoords[vertex.tex_index] : Vector3(0,0,0);
+		v.normal = vertex.normal_index >= 0 ? normals[vertex.normal_index].makeNormal() : Vector3(0,0,0);
+		v.polygon = NULL;
+		m->allocateVertex(v);
+	}
+
+	/* add all the faces to the model */
+
+	for (int i = 0 ; i < (int)geometry_buffer.size() ;)
+	{
+		/* get leading count */
+		int count = geometry_buffer[i];
+		i++;
+
+		/* get geometry data */
+		Model::PolygonData *p =  m->allocatePolygon();
+
+		int first_vertex_idx = geometry_buffer[i];
+		Model::Vertex *v = &m->vertices[first_vertex_idx];
+
+		if(v->polygon == NULL)
+			v->polygon = p;
+		else {
+			printf("shared data bug at geometry buffer at %i\n", i);
+		}
+
+		for (int j = 0 ; j < count ; j++)
+		{
+			int vertex_index = geometry_buffer[i];
+			assert(vertex_index >= 0 && vertex_index < (int)vertex_build_buffer.size());
+			m->addVertexToPolygon(geometry_buffer[i]);
+			i++;
+		}
+	}
+
+	geometry_buffer.clear();
+	vertex_build_buffer.clear();
+	vertex_data_index.clear();
+
+	models.push_back(m);
 }
 
 /*********************************************************************************/
@@ -108,6 +289,7 @@ void ObjLoader::setObjectName(std::string name)
 void ObjLoader::setGroupName(std::string name)
 {
 	finishCurrentModel();
+	currentGroup = name;
 }
 
 void ObjLoader::setMaterialName(std::string name)

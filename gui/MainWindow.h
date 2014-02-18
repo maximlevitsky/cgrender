@@ -68,6 +68,9 @@ private:
 
 public slots:
 
+	/* model menu*/
+	void onModelLoad();
+
 	/* transformation mode*/
 	void onCameraTransformMode();
 	void onWorldTransformationMode();

@@ -44,7 +44,7 @@ Model::~Model()
 	delete [] polygonData;
 }
 
-void Model::allocatePolygon( const PolygonData  &data )
+Model::PolygonData* Model::allocatePolygon(void)
 {
 	/* Add a new polygon, with predefined amount of vertices*/
 	assert(polygon_aviable_space > 1);
@@ -61,11 +61,10 @@ void Model::allocatePolygon( const PolygonData  &data )
 	current_polygon_last_vertex_ptr = current_polygon_ptr + 1;
 	*current_polygon_ptr = 0;
 
-	*currentPolygonData = data;
 	_polygonCount++;
 	polygon_aviable_space--;
+	return currentPolygonData;
 }
-
 
 int Model::allocateVertex( const Model::Vertex &v )
 {
@@ -74,7 +73,6 @@ int Model::allocateVertex( const Model::Vertex &v )
 	int ID = _vertexCount;
 	Vertex* _v = &vertices[_vertexCount++];
 	*_v = v;
-	_v->polygon = currentPolygonData;
 	return ID;
 }
 
@@ -161,16 +159,31 @@ void Model::finalize()
 {
 	for (polygonIterator iter(polygons, _polygonCount); iter.hasmore() ; iter.next() )
 	{
+		assert(vertices[iter[0]].polygon);
+
 		if (iter.vertexCount() < 3)
 			vertices[iter[0]].polygon->polygonCenter = Vector3(1,1,1);
 
 		// find center point while iterating over all polygon vertexes
 		Vector3 centerPoint(0,0,0);
-		for ( int j = 0 ; j < iter.vertexCount() ; j++)
-			centerPoint += vertices[iter[j]].position;
+		Vector3 normal(0,0,0);
+
+		for ( int j = 0 ; j < iter.vertexCount() ; j++) {
+
+			Vertex &v1= vertices[iter[j]];
+			Vertex &v2 = j == iter.vertexCount() - 1 ?
+					vertices[iter[0]] : vertices[iter[j+1]];
+
+			centerPoint += v1.position;
+
+			normal.x() += (v1.position.y() - v2.position.y()) * (v1.position.z()+v2.position.z());
+			normal.y() += (v1.position.z() - v2.position.z()) * (v1.position.x()+v2.position.x());
+			normal.z() += (v1.position.x() - v2.position.x()) * (v1.position.y()+v2.position.y());
+		}
 
 		centerPoint /= iter.vertexCount();
 		vertices[iter[0]].polygon->polygonCenter = centerPoint;
+		vertices[iter[0]].polygon->polygonNormal = normal;
 	}
 }
 
@@ -179,16 +192,16 @@ Model* Model::createTriangleModel( Vector3 a, Vector3 b, Vector3 c )
 	Model *result = new Model(3, 3);
 	Vector3 dummyNormal(0,0,1);
 
-	PolygonData d;
-	d.polygonCenter = Vector3(0,0,0);
-	d.polygonNormal = Vector3(0,0,0);
+	Model::PolygonData *d;
+	d = result->allocatePolygon();
+	d->polygonCenter = Vector3(0,0,0);
+	d->polygonNormal = Vector3(0,0,0);
 
-	/* TODO:*/
-	result->allocatePolygon(d);
 	Vertex v;
 	v.normal = dummyNormal;
 
 	v.position = a;
+	v.polygon = d;
 	result->addVertexToPolygon(result->allocateVertex(v));
 
 	v.position = b;

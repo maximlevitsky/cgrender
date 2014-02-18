@@ -21,6 +21,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <sstream>
 
 #include "common/Vector3.h"
 
@@ -35,31 +36,34 @@ private:
 };
 
 
-class Vertex
+struct RawVertex
 {
-public:
-	Vertex(int position_index, int texcoord_index, int normal_index) :
-		position_index(position_index),
-		texcoord_index(texcoord_index),
-		normal_index(normal_index)
-	{}
+	int pos_index;
+	int tex_index;
+	int normal_index;
+	bool first;
 
-	Vertex() {}
-
-	bool operator<(const Vertex &other)
+	bool operator<(const struct RawVertex& o) const
 	{
-		if (position_index != other.position_index)
-			return position_index < other.position_index;
-		if (texcoord_index != other.texcoord_index)
-			return texcoord_index < other.texcoord_index;
-		if (normal_index != other.normal_index)
-			return normal_index < other.normal_index;
+		if (pos_index != o.pos_index) return pos_index< o.pos_index;
+		if (tex_index != o.tex_index) return tex_index< o.tex_index;
+		return normal_index< o.normal_index;
 	}
 
-private:
-	int position_index;
-	int texcoord_index;
-	int normal_index;
+	bool operator==(const struct RawVertex& o)const
+	{
+		return
+			pos_index == o.pos_index &&
+			tex_index == o.tex_index &&
+			normal_index == o.normal_index;
+	}
+
+	std::string print()
+	{
+		std::stringstream s;
+		s << pos_index << "/" << tex_index << "/" << normal_index;
+		return s.str();
+	}
 };
 
 class ObjLoader
@@ -72,7 +76,7 @@ public:
 	void addVertexPosition(Vector3 pos);
 	void addTexCoord(Vector3 coord);
 	void addVertexNormal(Vector3 normal);
-	void addFace(std::list<Vertex>& faces);
+	void addFace(std::list<RawVertex>& faces);
 
 	/**/
 	void setObjectName(std::string name);
@@ -80,22 +84,14 @@ public:
 	void setMaterialName(std::string name);
 	void setMatrialLib(std::string name);
 
-	int transVertexPosition(int pos)
-	{
-		return pos >= 0 ? pos : positions.size() + pos;
-	}
+	int tVPos(int pos);
+	int tTexCoord(int pos);
+	int tVNormal(int pos);
 
-	int transTexCoord( int pos)
-	{
-		return pos >= 0 ? pos : texcoords.size() + pos;
-	}
+	std::list<Model*> models;
 
-	int transVertexNormal( int pos)
-	{
-		return pos >= 0 ? pos : normals.size() + pos;
-	}
+
 private:
-
 	void finishCurrentModel();
 
 	// state
@@ -107,7 +103,15 @@ private:
 	std::vector<Vector3> positions;
 	std::vector<Vector3> texcoords;
 	std::vector<Vector3> normals;
+
+	std::vector<RawVertex> vertex_build_buffer;
+	std::vector<int> geometry_buffer;
+	std::map<RawVertex, int> vertex_data_index;
+
+	int allocateVertex(RawVertex &v);
+
+	int tRelIndex(int index, std::vector<Vector3>& data);
+
 private:
 	MtlLoader matriallib;
-	std::list<Model*> models;
 };

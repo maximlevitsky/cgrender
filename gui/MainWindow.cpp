@@ -31,6 +31,8 @@
 #include "CameraPropertiesDialog.h"
 #include "MaterialsDialog.h"
 
+#include <QFileDialog>
+
 MainWindow::MainWindow()
 {
 	/* settings*/
@@ -48,6 +50,7 @@ MainWindow::MainWindow()
 	setupUi(this);
 
 	/* File menu */
+	connect(actionLoad, SIGNAL(triggered()), this, SLOT(onModelLoad()));
 
 
 	/* scene menu */
@@ -107,6 +110,26 @@ MainWindow::~MainWindow()
 {
 	delete engine;
 	delete renderer;
+}
+
+
+/***************************************************************************************/
+
+void MainWindow::onModelLoad()
+{
+	QFileDialog *dlg  = new QFileDialog(this);
+	dlg->setAcceptMode(QFileDialog::AcceptOpen);
+
+	if (!dlg->exec())
+		return;
+
+	 QStringList fileNames = dlg->selectedFiles();
+
+	 for (QString& filename : fileNames) {
+		 engine->loadSceneFromOBJ(filename.toStdString().c_str());
+	 }
+
+	 drawArea->invalidateScene();
 }
 
 /***************************************************************************************/

@@ -24,20 +24,19 @@ public:
 	  _polygon_ptr(polygons), _polygonCount(polygonCount), _currentPolygon(0)
 	  {}
 
-	  bool  hasmore() const {
+	  bool  hasmore() const
+	  {
 		  return _currentPolygon < _polygonCount;
 	  }
 
-	  void next(int stride = 1) {
-
-		  while(stride > 0 && hasmore()) {
-			  _polygon_ptr += *_polygon_ptr + 1;
-			  _currentPolygon++;
-			  stride--;
-		  }
+	  void next()
+	  {
+		  _polygon_ptr += *_polygon_ptr + 1;
+		  _currentPolygon++;
 	  }
 
-	  unsigned int operator[] (int i) const {
+	  unsigned int operator[] (int i) const
+	  {
 		  return _polygon_ptr[i+1];
 	  }
 

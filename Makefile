@@ -34,9 +34,9 @@ all:
 	$(MAKE) -C IO
 	
 	qmake -o gui/Makefile gui/make.pro
-	make -j1 -C gui
+	$(MAKE) -j1 -C gui
 	
-	g++ $(LDFLAGS) -o cgrender \
+	$(CXX) $(LDFLAGS) -o cgrender \
 		renderer/librenderer.a engine/libengine.a model/libmodel.a  \
 		IO/libio.a IO/mtlparser/libmtlparser.a IO/objparser/libobjparser.a \
 		  gui/libgui.a -lQtGui -lQtCore -lpng
@@ -50,6 +50,7 @@ clean:
 	$(MAKE) -C IO/mtlparser clean
 	$(MAKE) -C IO/objparser clean
 	$(MAKE) -C gui clean
+	rm -f gui/libgui.a
 	
 cleanall: clean
 	rm -f gui/Makefile

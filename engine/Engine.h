@@ -176,7 +176,7 @@ public:
 	enum SHADING_MODE {SHADING_NONE, SHADING_FLAT, SHADING_GOURAD, SHADING_PHONG};
 
 	// model loading
-	bool loadSceneFromOBJ(const char* file, int fineness);
+	bool loadSceneFromOBJ(const char* file);
 	void loadDebugScene();
 	void resetScene();
 

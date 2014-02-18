@@ -56,7 +56,7 @@ public:
 	void invertPolygonNormals();
 
 	// continuation of construction
-	void allocatePolygon(const PolygonData  &data);
+	PolygonData* allocatePolygon(void);
 	int allocateVertex(const Vertex &v);
 	void addVertexToPolygon(int ID);
 

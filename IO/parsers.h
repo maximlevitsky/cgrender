@@ -25,3 +25,5 @@
 
 extern int obj_parse (ObjLoader *loader, yyscan_t scanner);
 extern int mtl_parse (MtlLoader *loader, yyscan_t scanner);
+
+extern int obj_debug;

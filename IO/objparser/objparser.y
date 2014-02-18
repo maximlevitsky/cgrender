@@ -17,6 +17,11 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+%name-prefix "obj_"
+%define api.pure
+%lex-param   { yyscan_t scanner }
+%parse-param { ObjLoader *loader }
+%parse-param { yyscan_t scanner }
 
 /************************************************************************************/
 /* source preamble */
@@ -26,20 +31,17 @@
 	#include "objparser.h"
 	#include "objparser.l.hpp"
 	#include "objparser.y.hpp"
+	#include <list>
+	#include <iostream>
+	
+	#define YYDEBUG 1
 	
 	int yyerror(ObjLoader *loader, yyscan_t scanner, const char* p) 
 	{ 
+		std::cout << "syntax error at " << obj_get_lineno(scanner) << std::endl;
 		return 0;
-		//output::errorSyn(yylineno); 
 	}
 %}
-
-%name-prefix "obj_"
-
-%define api.pure
-%lex-param   { yyscan_t scanner }
-%parse-param { ObjLoader *loader }
-%parse-param { yyscan_t scanner }
 
 /************************************************************************************/
 /* tokens */
@@ -55,33 +57,43 @@
 /************************************************************************************/
 
 FILE : Statements;
-Statements : Statement Statements | Statement;
-Statement : VertexStatement | VertexNormalStatement | VertexUVStatement | FaceStatement |
-	ObjectStatement | GroupStatement | MaterialStatement | MatrialLibStatement;
+Statements : Statements Statement  | Statement;
+Statement : VertexPosStatement | VertexNormalStatement | VertexUVStatement | FaceStatement |
+	ObjectStatement | GroupStatement | MaterialStatement | MatrialLibStatement | SmoothGroupStmnt;
 
 
-VertexStatement:
+VertexPosStatement:
 	TOK_VERTEX TOK_NUMBER TOK_NUMBER TOK_NUMBER
 	{
-		loader->addVertexPosition(Vector3($2.num, $3.num, $4.num));
+		loader->addVertexPosition(Vector3($2.real, $3.real, $4.real));
 	};
 	
 VertexNormalStatement:
 	TOK_VERTEX_NORMAL TOK_NUMBER TOK_NUMBER TOK_NUMBER
 	{
-		loader->addVertexNormal(Vector3($2.num, $3.num, $4.num));
+		loader->addVertexNormal(Vector3($2.real, $3.real, $4.real));
 	};
 	
 VertexUVStatement:
 	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER
 	{
-		loader->addTexCoord(Vector3($2.num, $3.num, 0));
+		loader->addTexCoord(Vector3($2.real, $3.real, 0));
 	};
+	
+VertexUVStatement:
+	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER TOK_NUMBER
+	{
+		/* TODO */
+		loader->addTexCoord(Vector3($2.real, $3.real, 0));
+	};
+
 	
 FaceStatement:
 	TOK_FACE VertexItems
 	{
-		loader->addFace($2.vertices);
+		loader->addFace(*$2.vertices);
+		delete $2.vertices;
+		$2.vertices = NULL;
 	};
 	
 ObjectStatement:
@@ -91,7 +103,7 @@ ObjectStatement:
 	};
 	
 GroupStatement:
-	TOK_GROUP TOK_ID
+	TOK_GROUP IdList
 	{
 		loader->setGroupName($2.str);
 	};
@@ -108,47 +120,73 @@ MatrialLibStatement:
 		loader->setMatrialLib($2.str);
 	};
 	
+SmoothGroupStmnt: TOK_SMOOTHGROUP TOK_INTEGER | TOK_SMOOTHGROUP TOK_ID;
+	/* ignore */
+
  /*********************************************************************************/
 
 VertexItem:
 	/* only position*/
 	TOK_INTEGER 
 	{
-		$$.vertex = Vertex(loader->transVertexPosition($1.integer), -1, -1);
+		$$.vertex.pos_index = loader->tVPos($1.integer);
+		$$.vertex.tex_index = -1;
+		$$.vertex.normal_index = -1;
+		$$.vertex.first = false;
 	} |
 
 	/* position/texcoord*/
 	TOK_INTEGER '/' TOK_INTEGER 
 	{
-		$$.vertex = Vertex(loader->transVertexPosition($1.integer), loader->transTexCoord($3.integer), -1);
-		
+		$$.vertex.pos_index = loader->tVPos($1.integer);
+		$$.vertex.tex_index = loader->tTexCoord($3.integer);
+		$$.vertex.normal_index = -1;		
+		$$.vertex.first = false;
 	} |
 	
 	/* position/texcoord/normal*/
 	TOK_INTEGER '/' TOK_INTEGER '/' TOK_INTEGER
 	{
-		$$.vertex = Vertex(loader->transVertexPosition($1.integer), 
-				loader->transTexCoord($3.integer), 
-				loader->transVertexNormal($5.integer));		
+		$$.vertex.pos_index = loader->tVPos($1.integer);
+		$$.vertex.tex_index = loader->tTexCoord($3.integer);
+		$$.vertex.normal_index = loader->tVNormal($5.integer);		
+		$$.vertex.first = false;
 	} |
 	
 	/* position//normal*/
 	TOK_INTEGER '/'  '/' TOK_INTEGER
 	{
-		$$.vertex = Vertex(loader->transVertexPosition($1.integer), -1, loader->transVertexNormal($4.integer));	
+		$$.vertex.pos_index = loader->tVPos($1.integer);
+		$$.vertex.tex_index = -1;
+		$$.vertex.normal_index = loader->tVNormal($4.integer);
+		$$.vertex.first = false;
 	};
 
 VertexItems:
 	VertexItem
 	{
-		$$.vertices.push_back($1.vertex);
+		$$.vertices = new std::list<RawVertex>(1, $1.vertex);
 	} |
 
 	VertexItems VertexItem
 	{
-		$$.vertices.swap($1.vertices);
-		$$.vertices.push_back($2.vertex);
+		$$.vertices = $1.vertices;
+		$$.vertices->push_back($2.vertex);
 	};
+	
+ /*********************************************************************************/
+
+	/* for now take first group*/
+IdList : IdList TOK_ID 
+	{
+		$$.str = $1.str;
+	}
+
+	| TOK_ID 
+	{
+		$$.str = $1.str;
+		
+	};	
 	
  /*********************************************************************************/
 

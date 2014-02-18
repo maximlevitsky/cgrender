@@ -34,22 +34,23 @@ CXXFLAGS += -g -O3 -mtune=core2 -march=core2 -mfpmath=sse \
 
 OBJS_=$(addprefix .obj/, ${OBJS})
 DEPS=$(patsubst %.o,%.d, $(OBJS_))
+DUMPS=$(patsubst %.o,%*_dump.c, $(OBJS_))
 
 $(OUT)/%.o:%.cpp
 	@echo  "Compiling $*.cpp...."
 	@mkdir -p $(dir $@)
 	@echo -n "$(OUT)/" > $(OUT)/$*.d
-	@gcc $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
-	@gcc ${CXXFLAGS} -o $@  -c $< 
-	@objdump --disassembler-options=intel-mnemonic   -S $@ > $(OUT)/$*_dump.c
+	@$(CXX) $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
+	@$(CXX) ${CXXFLAGS} -o $@  -c $< 
+	@#objdump --disassembler-options=intel-mnemonic   -S $@ > $(OUT)/$*_dump.c
 
 
 ${TARGET}: $(OBJS_)
 	@echo "Making lib $(TARGET)"
-	ar rcs ${TARGET} $(OBJS_)
+	@$(AR) rcs ${TARGET} $(OBJS_)
 
 clean:
 	@rm -f $(TARGET) $(CLEAN_EXTRA)
-	@rm -rf $(OBJS_) $(DEPS)
+	@rm -rf $(OBJS_) $(DEPS) $(DUMPS)
 
 -include $(wildcard $(OUT)/*.d)

@@ -20,13 +20,13 @@
 #include <string>
 #include <list>
 
-struct myYYSTYPE
+union myYYSTYPE
 {
-	double num;
+	double real;
 	int integer;
-	std::string str;
-	Vertex vertex;
-	std::list<Vertex> vertices;
+	char* str;
+	RawVertex vertex;
+	std::list<RawVertex> *vertices;
 };
 
 #define YYSTYPE myYYSTYPE

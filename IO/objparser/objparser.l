@@ -29,6 +29,7 @@
 	#include <stdlib.h>
 %}
 
+%option yylineno
 %option reentrant 
 %option noyywrap
 %option never-interactive 
@@ -49,6 +50,11 @@
  */
 
 
+ /* ignored stuff - comments/etc */
+#[^\n]*\n								{}
+[ \t\n\r]+								{}
+
+
  /* grouping of objects */
 o										{ return TOK_OBJECT; }
 g										{ return TOK_GROUP; }
@@ -66,6 +72,7 @@ vn										{ return TOK_VERTEX_NORMAL; }
 vt										{ return TOK_VERTEX_UV; }
 f										{ return TOK_FACE; }
 
+ /*********************************************************************************************/
 
  /*integer number */
 [+-]?[0-9]*								{
@@ -74,26 +81,25 @@ f										{ return TOK_FACE; }
 										}
 
  /* double numbers */
-[+-]?[0-9]+.[0-9]+						{
-											yylval->num = strtod(yytext, NULL); 
+[+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?	{
+											yylval->real = strtod(yytext, NULL); 
 											return TOK_NUMBER;
 										}
+
+ /* identifier */
+[a-zA-z]([a-zA-z0-9_.:+-]*)					{
+											yylval->str = yytext; 
+											return TOK_ID;
+										}
+
+ /*********************************************************************************************/
 
  /* used in face declarations */
 "/"										{ return '/'; }
 
 
- /* identifier */
-[a-zA-z]([a-zA-z0-9_]*)					{
-											yylval->str = yytext; 
-											return TOK_ID;
-										}
-
- /* ignored stuff - comments/etc */
-"#"[^\n]*\n								{}
-[ \t\n\r]+								{}
 
 .										{ 
-											printf("parser: unknown data detected: %s", yytext);
+											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
 										}
 %%
