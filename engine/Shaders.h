@@ -140,4 +140,8 @@ void usePhongShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrect)
 void useFlatShader(Renderer *render, UniformBuffer *u);
 void useSimpleShader(Renderer *render, UniformBuffer *u);
 
+
+void phongVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_out[] );
+Color phongPixelShader( void* priv, const PS_INPUTS &in);
+
 #endif

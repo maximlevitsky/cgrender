@@ -103,26 +103,3 @@ void Engine::setupFogShaderData()
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Color applyFog(const UniformBuffer* u, double depth, const Color &color)
-{
-	double coof;
-	const ShaderFogData &fp = u->fogParams;
-
-	depth = max(0.0, depth);
-
-	if (fp.linear)
-		coof = (fp.end -depth) *  fp.scale;
-	else {
-
-		double expparam = fp.density * depth;
-		if (fp.exp2)
-			expparam = expparam * expparam;
-
-		coof = exp(-expparam);
-	}
-
-	coof = clamp(coof, 0.0, 1.0);
-	return (color * coof) + (fp.color * (1.0-coof));
-}

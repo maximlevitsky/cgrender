@@ -25,7 +25,7 @@
 #include <assert.h>
 
 #include "model/Model.h"
-#include "IO/ObjLoader.h"
+#include "model/ObjLoader.h"
 
 Engine::Engine( void ) : 
 
@@ -177,7 +177,6 @@ bool Engine::loadSceneFromOBJ( const char* file)
 	ObjLoader loader;
 	loader.load(file);
 
-
 	// initialize our model array
 	_itemCount = loader.models.size();
 	_sceneItems = new SceneItem[_itemCount];
@@ -187,24 +186,6 @@ bool Engine::loadSceneFromOBJ( const char* file)
 	for (auto it = loader.models.begin() ; it !=  loader.models.end() ; it++, i++)
 		_sceneItems[i]._mainModel = *it;
 
-
-#if 0
-	/* load lights from IRIT
-	*/
-
-	if (iritLights.size()) {
-
-		resetLighting();
-
-		int i = 0;
-		for (auto iter = iritLights.begin() ; iter != iritLights.end() ; iter++, i++) {
-			_lightParams[i] = *iter;
-			_lightParams[i].enabled = true;
-		}
-
-		iritLights.clear();
-	}
-#endif
 
 	processScene();
 	resetTransformations();

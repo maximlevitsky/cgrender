@@ -20,8 +20,6 @@
 #define VECTOR4_H
 
 #include <math.h>
-#include <utility>
-
 #include "Mat4.h"
 #include "Vector3.h"
 
@@ -217,8 +215,41 @@ public:
 	}
 };
 
-static Vector4 toHomoCoords(const Vector3& v) {
-	return Vector4(v[0], v[1], v[2], 1);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+inline Vector4 vmul4point (const Vector3 &v, const Mat4 &other)
+{
+	/* this assumes that incoming vector is point and transformation both moves it and warps w*/
+	return Vector4
+	(
+		v[0]*other(0,0) + v[1]*other(1,0) + v[2]*other(2,0)+other(3,0),
+		v[0]*other(0,1) + v[1]*other(1,1) + v[2]*other(2,1)+other(3,1),
+		v[0]*other(0,2) + v[1]*other(1,2) + v[2]*other(2,2)+other(3,2),
+		v[0]*other(0,3) + v[1]*other(1,3) + v[2]*other(2,3)+other(3,3)
+	);
+}
+
+inline Vector3 vmul3dir (const Vector3 &v, const Mat4 &other)
+{
+	/* this assumes that incoming vector is direction so no need ether to warp w or to move it*/
+	return Vector3
+	(
+		v[0]*other(0,0) + v[1]*other(1,0) + v[2]*other(2,0),
+		v[0]*other(0,1) + v[1]*other(1,1) + v[2]*other(2,1),
+		v[0]*other(0,2) + v[1]*other(1,2) + v[2]*other(2,2)
+	);
+}
+
+inline Vector3 vmul3point (const Vector3 &v, const Mat4 &other)
+{
+	/* this assumes that incoming vector is position and so it can be moved but not w warped */
+	return Vector3
+	(
+		v[0]*other(0,0) + v[1]*other(1,0) + v[2]*other(2,0)+other(3,0),
+		v[0]*other(0,1) + v[1]*other(1,1) + v[2]*other(2,1)+other(3,1),
+		v[0]*other(0,2) + v[1]*other(1,2) + v[2]*other(2,2)+other(3,2)
+	);
 }
 
 

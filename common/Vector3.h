@@ -171,19 +171,6 @@ public:
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
-
-	
-	Vector3 operator* (const Mat4 &other) const
-	{
-		return Vector3 (
-			data[0]*other(0,0) + data[1]*other(1,0) + data[2]*other(2,0),
-			data[0]*other(0,1) + data[1]*other(1,1) + data[2]*other(2,1),
-			data[0]*other(0,2) + data[1]*other(1,2) + data[2]*other(2,2)
-		);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////////////////
-
 	Vector3 operator -() const
 	{
 		return Vector3(-data[0], -data[1], -data[2]);

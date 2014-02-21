@@ -19,10 +19,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "IO/PngLoader.h"
 #include "common/Vector4.h"
 #include "Renderer.h"
-
 #include <string>
 #include <map>
 
@@ -101,25 +99,7 @@ public:
 
 	virtual Color debugGetPixel(int x, int y) const  { return Color(0,0,0);  }
 
-	bool saveToFile( const char* file ) const
-	{
-		PngLoader o(file,_width, _height);
-
-		if (!o.InitWritePng()) 
-			return false;
-
-		for(int y = 0 ; y < _height ; y++) 
-		{
-			for (int x = 0 ; x < _width; x++) {
-				Color pixel = debugGetPixel(x,y);
-				o.SetValue(x,_height - y,SET_RGB((int)(pixel.x()*255), (int)(pixel.y()*255), (int)(pixel.z()*255)));
-			}
-		}
-
-		bool retval = o.WritePng();
-		o.ClosePng();
-		return retval;
-	}
+	bool saveToFile(const char* file) const;
 
 	T* getPointer() { return _data; }
 
@@ -175,7 +155,6 @@ private:
 
 	/* RO texture cache */
 	mutable int refcount;
-	static std::map<std::string, const Texture*> textureCache;
 
 	Texture() { _mipmapCount = 0 ; _allocated = false ; refcount = 1;}
 };
@@ -220,5 +199,7 @@ public:
 	IntegerTexture(int width, int height) : TextureBase(width, height) {}
 	void clear() { TextureBase::clear(0);}
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif

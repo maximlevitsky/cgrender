@@ -27,8 +27,8 @@ static void flatVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 at
 
 	if (v.polygon) {
 
-		const Vector4& position = (toHomoCoords(v.polygon->polygonCenter) * u->mat_objectToCameraSpace);
-		Vector3 normal = (v.polygon->polygonNormal * u->mat_objectToCameraSpaceNormalTransform).returnNormal();
+		const Vector4& position = vmul4point(v.polygon->polygonCenter, u->mat_objectToCameraSpace);
+		Vector3 normal = vmul3dir(v.polygon->polygonNormal, u->mat_objectToCameraSpaceNormalTransform).returnNormal();
 
 		Color c;
 		if (!u->textureSampler.isBound())
@@ -42,7 +42,7 @@ static void flatVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 at
 		attribs_out[1] = doLighting(u, c, position, normal, true);
 	}
 
-	pos_out = toHomoCoords(v.position) * u->mat_objectToClipSpaceTransform;
+	pos_out = vmul4point(v.position,u->mat_objectToClipSpaceTransform);
 }
 
 static Color flatPixelShader( void* priv, const PS_INPUTS &in)
@@ -71,8 +71,8 @@ static void gouraldVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const Model::Vertex& v = *(const Model::Vertex*)in;
 
-	const Vector4 &position = (toHomoCoords(v.position) * u->mat_objectToCameraSpace);
-	Vector3 normal = (v.normal * u->mat_objectToCameraSpaceNormalTransform).returnNormal();
+	const Vector4 &position = vmul4point(v.position,u->mat_objectToCameraSpace);
+	Vector3 normal = vmul3dir(v.normal,u->mat_objectToCameraSpaceNormalTransform).returnNormal();
 
 	Color c;
 	if (!u->textureSampler.isBound())
@@ -84,7 +84,7 @@ static void gouraldVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3
 
 	attribs_out[0] = doLighting(u, c, position, normal, false);
 	attribs_out[1] = doLighting(u, c, position, normal, true);
-	pos_out = toHomoCoords(v.position) * u->mat_objectToClipSpaceTransform;
+	pos_out = vmul4point(v.position,u->mat_objectToClipSpaceTransform);
 
 }
 
@@ -109,46 +109,6 @@ void useGouraldShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrec
 	render->setPixelShader(gouraldPixelShader, u);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static void phongVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_out[] )
-{
-	const UniformBuffer *u = (const UniformBuffer*)priv;
-	const Model::Vertex& v = *(const Model::Vertex*)in;
-
-	attribs_out[0] = (toHomoCoords(v.position) * u->mat_objectToCameraSpace).xyz();
-	attribs_out[1] = (v.normal * u->mat_objectToCameraSpaceNormalTransform).returnNormal();
-
-	if (u->textureSampler.isBound())
-		attribs_out[2] = v.texCoord;
-
-	pos_out = toHomoCoords(v.position) * u->mat_objectToClipSpaceTransform;
-}
-
-static Color phongPixelShader( void* priv, const PS_INPUTS &in)
-{
-	const UniformBuffer *u = (const UniformBuffer*)priv;
-
-	const Vector4 &position = toHomoCoords(in.attributes[0]);
-	Vector3 normal = in.attributes[1].returnNormal();
-	Color c;
-
-	if (!u->textureSampler.isBound())
-		 c = u->objectColor;
-	else if (u->sampleMode == TMS_NEARST)
-			c = u->textureSampler.sample(in.attributes[2][0], in.attributes[2][1]);
-	else if (u->sampleMode == TMS_BILINEAR)
-		c = u->textureSampler.sampleBiLinear(in.attributes[2][0], in.attributes[2][1]);
-	else {
-		double lodX, lodY;
-		in._renderer->queryLOD(2, lodX, lodY);
-		c = u->textureSampler.sampleBiLinearMipmapped(in.attributes[2][0], in.attributes[2][1], lodX, lodY);
-	}
-
-	bool frontFace = u->forceFrontFaces ? true : (in.frontface ^ u->facesReversed);
-	c = doLighting(u, c, position, normal, !frontFace );
-	return !u->fogParams.enabled ? c : applyFog(u, in.d, c);
-}
 
 void usePhongShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrect)
 {
@@ -173,7 +133,7 @@ static void simpleVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const Model::Vertex& v = *(const Model::Vertex*)in;
-	pos_out = toHomoCoords(v.position) * u->mat_objectToClipSpaceTransform;
+	pos_out = vmul4point(v.position,u->mat_objectToClipSpaceTransform);
 }
 
 static Color simplePixelShader( void* priv, const PS_INPUTS &in) 
@@ -196,7 +156,7 @@ static void simpleWireFrameShader( void* priv, void* in, Vector4 &pos_out, Vecto
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const WireFrameModel::Vertex& v = *(const WireFrameModel::Vertex*)in;
-	pos_out = v.position * u->mat_objectToClipSpaceTransform;
+	pos_out = vmul4point(v.position,u->mat_objectToClipSpaceTransform);
 	attribs_out[0] = v.c;
 }
 

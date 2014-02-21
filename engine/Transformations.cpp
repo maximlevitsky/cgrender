@@ -40,9 +40,9 @@ void Engine::setupTransformationShaderData( int objectID )
 		_globalObjectTransform.getNormalTransformMatrix() * _cameraTransform.getNormalTransformMatrix();
 
 	_shaderData.mat_cameraToWorldSpace = _cameraTransform.getMatrix().inverse();
-	_shaderData.mat_cameraToObjectSpace = _shaderData.mat_cameraToWorldSpace * _globalObjectTransform.getMatrix().inverse();
+	_shaderData.mat_cameraToObjectSpace = (_shaderData.mat_cameraToWorldSpace * _globalObjectTransform.getMatrix()).inverse();
 
-	_shaderData.projNormaltransform = _shaderData.mat_objectToCameraSpaceNormalTransform * _projectionTransform.getMatrix().inverse().transpose();
+	//_shaderData.projNormaltransform = _shaderData.mat_objectToCameraSpaceNormalTransform * _projectionTransform.getMatrix().inverse().transpose();
 }
 
 void Engine::resetTransformations() 

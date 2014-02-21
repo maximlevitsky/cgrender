@@ -20,8 +20,9 @@
 #include "Texture.h"
 #include "common/Vector4.h"
 #include <cmath>
+#include "model/PngLoader.h"
 
-std::map<std::string, const Texture*> Texture::textureCache;
+static std::map<std::string, const Texture*> textureCache;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,8 +77,10 @@ void Texture::unloadCached(const Texture*t)
 	Texture* tex = const_cast<Texture*>(t);
 	if (tex->refcount > 1)
 		tex->refcount--;
-	else
+	else {
+		textureCache.erase(tex->filename);
 		delete [] tex;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +125,10 @@ Texture* Texture::load(const char* name, bool mipmaps)
 				c +=  prev_level->sample(x*2, y*2+1);
 				c +=  prev_level->sample(x*2+1, y*2+1);
 				c /= 4;
-				next_level->setPixelValue(x,y, DEVICE_PIXEL((unsigned char)(c.x()*255), (unsigned char)(c.y()*255), (unsigned char)(c.z()*255)));
+				next_level->setPixelValue(x,y, DEVICE_PIXEL(
+						(unsigned char)(c.x()*255),
+						(unsigned char)(c.y()*255),
+						(unsigned char)(c.z()*255)));
 			}
 
 			prev_level = next_level;
@@ -132,16 +138,42 @@ Texture* Texture::load(const char* name, bool mipmaps)
 	return t;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Texture::~Texture()
 {
 	refcount--;
 	assert(refcount == 0);
-
-	if (_allocated && _mipmapCount)  
-	{
-		// only allocated and not internal textures are in the cache
-		textureCache.erase(this->filename);
-	}
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+bool TextureBase<T>::saveToFile(const char* file) const
+{
+	PngLoader o(file, _width, _height);
+	if (!o.InitWritePng())
+		return false;
+
+	for (int y = 0; y < _height; y++) {
+		for (int x = 0; x < _width; x++) {
+			Color pixel = debugGetPixel(x, y);
+			o.SetValue(x, _height - y,
+					SET_RGB((int) ((pixel.x() * 255)),
+							(int) ((pixel.y() * 255)),
+							(int) ((pixel.z() * 255))));
+		}
+	}
+	bool retval = o.WritePng();
+	o.ClosePng();
+	return retval;
+}
+
+template<>
+bool TextureBase<DEVICE_PIXEL>::saveToFile(const char* file) const;
+
+template<>
+bool TextureBase<double>::saveToFile(const char* file) const;
+
+template<>
+bool TextureBase<int>::saveToFile(const char* file) const;

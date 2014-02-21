@@ -43,9 +43,9 @@ void Engine::updateShadowMaps()
 		if (lp.space == LIGHT_SPACE_LOCAL) 
 		{
 			if (lp.type != LIGHT_TYPE_POINT) 
-				direction = direction * _globalObjectTransform.getNormalTransformMatrix();
+				direction = vmul3dir(direction,_globalObjectTransform.getNormalTransformMatrix());
 			if (lp.type != LIGHT_TYPE_DIRECTIONAL)
-				position = (toHomoCoords(position) * _globalObjectTransform.getMatrix()).xyz();
+				position = vmul3point(position ,_globalObjectTransform.getMatrix());
 		}
 
 		direction.makeNormal();
@@ -104,7 +104,7 @@ static void shadowMapVertexShader( void* priv, void* in, Vector4 &pos_out, Vecto
 {
 	const ShadowMapUniformBuffer *u = (const ShadowMapUniformBuffer*)priv;
 	const Model::Vertex& v = *(const Model::Vertex*)in;
-	pos_out = toHomoCoords(v.position) * u->mat_objectToLightSpace;
+	pos_out = vmul4point(v.position, u->mat_objectToLightSpace);
 }
 
 void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &position, bool projective, double maxFov )
@@ -256,49 +256,4 @@ void Engine::setupShadowMapShaderData( int objectID )
 					_shaderData.mat_cameraToWorldSpace *_shadowMapsMatrices[i*6+face] * clipToTextureSpace;
 		}		
 	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-double sampleShadowMap( const ShaderLightData &light, const UniformBuffer *u, const Vector4 &pos, 
-	const Vector3 &dir, double surfaceAngeleCosine )
-{
-
-	surfaceAngeleCosine = clamp(surfaceAngeleCosine, 0.0, 1.0);
-	double bias = clamp(u->shadowParams.z_bias_mul * tan (acos(surfaceAngeleCosine)), 0.0, u->shadowParams.z_bias_max);
-
-	if (light._shadowMapSampler.isBound()) 
-	{
-		Vector4 trans_pos = pos * (light.shadowMapTransfrom[0]);
-		trans_pos.canonicalize();
-
-		const ShadowSampler &sampler = light._shadowMapSampler;
-
-		if (u->shadowParams.poison && u->shadowParams.pcf)
-			return sampler.samplePoisonPCF(trans_pos.x(), trans_pos.y(), trans_pos.z()-bias, u->shadowParams.pcf_taps);
-		else if (u->shadowParams.pcf)
-			return sampler.samplePCF(trans_pos.x(), trans_pos.y(), trans_pos.z()-bias, u->shadowParams.pcf_taps);
-		else if (u->shadowParams.poison)
-			return sampler.samplePoison(trans_pos.x(), trans_pos.y(), trans_pos.z()-bias);
-		else
-			return sampler.sample(trans_pos.x(), trans_pos.y(), trans_pos.z()-bias);
-
-	} else if (light._shadowCubemapSampler.isBound()) 
-	{
-		int face = light._shadowCubemapSampler.selectFace(dir * u->mat_cameraToWorldSpace);
-		Vector4 trans_pos = pos * (light.shadowMapTransfrom[face]);
-		trans_pos.canonicalize();
-
-		const ShadowCubemapSampler &sampler = light._shadowCubemapSampler;
-
-		if (u->shadowParams.poison && u->shadowParams.pcf)
-			return sampler.samplePoisonPCF(face, trans_pos.x(), trans_pos.y(), trans_pos.z()-bias, u->shadowParams.pcf_taps);
-		else if (u->shadowParams.pcf)
-			return sampler.samplePCF(face, trans_pos.x(), trans_pos.y(), trans_pos.z()-bias, u->shadowParams.pcf_taps);
-		else if (u->shadowParams.poison)
-			return sampler.samplePoison(face, trans_pos.x(), trans_pos.y(), trans_pos.z()-bias);
-		else
-			return sampler.sample(face, trans_pos.x(), trans_pos.y(), trans_pos.z()-bias);
-	} else
-		return 1;
 }

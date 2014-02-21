@@ -51,11 +51,12 @@ void Engine::setupLightingShaderData(int objectID)
 
 		if (lp.space == LIGHT_SPACE_LOCAL ) 
 		{
-			light.direction = -(lp.direction *  _globalObjectTransform.getNormalTransformMatrix()  * _cameraTransform.getNormalTransformMatrix());
-			light.location = (toHomoCoords(lp.position) * _globalObjectTransform.getMatrix() *  _cameraTransform.getMatrix()).xyz();
+			/* direction doesn't need homogenus coodrinates transform */
+			light.direction = vmul3dir(-lp.direction, _globalObjectTransform.getNormalTransformMatrix()  * _cameraTransform.getNormalTransformMatrix());
+			light.location = vmul3point(lp.position ,_globalObjectTransform.getMatrix() *  _cameraTransform.getMatrix());
 		} else {
-			light.direction = -(lp.direction * _cameraTransform.getNormalTransformMatrix());
-			light.location = (toHomoCoords(lp.position) *  _cameraTransform.getMatrix()).xyz();
+			light.direction = vmul3dir(-lp.direction,_cameraTransform.getNormalTransformMatrix());
+			light.location = vmul3point(lp.position,_cameraTransform.getMatrix());
 		}
 
 		light.kD = (lp.color / 255) * material->getDiffuse();
@@ -81,72 +82,6 @@ void Engine::resetLighting()
 	_lightParams[0].direction = Vector3(0,0,-1);
 	_lightParams[0].color = Color(255,255,255);
 	invalidateShadowMaps();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector4 & pos, Vector3 &normal, bool backface )
-{
-
-	Color c = u->kA * objcolor;
-
-	// dealing with backfaces...
-	if (backface && !u->lightBackfaces) 
-		return c.clamp();
-
-	if (backface)
-		normal = - normal;
-
-	for (int i = 0 ; i < u->lightsCount ; i++) 
-	{
-		const ShaderLightData &light = u->lights[i];
-
-		// Calculate the direction the light is coming from (from point toward the light source)
-		const Vector3 &lightDirection = light.is_point ? (light.location - pos.xyz()).returnNormal() : light.direction;
-
-		// calculate the angle of incoming light vs surface normal
-		double surfaceLightAngleCosine = lightDirection.dot(normal);
-		if (surfaceLightAngleCosine <= 0) continue;
-
-		// For spot lights, check if we are in the cone of the light, and calculate attenuation factor
-		double factor = 1;
-
-		if (u->lights[i].is_spot) 
-		{
-			double lightAngleFromDirectionCosine = lightDirection.dot(u->lights[i].direction);
-			if (lightAngleFromDirectionCosine <=  u->lights[i].cutoffCOsine)
-				continue;
-
-			if (lightAngleFromDirectionCosine <= light.startCutofAttenuationCosine) 
-			{
-				factor = (lightAngleFromDirectionCosine - light.cutoffCOsine) / (light.startCutofAttenuationCosine - light.cutoffCOsine);
-				factor = min(factor, 1.0);
-			}
-
-		}
-
-		// check shadow
-		factor *= sampleShadowMap(light, u, pos, lightDirection, surfaceLightAngleCosine);
-		if (factor == 0)
-			continue;
-
-		// Diffuse lights
-		c += objcolor * (u->lights[i].kD *  surfaceLightAngleCosine * factor);
-
-		// Calculate the direction of the directly reflected light
-		Vector3 relfectedLightDirection = (normal * (surfaceLightAngleCosine * 2) - lightDirection);
-
-		// calculate the cosine of the angle of reflected light direction and viewer
-		double reflectedangleToCameraCosine = -(relfectedLightDirection.dot(pos.returnNormal().xyz()));
-		if (reflectedangleToCameraCosine <= 0)
-			continue;
-
-		// Specular lights
-		c += u->lights[i].kS  * (pow(reflectedangleToCameraCosine,u->shineness) * factor);
-	}
-
-	return c.clamp();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

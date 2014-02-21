@@ -41,8 +41,8 @@ void WireFrameModel::addLine( Vector3 start, Vector3 direction, double length, C
 
 	unsigned int *geom_data = next_polygon;
 	geom_data[0] = 2;
-	geom_data[1] = allocateVertex(Vertex(toHomoCoords(start), c));
-	geom_data[2] = allocateVertex(Vertex(toHomoCoords(start + direction  * length), c));
+	geom_data[1] = allocateVertex(Vertex(start, c));
+	geom_data[2] = allocateVertex(Vertex(start + direction  * length, c));
 	next_polygon += 3;
 	polygonCount++;
 }
@@ -79,7 +79,7 @@ WireFrameModel* WireFrameModel::createBoxModel( BOUNDING_BOX box, Color c, int e
 	unsigned int b[4];
 
 	// front face points
-	Vector4 point = toHomoCoords(box.point1);
+	Vector3 point = box.point1;
 	f[0] = boxModel->allocateVertex(Vertex(point,c));
 	point[0] += sizes[0];
 	f[1] = boxModel->allocateVertex(Vertex(point,c));
@@ -89,7 +89,7 @@ WireFrameModel* WireFrameModel::createBoxModel( BOUNDING_BOX box, Color c, int e
 	f[3] = boxModel->allocateVertex(Vertex(point,c));
 
 	// back face points
-	point = toHomoCoords(box.point1);
+	point = box.point1;
 	point[2] += sizes[2];
 	b[0] = boxModel->allocateVertex(Vertex(point,c));
 	point[0] += sizes[0];
@@ -121,18 +121,18 @@ WireFrameModel* WireFrameModel::createVertexNormalModel( const Model* model, dou
 
 	for (int i = 0 ; i < model->getNumberOfVertices() ; i++)
 	{
-		Vector3 vertexNormal = (model->vertices[i].normal * scaleMatrix);
+		Vector3 vertexNormal = vmul3dir(model->vertices[i].normal,scaleMatrix);
 		if (vertexNormal.len() == 0)
 			continue;
 
 		vertexNormal.makeNormal();
-		vertexNormal = vertexNormal * scaleMatrix;
+		vertexNormal = vmul3dir(vertexNormal,scaleMatrix);
 
 		if (vertexNormal.len() < 1e-10f || vertexNormal.len() > 1e5)
 			continue;
 
 		result->addLine(model->vertices[i].position, vertexNormal, scale, Color(255,182,193) / 255);
-		result->addLine(model->vertices[i].position +vertexNormal*scale,
+		result->addLine(model->vertices[i].position + vertexNormal*scale,
 			vertexNormal, scale/3, Color(1,0,0));
 	}
 	return result;
@@ -150,12 +150,12 @@ WireFrameModel* WireFrameModel::createPolygonNormalModel( const Model* model, do
 		const Model::Vertex &firstVertex = model->vertices[iter[0]];
 
 		// take polygon normal from first vertex
-		Vector3 polygonNormal = firstVertex.polygon->polygonNormal * scaleMatrix;
+		Vector3 polygonNormal = vmul3dir( firstVertex.polygon->polygonNormal,scaleMatrix);
 		if (polygonNormal.len() == 0)
 			continue;
 
 		polygonNormal.makeNormal();
-		polygonNormal = polygonNormal * scaleMatrix;
+		polygonNormal = vmul3dir(polygonNormal,scaleMatrix);
 
 		Vector3 centerPoint = firstVertex.polygon->polygonCenter;
 

@@ -16,6 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef ITERATORS_H
+#define ITERATORS_H
 
 class polygonIterator
 {
@@ -48,3 +50,5 @@ private:
 	unsigned int* _polygon_ptr;
 	const int _polygonCount;
 };
+
+#endif

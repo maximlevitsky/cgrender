@@ -26,19 +26,18 @@ LDFLAGS += -g -flto -O3 -march=core2 -Wall
 
 all:
 	$(MAKE) -C renderer
-	$(MAKE) -C model
 	$(MAKE) -C engine
-
-	$(MAKE) -C IO/mtlparser
-	$(MAKE) -C IO/objparser
-	$(MAKE) -C IO
+	
+	$(MAKE) -C model/mtlparser
+	$(MAKE) -C model/objparser
+	$(MAKE) -C model
 	
 	qmake -o gui/Makefile gui/make.pro
 	$(MAKE) -j1 -C gui
 	
 	$(CXX) $(LDFLAGS) -o cgrender \
-		renderer/librenderer.a engine/libengine.a model/libmodel.a  \
-		IO/libio.a IO/mtlparser/libmtlparser.a IO/objparser/libobjparser.a \
+		renderer/librenderer.a engine/libengine.a   \
+		model/libmodel.a model/mtlparser/libmtlparser.a model/objparser/libobjparser.a model/libmodel.a \
 		  gui/libgui.a gui/.objs/qrc_resources.o -lpng12 -lQtGui -lQtCore -lpthread
 	
 clean:
@@ -46,9 +45,8 @@ clean:
 	$(MAKE) -C renderer clean
 	$(MAKE) -C engine  clean
 	$(MAKE) -C model clean
-	$(MAKE) -C IO  clean
-	$(MAKE) -C IO/mtlparser clean
-	$(MAKE) -C IO/objparser clean
+	$(MAKE) -C model/mtlparser clean
+	$(MAKE) -C model/objparser clean
 	$(MAKE) -C gui clean
 	rm -f gui/libgui.a
 	

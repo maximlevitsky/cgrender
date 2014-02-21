@@ -98,10 +98,10 @@ public:
 
 	struct Vertex 
 	{
-		Vertex(const Vector4 pos, const Color c) : position(pos), c(c) {}
+		Vertex(const Vector3 pos, const Color c) : position(pos), c(c) {}
 		Vertex() {}
 
-		Vector4 position;
+		Vector3 position;
 		Color c;
 	};
 

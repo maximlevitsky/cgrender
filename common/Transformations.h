@@ -28,7 +28,7 @@ namespace Transformations {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static Mat4 getOrthoProjMatrix(double L, double R, double T, double B, double N, double F)
+static inline Mat4 getOrthoProjMatrix(double L, double R, double T, double B, double N, double F)
 {
 	return Mat4 (
 		(2.0)/(R-L),		0,					0,					0,
@@ -38,7 +38,7 @@ static Mat4 getOrthoProjMatrix(double L, double R, double T, double B, double N,
 		);
 }
 
-static Mat4 getPerspectiveMatrix(double L, double R, double T, double B, double N, double F)
+static inline Mat4 getPerspectiveMatrix(double L, double R, double T, double B, double N, double F)
 {
 	return Mat4 (
 		(2.0 *N)/(R-L),		0,					0,					0,
@@ -48,7 +48,7 @@ static Mat4 getPerspectiveMatrix(double L, double R, double T, double B, double 
 		);
 }
 
-static Mat4 getPerspectiveMatrix(double fov, double aspect, double N, double F) 
+static inline Mat4 getPerspectiveMatrix(double fov, double aspect, double N, double F)
 {
 	double f = 1.0 / tan(fov * 0.5 * (M_PI / 180));
 
@@ -60,7 +60,7 @@ static Mat4 getPerspectiveMatrix(double fov, double aspect, double N, double F)
 }
 
 
-static Mat4 getGershonPerspectiveMatrix(double N, double F)
+static inline Mat4 getGershonPerspectiveMatrix(double N, double F)
 {
 	return Mat4(
 		1,					0,					0,					0,
@@ -69,7 +69,7 @@ static Mat4 getGershonPerspectiveMatrix(double N, double F)
 		0,					0,					-(N*F)/(F-N),		0);
 }
 
-static Mat4 getRotationalMatrix(const Vector3 &rot) 
+static inline Mat4 getRotationalMatrix(const Vector3 &rot)
 {
 
 	// rotate by X
@@ -99,7 +99,7 @@ static Mat4 getRotationalMatrix(const Vector3 &rot)
 	return rotX * rotY * rotZ;
 }
 
-static Mat4 getScaleMatrix(const Vector3 &scales) 
+static inline Mat4 getScaleMatrix(const Vector3 &scales)
 {
 	return Mat4(
 		scales[0],			0,					0,					0,
@@ -109,7 +109,7 @@ static Mat4 getScaleMatrix(const Vector3 &scales)
 	);
 }
 
-static Mat4 getTranlationMatrix(const Vector3 &trans) 
+static inline Mat4 getTranlationMatrix(const Vector3 &trans)
 {
 	return Mat4(
 		1,					0,					0,					0,
@@ -119,7 +119,7 @@ static Mat4 getTranlationMatrix(const Vector3 &trans)
 	);
 }
 
-static Mat4 lookAt(Vector3 p, Vector3 direction, Vector3 up) 
+static inline Mat4 lookAt(Vector3 p, Vector3 direction, Vector3 up)
 {
 	Vector3 n = direction.returnNormal();
 	Vector3 u = n.cross(up).returnNormal();
