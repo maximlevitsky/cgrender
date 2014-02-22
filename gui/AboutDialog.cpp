@@ -17,7 +17,7 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <AboutDialog.h>
+#include "AboutDialog.h"
 
 AboutDialog::AboutDialog(QWidget * parent) : QDialog(parent)
 {

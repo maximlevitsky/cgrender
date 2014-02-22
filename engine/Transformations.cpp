@@ -250,9 +250,9 @@ Vector3 Engine::deviceToNDC( double X, double Y, double Z )
 
 Engine::FACE_TYPE Engine::translateFaceType( FACE_TYPE given )
 {
-	if (_force_all_front_faces)
+	if (_lightAllFaces)
 		return FACE_FRONT;
 
 	bool b = (bool)given;
-	return (FACE_TYPE)(b ^ _invertedPolygonNormals ^ _cameraTransform.getInvert());
+	return (FACE_TYPE)(b ^ _invertFaces ^ _cameraTransform.getInvert());
 }

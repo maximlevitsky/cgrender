@@ -17,15 +17,32 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <MaterialsDialog.h>
-#include "MainWindow.h"
+#ifndef ENVIRONMENTDIALOG_H_
+#define ENVIRONMENTDIALOG_H_
 
-MaterialsDialog::MaterialsDialog(MainWindow *parent) : QDialog(parent)
+#include <qdialog.h>
+#include "ui_sidepanel.h"
+#include "ColorChooser.h"
+#include "FileChooser.h"
+
+#include <QDockWidget>
+#include <QCloseEvent>
+
+
+class MainWindow;
+class SidePanel: public QDockWidget, private Ui::SidePanel
 {
-	setupUi(this);
-}
+	Q_OBJECT
 
-MaterialsDialog::~MaterialsDialog()
-{
-}
+public:
+	SidePanel(MainWindow* parent);
+	virtual ~SidePanel();
+private:
+	void closeEvent (QCloseEvent *event);
+	QWidget *panel;
 
+private:
+	MainWindow* mainWindow;
+};
+
+#endif /* ENVIRONMENTDIALOG_H_ */

@@ -196,16 +196,24 @@ public:
 	// perspective settings
 	void setOrtographicRendering() {_projectionTransform.setPerspectiveEnabled(false);}
 	void setPerspectiveRendering() {_projectionTransform.setPerspectiveEnabled(true);}
-	void setPerspectiveD(double d);
 	bool isPerspectiveRendering() const { return _projectionTransform.getPerspectiveEnabled(); }
+
+	void setPerspectiveD(double d);
 	double getPerspectiveD() const  { return _projectionTransform.getDistance(); }
 
 
 	// normals
-	void invertVertexNormals(bool enable);
-	void invertPolygonNormals(bool enable);
-	bool getInvertedVertexNormals() { return _invertedVertexNormals; }
-	bool getInvertedPolygonNormals() { return _invertedPolygonNormals; }
+	void setInvertNormals(bool enable);
+	bool getInvertNormals() { return _invertNormals; }
+	void setInvertFaces(bool enable);
+	bool getInvertFaces() { return _invertFaces; }
+
+	// lightning tweaks
+	void setLightAllFaces(bool enable) { _lightAllFaces = enable;}
+	bool getLightAllFaces() { return _lightAllFaces; }
+	void setLightBackFaces(bool enable) { _lightBackfaces = enable; }
+	bool getLightBackFaces() { return _lightBackfaces; }
+
 
 	// shading mode
 	enum SHADING_MODE getShadingMode()  { return _shadingMode; };
@@ -226,28 +234,28 @@ public:
 
 	// misc settings
 	void setDrawBoundingBox(bool enable) { _drawBoundingBox = enable; }
+	bool getDrawBoundingBox() const  { return _drawBoundingBox;}
+
 	void setDrawVertexNormals(bool enable) { _drawVertexNormals = enable; }
+	bool getdrawVertexNormals() const  { return _drawVertexNormals;}
+
 	void setDrawPolygonNormals(bool enable) { _drawPolygonNormals = enable; }
-	void setDrawWireFrame(bool enable) 
-	{ 
-		if (_shadingMode != SHADING_NONE)
-			_drawWireFrame = enable; 
-	}
+	bool getdrawPolygonNormals() const  { return _drawPolygonNormals;}
+
+	void setDrawWireFrame(bool enable)  {_drawWireFrame = enable; }
+	bool getdrawWireFrame() const { return _drawWireFrame || _shadingMode == SHADING_NONE;}
 
 	void setDrawAxes(bool enable) { _drawAxes = enable;}
-	bool getDrawBoundingBox() const  { return _drawBoundingBox;}
-	bool getdrawVertexNormals() const  { return _drawVertexNormals;}
-	bool getdrawPolygonNormals() const  { return _drawPolygonNormals;}
-	bool getdrawWireFrame() const { return _drawWireFrame || _shadingMode == SHADING_NONE;}
 	bool getDrawAxes() const { return _drawAxes; }
+
 	bool getBackfaceCulling() { return _backfaceCulling;}
 	void setBackFaceCulling(bool enable) { _backfaceCulling = enable; }
+
 	bool getDepthRendering() { return _depthRendering; }
 	void setDepthRendering(bool enable) { _depthRendering = enable; }
+
 	bool getPerspectiveCorrect() { return _perspectiveCorrect; }
 	void setPerspectiveCorrect(bool enable) { _perspectiveCorrect = enable; }
-	void setLightBackFaces(bool enable) { _lightBackfaces = enable; }
-	bool getLightBackFaces() { return _lightBackfaces; }
 
 	void setInvertDepth(bool enable) { _cameraTransform.setInvert(enable); }
 	bool getInvertDepth() { return _cameraTransform.getInvert();}
@@ -255,11 +263,9 @@ public:
 	void setDrawLightSources(bool enable) { _draw_light_sources = enable; }
 	bool getDrawLightSources() { return _draw_light_sources; }
 
-	void setForceAllFrontFaces(bool enable) { _force_all_front_faces = enable;}
-	bool getForceAllFrontFaces() { return _force_all_front_faces; }
-
 	double getNormalScale() { return _normalsScale; }
-	void setNormalScale(double newscale) {
+	void setNormalScale(double newscale)
+	{
 		invalidateNormalModels();
 		_normalsScale = newscale;
 	}
@@ -281,11 +287,8 @@ public:
 	void setFogParams(const FogParams &params);
 	void resetFog();
 
-
 	// rendering
 	void render();
-
-	void drawLightSources();
 
 	// shadow maps
 	void invalidateShadowMaps();
@@ -337,14 +340,12 @@ private:
 	bool _draw_light_sources;
 
 	// debug settings
-	bool _force_all_front_faces;
+	bool _lightAllFaces;
 	bool _depthRendering;
 	bool _perspectiveCorrect;
-	bool _invertedVertexNormals;
-	bool _invertedPolygonNormals;
+	bool _invertNormals;
+	bool _invertFaces;
 	double _normalsScale;
-
-
 
 	// shader data and its setup
 	UniformBuffer _shaderData;
@@ -390,6 +391,8 @@ private:
 
 	void renderMiscModelWireframe(const WireFrameModel *m, Color c = Color(0,0,0), bool colorValid = false);
 	void renderMiscModelPolygonWireframe(const WireFrameModel* m, Color c = Color(0,0,0), bool colorValid = false);
+
+	void drawLightSources();
 
 	enum FACE_TYPE {
 		FACE_FRONT,

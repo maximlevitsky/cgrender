@@ -17,20 +17,27 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MATERIALSDIALOG_H_
-#define MATERIALSDIALOG_H_
+#include "SidePanel.h"
+#include "MainWindow.h"
 
-#include <qdialog.h>
-#include "ui_material_dialog.h"
-
-class MainWindow;
-
-class MaterialsDialog: public QDialog, Ui::materialDialog
+SidePanel::SidePanel(MainWindow* parent) : QDockWidget(parent)
 {
-	Q_OBJECT
-public:
-	MaterialsDialog(MainWindow *parent);
-	virtual ~MaterialsDialog();
-};
+	mainWindow = parent;
+	panel = new QWidget(this);
+	setupUi(panel);
+	setWidget(panel);
+	setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable);
+	setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
+	setWidget(panel);
+	lightDirectionChooser->showAngleHelpBoxes(true);
+	cameraDirectionChooser->showAngleHelpBoxes(true);
+}
 
-#endif /* MATERIALSDIALOG_H_ */
+SidePanel::~SidePanel()
+{
+}
+
+void SidePanel::closeEvent (QCloseEvent *event)
+{
+	mainWindow->actionSidePanel->setChecked(false);
+}

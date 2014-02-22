@@ -27,11 +27,10 @@
 
 #include "AboutDialog.h"
 #include "MouseSensivetyDialog.h"
-#include "EnvironmentDialog.h"
-#include "CameraPropertiesDialog.h"
-#include "MaterialsDialog.h"
+#include "SidePanel.h"
 
 #include <QFileDialog>
+#include <QDockWidget>
 
 MainWindow::MainWindow()
 {
@@ -55,17 +54,14 @@ MainWindow::MainWindow()
 	connect(actionSave_screenshot, SIGNAL(triggered()), this, SLOT(onSaveScreenShot()));
 
 
-	/* scene menu */
-	cameraPropertiesDialog = new CameraPropertiesDialog(this);
-	environmentDialog = new EnvironmentDialog(this);
-	materialDialog = new MaterialsDialog(this);
-	connect(actionCamera_properties, SIGNAL(triggered()), this, SLOT(onCameraPropertiesDialog()));
-	connect(actionEnvironment, SIGNAL(triggered()), this, SLOT(onEnvironmentDialog()));
-	connect(actionMaterial, SIGNAL(triggered()), this, SLOT(onMaterialDialog()));
-	connect(actionLeft_coordinate_system, SIGNAL(toggled(bool)), this, SLOT(onLeftCoordinateSystem(bool)));
-
 	/* view menu*/
-	connect(actionBounding_box, SIGNAL(toggled(bool)), this, SLOT(onDrawBoundingBox(bool)));
+	sidePanel = new SidePanel(this);
+	panelShown = true;
+    this->addDockWidget(Qt::RightDockWidgetArea, sidePanel);
+    actionSidePanel->setChecked(true);
+
+	connect(actionSidePanel, SIGNAL(toggled(bool)), this, SLOT(onSidePanelShowHide(bool)));
+    connect(actionBounding_box, SIGNAL(toggled(bool)), this, SLOT(onDrawBoundingBox(bool)));
 	connect(actionAxes, SIGNAL(toggled(bool)), this, SLOT(onDrawAxes(bool)));
 	connect(actionNormals, SIGNAL(toggled(bool)), this, SLOT(onDrawNormals(bool)));
 	connect(actionFaces, SIGNAL(toggled(bool)), this, SLOT(onDrawfaceNormals(bool)));
@@ -81,6 +77,7 @@ MainWindow::MainWindow()
 	actionWorld_separate_objects->setActionGroup(transformGroup);
 	_transformMode = TRANSFORM_OBJECT;
 	actionWorld->setChecked(true);
+	connect(actionLeft_coordinate_system, SIGNAL(toggled(bool)), this, SLOT(onLeftCoordinateSystem(bool)));
 
 	connect(actionCamera, SIGNAL(toggled(bool)), this, SLOT(onCameraTransformMode()));
 	connect(actionWorld, SIGNAL(toggled(bool)), this, SLOT(onWorldTransformationMode()));
@@ -131,10 +128,10 @@ void MainWindow::updateStatus()
 	actionGourald->setChecked(engine->getShadingMode() == Engine::SHADING_GOURAD);
 	actionFlat->setChecked(engine->getShadingMode() == Engine::SHADING_FLAT);
 
-	actionInvert_vertex_normals->setChecked(engine->getInvertedVertexNormals());
-	actionInvert_faces->setChecked(engine->getInvertedPolygonNormals());
+	actionInvert_vertex_normals->setChecked(engine->getInvertNormals());
+	actionInvert_faces->setChecked(engine->getInvertFaces());
 	actionDual_face_lighting->setChecked(engine->getLightBackFaces());
-	actionAll_face_lighting->setChecked(engine->getForceAllFrontFaces());
+	actionAll_face_lighting->setChecked(engine->getLightAllFaces());
 
 	/* TODO: update contents of all subdialogs here*/
 }
@@ -151,7 +148,8 @@ MainWindow::~MainWindow()
 /* FILE MENU */
 /***************************************************************************************/
 
-void MainWindow::onModelLoad() {
+void MainWindow::onModelLoad()
+{
 	QFileDialog *dlg  = new QFileDialog(this);
 	dlg->setAcceptMode(QFileDialog::AcceptOpen);
 
@@ -191,37 +189,18 @@ void MainWindow::onSaveScreenShot()
 	/* TODO */
 }
 
-
-/***************************************************************************************/
-/* SCENE MENU */
-/***************************************************************************************/
-
-void MainWindow::onEnvironmentDialog()
-{
-	environmentDialog->show();
-}
-
-void MainWindow::onMaterialDialog()
-{
-	materialDialog->show();
-}
-
-void MainWindow::onCameraPropertiesDialog()
-{
-	cameraPropertiesDialog->show();
-}
-
-void MainWindow::onLeftCoordinateSystem(bool enable)
-{
-	engine->setInvertDepth(enable);
-	drawArea->invalidateScene();
-}
-
-
-
 /***************************************************************************************/
 /* VIEW MENU */
 /***************************************************************************************/
+
+void MainWindow::onSidePanelShowHide(bool checked)
+{
+	if (checked)
+	{
+		sidePanel->show();
+	} else
+		sidePanel->hide();
+}
 
 void MainWindow::onDrawBoundingBox(bool checked)
 {
@@ -300,13 +279,13 @@ void MainWindow::onShadingPhong(bool checked)
 
 void MainWindow::onInvertNormals(bool checked)
 {
-	engine->invertVertexNormals(checked);
+	engine->setInvertNormals(checked);
 	drawArea->invalidateScene();
 }
 
 void MainWindow::onInvertFaces(bool checked)
 {
-	engine->invertPolygonNormals(checked);
+	engine->setInvertFaces(checked);
 	drawArea->invalidateScene();
 }
 
@@ -318,7 +297,7 @@ void MainWindow::onDualfaceLighting(bool checked)
 
 void MainWindow::onAllFaceLighting(bool checked)
 {
-	engine->setForceAllFrontFaces(checked);
+	engine->setLightAllFaces(checked);
 	drawArea->invalidateScene();
 }
 
@@ -355,6 +334,12 @@ void MainWindow::onSeparateObjectsMode()
 void MainWindow::onTransformationsReset()
 {
 	engine->resetTransformations();
+	drawArea->invalidateScene();
+}
+
+void MainWindow::onLeftCoordinateSystem(bool enable)
+{
+	engine->setInvertDepth(enable);
 	drawArea->invalidateScene();
 }
 

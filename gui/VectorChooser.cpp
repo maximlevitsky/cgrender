@@ -16,20 +16,29 @@
     You should have received a copy of the GNU General Public License
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "VectorChooser.h"
+#include <QWidget>
 
-#include <gui/CameraPropertiesDialog.h>
-
-#include <QDialog>
-#include "MainWindow.h"
-
-CameraPropertiesDialog::CameraPropertiesDialog(MainWindow* mainWindow) : QDialog(mainWindow)
+VectorChooser::VectorChooser(QWidget *parent) : QWidget(parent)
 {
 	setupUi(this);
-	setModal(false);
+	showAngleHelpBoxes(false);
 }
 
-CameraPropertiesDialog::~CameraPropertiesDialog()
+
+void VectorChooser::showAngleHelpBoxes(bool show)
 {
+	if (show)
+	{
+		labelPhi->show();
+		labelTheta->show();
+		spinBoxPhi->show();
+		spinBoxTheta->show();
 
+	} else {
+		labelPhi->hide();
+		labelTheta->hide();
+		spinBoxPhi->hide();
+		spinBoxTheta->hide();
+	}
 }
-

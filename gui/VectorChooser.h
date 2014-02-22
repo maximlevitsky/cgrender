@@ -17,16 +17,18 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <gui/EnvironmentDialog.h>
-#include "MainWindow.h"
+#ifndef VECTORCHOOSER_H_
+#define VECTORCHOOSER_H_
 
-EnvironmentDialog::EnvironmentDialog(MainWindow* parent) : QDialog(parent)
+#include "ui_vector_chooser.h"
+#include <QWidget>
+
+class VectorChooser : public QWidget, Ui::VectorChooser
 {
-	setupUi(this);
-	// TODO Auto-generated constructor stub
-}
+	Q_OBJECT
+public:
+	VectorChooser(QWidget *parent);
+	void showAngleHelpBoxes(bool show);
+};
 
-EnvironmentDialog::~EnvironmentDialog() {
-	// TODO Auto-generated destructor stub
-}
-
+#endif

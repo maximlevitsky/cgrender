@@ -242,12 +242,20 @@ public:
 		updateMatrix();
 	}
 
+	void getFrontPlane(double *W, double *H) {
+		*W = _width;
+		*H = _height;
+	}
+
 	/* update viewing frustum front plane distance (camera focal length) */
 	void setDistance(double distance) 
 	{
 		_distance = distance;
 		updateMatrix();
 	}
+
+	double getDistance() const { return _distance; }
+
 
 	/* set depth of the scene - for possible Z clipping */
 	void setDepth(double depth) 
@@ -269,7 +277,6 @@ public:
 	}
 
 	// return current settings and the resulting matrix
-	double getDistance() const { return _distance; }
 	bool getPerspectiveEnabled() const { return _perspective_enalbed; }
 	const Mat4 getMatrix() const  { return matrix; }
 

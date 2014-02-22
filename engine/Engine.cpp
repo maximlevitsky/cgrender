@@ -40,13 +40,13 @@ Engine::Engine( void ) :
 	_backfaceCulling(false),
 	_depthRendering(false),
 	_perspectiveCorrect(true),
-	_invertedVertexNormals(false),
-	_invertedPolygonNormals(false),
+	_invertNormals(false),
+	_invertFaces(false),
 	_tile_background(true),
 	_lightBackfaces(false),
 	_backgroundTexture(NULL),
 	_texSampleMode(TMS_BILINEAR_MIPMAPS),
-	_force_all_front_faces(false),
+	_lightAllFaces(false),
 	_draw_light_sources(false),
 
 	// models
@@ -261,8 +261,8 @@ void Engine::resetScene()
 	_sceneBoxModel = NULL;
 	_axesModel = NULL;
 
-	_invertedPolygonNormals = false;
-	_invertedVertexNormals = false;
+	_invertFaces = false;
+	_invertNormals = false;
 
 	invalidateShadowMaps();
 	resetBackground();
@@ -311,28 +311,28 @@ bool Engine::selectObject( int mouseCX, int mouseCY )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Engine::invertVertexNormals( bool enable )
+void Engine::setInvertNormals( bool enable )
 {
-	if (enable == _invertedVertexNormals)
+	if (enable == _invertNormals)
 		return;
 
 	for (unsigned int i = 0 ; i < _itemCount ; i++)
 		_sceneItems[i]._mainModel->invertVertexNormals();
 
-	_invertedVertexNormals = enable;
+	_invertNormals = enable;
 
 	invalidateNormalModels();
 }
 
-void Engine::invertPolygonNormals( bool enable )
+void Engine::setInvertFaces( bool enable )
 {
-	if (enable == _invertedPolygonNormals)
+	if (enable == _invertFaces)
 		return;
 
 	for (unsigned int i = 0 ; i < _itemCount ; i++)
 		_sceneItems[i]._mainModel->invertPolygonNormals();
 
-	_invertedPolygonNormals = enable;
+	_invertFaces = enable;
 	invalidateNormalModels();
 }
 

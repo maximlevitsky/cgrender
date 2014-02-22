@@ -23,10 +23,11 @@
 #include <qwidget.h>
 #include "ui_color_chooser.h"
 
-class ColorChooser: public QWidget, Ui_ColorChooser {
+class ColorChooser: public QWidget, Ui_ColorChooser
+{
+	Q_OBJECT
 public:
 	ColorChooser(QWidget* parent);
-	virtual ~ColorChooser();
 };
 
 #endif /* COLORCHOOSER_H_ */

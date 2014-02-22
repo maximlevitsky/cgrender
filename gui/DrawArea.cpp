@@ -24,19 +24,35 @@
 #include <QPaintEvent>
 #include <QPixmap>
 #include <QString>
-
 #include <sys/time.h>
 #include <stdint.h>
-
 #include "MainWindow.h"
-
 #include <stdio.h>
 
-DrawArea::DrawArea(QMainWindow *parent) : QWidget(parent), _image(NULL), _outputTexture(NULL)
+/***************************************************************************************/
+static double translateSensivety(double value)
 {
-	mainWindow = dynamic_cast<MainWindow*>(parent);
-	sceneValid = false;
+	double result;
+
+	if (value >= 50)
+		result =  1+((double)value - 50) / 5;
+	else
+		result =  1.0 / (1.0 + (50-(value-1))/5);
+
+	return result;
 }
+
+/***************************************************************************************/
+
+DrawArea::DrawArea(QWidget *parent) : QWidget(parent), _image(NULL), _outputTexture(NULL)
+{
+	mainWindow = dynamic_cast<MainWindow*>(parent->parent());
+	engine = mainWindow->getEngine();
+	sceneValid = false;
+
+	setFocusPolicy(Qt::ClickFocus);
+}
+/***************************************************************************************/
 
 DrawArea::~DrawArea()
 {
@@ -44,6 +60,7 @@ DrawArea::~DrawArea()
 	delete _image;
 }
 
+/***************************************************************************************/
 
 void DrawArea::invalidateScene()
 {
@@ -51,6 +68,7 @@ void DrawArea::invalidateScene()
 	repaint();
 }
 
+/***************************************************************************************/
 
 void DrawArea::paintEvent(QPaintEvent *)
 {
@@ -67,10 +85,9 @@ void DrawArea::paintEvent(QPaintEvent *)
 		struct timeval t,t2,t3;
 		gettimeofday(&t, NULL);
 
-		Color bkgcolor = mainWindow->getEngine()->getBackgroundColor();
+		Color bkgcolor = engine->getBackgroundColor();
 
-
-		mainWindow->getEngine()->render();
+		engine->render();
 		sceneValid = true;
 
 		// measure time again
@@ -94,6 +111,8 @@ void DrawArea::paintEvent(QPaintEvent *)
 	// blit the _image
 	painter.drawImage(QPoint(0,0), *_image);
 }
+
+/***************************************************************************************/
 
 void DrawArea::resizeEvent (QResizeEvent * event)
 {
@@ -124,4 +143,154 @@ void DrawArea::resizeEvent (QResizeEvent * event)
 
 	mainWindow->getEngine()->setOutput(_outputTexture, newSize.width(), newSize.height());
 	invalidateScene();
+}
+
+
+/***************************************************************************************/
+void DrawArea::mouseMoveEvent(QMouseEvent* event)
+{
+	QPoint pos = event->pos();
+	QPoint screenDist = pos - startMousePos;
+
+	if (event->buttons() & Qt::RightButton)
+	{
+		Vector3 dist =
+				engine->deviceToNDC(pos.x(), 0, 0) -
+				engine->deviceToNDC(startMousePos.x(), 0, 0);
+
+		switch(mainWindow->_transformMode)
+		{
+		case TRANSFORM_CAMERA:
+			switch(QApplication::keyboardModifiers()) {
+			case Qt::ShiftModifier:
+				engine->moveCamera(2, dist.x() * translateSensivety(mainWindow->movementSensivety));
+				break;
+			default:
+				engine->rotateCamera(2, screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
+				break;
+			}
+			break;
+		case TRANSFORM_OBJECT:
+			switch(QApplication::keyboardModifiers()) {
+			case Qt::ShiftModifier:
+				engine->moveObject(2, dist.x() * translateSensivety(mainWindow->movementSensivety));
+				break;
+			case Qt::ControlModifier:
+				engine->scaleObject(2, dist.x() * translateSensivety(mainWindow->scaleSensivety));
+				break;
+			default:
+				engine->rotateObject(2, screenDist.x()  * translateSensivety(mainWindow->rotationSensivety));
+				break;
+			}
+			break;
+		}
+
+	} else
+	{
+		Vector3 dist =
+				engine->deviceToNDC(pos.x(), pos.y(), 0) -
+				engine->deviceToNDC(startMousePos.x(), startMousePos.y(), 0);
+
+		switch(mainWindow->_transformMode)
+		{
+		case TRANSFORM_CAMERA:
+			switch(QApplication::keyboardModifiers()) {
+			case Qt::ShiftModifier:
+				engine->moveCamera(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
+				engine->moveCamera(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
+				break;
+			default:
+				engine->rotateCamera(0, screenDist.y() * translateSensivety(mainWindow->rotationSensivety));
+				engine->rotateCamera(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
+				break;
+			}
+			break;
+		case TRANSFORM_OBJECT:
+			switch(QApplication::keyboardModifiers()) {
+			case Qt::ShiftModifier:
+				engine->moveObject(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
+				engine->moveObject(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
+				break;
+			case Qt::ControlModifier:
+				engine->scaleObject(0, dist.x() * translateSensivety(mainWindow->scaleSensivety));
+				engine->scaleObject(1, dist.y() * translateSensivety(mainWindow->scaleSensivety));
+				break;
+			default:
+				engine->rotateObject(0, screenDist.y()  * translateSensivety(mainWindow->rotationSensivety));
+				engine->rotateObject(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
+				break;
+			}
+			break;
+		}
+
+	}
+
+
+	startMousePos = pos;
+	invalidateScene();
+
+}
+
+/***************************************************************************************/
+
+void DrawArea::wheelEvent (QWheelEvent * event )
+{
+	int degrees = event->delta() / 8;
+
+	Vector3 p1 = engine->deviceToNDC(0, 0, 0);
+	Vector3 p2 = engine->deviceToNDC(0, 0, 0.01*(degrees));
+	double scaleDist = p1.z() - p2.z();
+
+	if (mainWindow->_transformMode == TRANSFORM_OBJECT) {
+		engine->scaleObject(0, scaleDist * translateSensivety(mainWindow->scaleSensivety));
+		engine->scaleObject(1, scaleDist * translateSensivety(mainWindow->scaleSensivety));
+		engine->scaleObject(2, scaleDist * translateSensivety(mainWindow->scaleSensivety));
+	}
+
+	invalidateScene();
+
+}
+
+/***************************************************************************************/
+
+
+void DrawArea::mousePressEvent(QMouseEvent* event)
+{
+	startMousePos = event->pos();
+
+	if (engine->getDrawSeparateObjects() && (event->modifiers() == 0))
+	{
+		printf("selecting object at %i, %i\n", startMousePos.x(), startMousePos.y());
+
+		if (engine->selectObject(startMousePos.x(), startMousePos.y())) {
+			printf("selected some object...");
+			invalidateScene();
+		}
+	}
+}
+
+/***************************************************************************************/
+
+void DrawArea::keyPressEvent ( QKeyEvent * event )
+{
+	switch (event->modifiers()) {
+	case Qt::ShiftModifier:
+		/* move */
+		setCursor(Qt::ClosedHandCursor);
+		break;
+	case Qt::ControlModifier:
+		/* resize */
+		setCursor(Qt::SizeVerCursor);
+		break;
+	default:
+		setCursor(Qt::ArrowCursor);
+		break;
+	}
+}
+
+/***************************************************************************************/
+
+void DrawArea::keyReleaseEvent ( QKeyEvent * event )
+{
+	setCursor(Qt::ArrowCursor);
 }

@@ -16,22 +16,10 @@
     You should have received a copy of the GNU General Public License
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "FileChooser.h"
+#include <QWidget>
 
-#ifndef CAMERAPROPERTIESDIALOG_H_
-#define CAMERAPROPERTIESDIALOG_H_
-
-class MainWindow;
-
-#include "ui_camera_properties.h"
-#include <qdialog.h>
-
-class CameraPropertiesDialog: public QDialog, Ui::CameraProperties {
-
-	Q_OBJECT
-
-public:
-	CameraPropertiesDialog(MainWindow* mainWindow);
-	virtual ~CameraPropertiesDialog();
-};
-
-#endif /* CAMERAPROPERTIESDIALOG_H_ */
+FileChooser::FileChooser(QWidget *parent) : QWidget(parent)
+{
+	setupUi(this);
+}

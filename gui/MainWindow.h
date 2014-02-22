@@ -34,13 +34,11 @@ enum TRANSFORM_MODES {
 };
 
 class MouseSensivetyDialog;
-class CameraPropertiesDialog;
-class EnvironmentDialog;
-class MaterialsDialog;
+class SidePanel;
 class Engine;
 
 
-class MainWindow : public QMainWindow, Ui::MainWindow
+class MainWindow : public QMainWindow, public Ui::MainWindow
 {
 	Q_OBJECT
 
@@ -49,22 +47,18 @@ public:
 	virtual ~MainWindow();
 	Engine* getEngine() { return engine;}
 
+	void updateStatus();
+
 	double movementSensivety;
 	double scaleSensivety;
 	double rotationSensivety;
+	TRANSFORM_MODES _transformMode;
+
+	bool panelShown;
 
 private:
 	Engine* engine;
 	Renderer * renderer;
-	QPoint startMousePos;
-	TRANSFORM_MODES _transformMode;
-
-private:
-	void mouseMoveEvent (QMouseEvent * event);
-	void mousePressEvent ( QMouseEvent * event );
-	void wheelEvent (QWheelEvent * event );
-	void keyPressEvent ( QKeyEvent * event );
-	void keyReleaseEvent ( QKeyEvent * event );
 
 public slots:
 
@@ -74,13 +68,8 @@ public slots:
 	void onReset();
 	void onLoadDebugModel();
 
-	/* scene menu */
-	void onCameraPropertiesDialog();
-	void onEnvironmentDialog();
-	void onMaterialDialog();
-	void onLeftCoordinateSystem(bool);
-
 	/* view menu*/
+	void onSidePanelShowHide(bool);
 	void onDrawBoundingBox(bool);
 	void onDrawAxes(bool);
 	void onDrawNormals(bool);
@@ -107,7 +96,7 @@ public slots:
 	void onSeparateObjectsMode();
 	void onTransformationsReset();
 	void onMouseSensivetyDialog();
-
+	void onLeftCoordinateSystem(bool);
 
 	/* help menu */
 	void onAboutDialog();
@@ -115,11 +104,8 @@ public slots:
 private:
 	/* resident dialogs*/
 	MouseSensivetyDialog *mouseSensivetyDialog;
-	CameraPropertiesDialog *cameraPropertiesDialog;
-	EnvironmentDialog *environmentDialog;
-	MaterialsDialog *materialDialog;
+	SidePanel *sidePanel;
 
-	void updateStatus();
 };
 
 #endif /* MAINWINDOW_H_ */

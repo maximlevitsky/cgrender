@@ -22,10 +22,4 @@
 ColorChooser::ColorChooser(QWidget* parent) : QWidget(parent)
 {
 	setupUi(this);
-	// TODO Auto-generated constructor stub
 }
-
-ColorChooser::~ColorChooser() {
-	// TODO Auto-generated destructor stub
-}
-

@@ -33,7 +33,7 @@ class MainWindow;
 class DrawArea: public QWidget
 {
 public:
-	DrawArea(QMainWindow *parent);
+	DrawArea(QWidget *parent);
 	virtual ~DrawArea();
 
 	void invalidateScene();
@@ -42,12 +42,20 @@ private:
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent (QResizeEvent * event);
 
+	void mouseMoveEvent (QMouseEvent * event);
+	void mousePressEvent ( QMouseEvent * event );
+	void wheelEvent (QWheelEvent * event );
+	void keyPressEvent ( QKeyEvent * event );
+	void keyReleaseEvent ( QKeyEvent * event );
+
+
 private:
 	// data
 	QImage *_image;
 	Texture *_outputTexture;
 	MainWindow *mainWindow;
-
+	Engine* engine;
+	QPoint startMousePos;
 
 	bool sceneValid;
 };

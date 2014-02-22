@@ -17,22 +17,17 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ENVIRONMENTDIALOG_H_
-#define ENVIRONMENTDIALOG_H_
+#ifndef FILECHOOSER_H_
+#define FILECHOOSER_H_
 
-#include <qdialog.h>
-#include "ui_environment_dialog.h"
-#include "ColorChooser.h"
+#include "ui_file_chooser.h"
+#include <QWidget>
 
-
-class MainWindow;
-
-class EnvironmentDialog: public QDialog, private Ui::EnvironmentDialog {
+class FileChooser : public QWidget, Ui::FileChooser
+{
 	Q_OBJECT
-
 public:
-	EnvironmentDialog(MainWindow* parent);
-	virtual ~EnvironmentDialog();
+	FileChooser(QWidget *parent);
 };
 
-#endif /* ENVIRONMENTDIALOG_H_ */
+#endif
