@@ -20,7 +20,7 @@
 ##################################################################################
 
 
-LDFLAGS += -g -flto -O3 -march=core2 -Wall
+LDFLAGS += -g -flto=3 -O3 -march=core2 -Wall
 
 .PHONY: all
 
@@ -33,12 +33,12 @@ all:
 	$(MAKE) -C model
 	
 	qmake -o gui/Makefile gui/make.pro
-	$(MAKE) -j1 -C gui
+	$(MAKE) -C gui
 	
 	$(CXX) $(LDFLAGS) -o cgrender \
 		renderer/librenderer.a engine/libengine.a   \
 		model/libmodel.a model/mtlparser/libmtlparser.a model/objparser/libobjparser.a model/libmodel.a \
-		  gui/libgui.a gui/.objs/qrc_resources.o -lpng12 -lQtGui -lQtCore -lpthread
+		gui/libgui.a gui/.objs/qrc_resources.o -lpng12 -lQtGui -lQtCore -lpthread
 	
 clean:
 	rm -f cgrender

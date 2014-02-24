@@ -1,5 +1,23 @@
-1. implement material loading
-2. verify texture loading
-3. implement appearence of same group more that once in obj file
-4. implement app title consistently
-5. implement 
+
+* loader:
+	* implement material loading - MEDIUM
+	* implement appearence of same group more that once in obj file - MEDIUM
+
+* materials:
+	* think about meaning of kd,ks,etc
+	* verify texture loading
+
+* misc
+	* implement shading mode == none - EASY
+	* implement app title consistently - EASY
+	* implement render to file
+	* refactor Engine get/set inteface
+
+
+* implemement side panel
+	* fog panel
+	* background panel
+	* ambient light panel
+	* lights panel
+	* shadows panel
+	....

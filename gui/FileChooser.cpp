@@ -18,8 +18,42 @@
 */
 #include "FileChooser.h"
 #include <QWidget>
+#include <QFileDialog>
 
 FileChooser::FileChooser(QWidget *parent) : QWidget(parent)
 {
 	setupUi(this);
+	connect(btnReset, SIGNAL(clicked(bool)), this, SLOT(onFileResetCalled()));
+	connect(btnSelectFile, SIGNAL(clicked(bool)), this, SLOT(onFileChooseCalled()));
+	fileFilter = "All files (*.*)";
+}
+
+void FileChooser::setFileName(QString newfileName)
+{
+	filename = newfileName;
+	updateUI();
+}
+
+void FileChooser::onFileChooseCalled()
+{
+	QString result = QFileDialog::getOpenFileName(this, QString(), filename, fileFilter);
+
+	if (result.isNull())
+		return;
+
+	filename = result;
+	updateUI();
+	emit contentsChanged();
+}
+
+void FileChooser::onFileResetCalled()
+{
+	filename = defaultFilename;
+	updateUI();
+	emit contentsChanged();
+}
+
+void FileChooser::updateUI()
+{
+	filenameTextBox->setText(filename);
 }

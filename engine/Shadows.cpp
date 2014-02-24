@@ -19,6 +19,7 @@
 
 #include "Engine.h"
 #include "common/Transformations.h"
+#include <cmath>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +116,7 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 	double cameraAngleVsup = direction.dot(Vector3(0,1,0));
 
 	// set the camera 'up' direction to be ether UP or RIGHT depending which is father in angle distance
-	Vector3 up =  (abs(cameraAngleVsup) < (sqrt(2.0) / 2)) ? Vector3(0,-1,0) : Vector3(-1,0,0 );
+	Vector3 up =  (std::abs(cameraAngleVsup) < (sqrt(2.0) / 2.0)) ? Vector3(0,-1.0,0) : Vector3(-1.0,0,0 );
 
 	// set up camera matrix that we will apply on the scene (so its inverse)
 	Mat4 cameraMatrix = Transformations::lookAt(position, direction, up).inverse();
@@ -160,8 +161,8 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 			if (optimalFOV < maxFov)
 				maxFov = optimalFOV;
 
-			rangeMax = abs(sceneBoxFromLightPOV.point1.z());
-			rangeMin = abs(sceneBoxFromLightPOV.point2.z());
+			rangeMax = std::abs(sceneBoxFromLightPOV.point1.z());
+			rangeMin = std::abs(sceneBoxFromLightPOV.point2.z());
 		} else 
 		{
 			// otherwise maximum needed distance is the radius of the scene

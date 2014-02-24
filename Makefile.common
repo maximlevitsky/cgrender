@@ -23,8 +23,9 @@ OUT=.obj
 
 CXXFLAGS += -g  -flto \
 	-mtune=core2 -march=core2 -mfpmath=sse -mssse3 -msse3 -msse2 -malign-double \
-	-O3 -ffast-math -ftree-vectorize -floop-interchange -ftree-loop-distribution \
-	-I. -I.. -std=c++11 -Wall -Wno-reorder	 
+	-O3 -ffast-math -ftree-vectorize -ftree-slp-vectorize\
+	 -floop-interchange -ftree-loop-distribution -fstrict-aliasing \
+	-I. -I.. -std=c++11 -Wall -Wno-reorder
 	
 
 

@@ -18,6 +18,7 @@
 */
 #include <assert.h>
 #include <limits>
+#include <cmath>
 
 #include "Renderer.h"
 #include "Texture.h"
@@ -66,8 +67,8 @@ void TextureSampler::setScale( double new_scalex, double new_scaley )
 
 Color TextureSampler::sample( double x, double y ) const
 {
-	x = abs(x) * _scaleX;
-	y = abs(1-y) * _scaleY;
+	x = std::abs(x) * _scaleX;
+	y = std::abs(1-y) * _scaleY;
 
 	int tx = (int)x %  _texture->getWidth();
 	int ty = (int)y %  _texture->getHeight();
@@ -79,8 +80,8 @@ Color TextureSampler::sampleBiLinear( double x, double y, int mipNumber /*= 0*/ 
 	const Texture &t = _texture[mipNumber];
 
 	// scale the the input coordinates by current scale.
-	x = abs(x) * _scaleX / (1 << mipNumber);
-	y = abs(1-y) * _scaleY / (1 << mipNumber);
+	x = std::abs(x) * _scaleX / (1 << mipNumber);
+	y = std::abs(1-y) * _scaleY / (1 << mipNumber);
 
 	// find texel coordinates
 	int tx = (int)x % t.getWidth();
@@ -185,9 +186,9 @@ int ShadowCubemapSampler::selectFace(const Vector3 &dir) const
 	const double y = -dir.y();
 	const double z = -dir.z();
 
-	if (abs(z) >= abs(x) && abs(z) >= abs(y))
+	if (std::abs(z) >= std::abs(x) && std::abs(z) >= std::abs(y))
 		return  z > 0 ? 4 : 5;
-	else if (abs(y) >= abs(x))
+	else if (std::abs(y) >= std::abs(x))
 		return y > 0 ? 2 : 3;
 	else
 		return x > 0 ? 0 : 1;

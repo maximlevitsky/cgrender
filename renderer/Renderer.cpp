@@ -216,7 +216,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 			Vector3 *a2 = _vertexBuffer[iter[i]]+_vertexFlatAttributeCount;
 			Vector3 *a3 = _vertexBuffer[iter[i+1]]+_vertexFlatAttributeCount;
 
-			if (v1.w() > 0 && v2.w() > 0 && v3.w() > 0) 
+			if (v1.w() > 0 && v2.w() > 0 && v3.w() > 0)
 			{
 				if (!fastClipTriangle(v1,v2, v3)) {
 					Vector4 p1 = NDC_to_DeviceSpace(&v1);
@@ -228,7 +228,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 			}
 			else
 				/* otherwise we need clipping */
-				drawClippedTriangle(&v1, &v2,&v3,a1,a2,a3);		
+				drawClippedTriangle(&v1, &v2,&v3,a1,a2,a3);
 		}
 	}
 }
@@ -396,7 +396,7 @@ void Renderer::drawPixel( int x, int y, const Color &value )
 		return;
 
 	_outputTexture->setPixelValue(x,y, 
-		DEVICE_PIXEL((int)(value[0]*255), (int)(value[1]*255), (int)(value[2]*255)));
+		DEVICE_PIXEL((uint8_t)(value[0]*255), (uint8_t)(value[1]*255), (uint8_t)(value[2]*255)));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -486,7 +486,7 @@ void VerticalLineRasterizer::setAttributesCount(unsigned char smoothcount, unsig
 	assert (smoothcount + noPerspectiveCount <= 8);
 	smoothAttribCount = smoothcount;
 	noPerspectiveAttribCount = noPerspectiveCount;
-	smoothAndNoPerspectiveCount = smoothcount + noPerspectiveCount;
+	smoothAndNoPerspectiveCount = (unsigned char)(smoothcount + noPerspectiveCount);
 }
 
 void VerticalLineRasterizer::setup( const Vector3 *attr1, const Vector3 *attr2, const Vector4& p1, const Vector4 &p2 )
@@ -530,7 +530,7 @@ void VerticalLineRasterizer::setup( const Vector3 *attr1, const Vector3 *attr2, 
 			z1 += (y1_fraction * (z2 - z1))/dy;
 			w1 += (y1_fraction * (w2 - w1))/dy;
 
-			for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++) 
+			for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++)
 				attribs[i] += (attrib_steps[i] * y1_fraction);
 		}
 	}
@@ -581,7 +581,7 @@ void HorizintalLineRasterizer::setAttributesCount(
 
 void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const VerticalLineRasterizer &line2 )
 {
-	double dx = line2.x1 - line1.x1; 
+	double dx = line2.x1 - line1.x1;
 	z1 = line1.z1;
 	w1 = line1.w1;
 
@@ -600,13 +600,13 @@ void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const
 	// account for fractional X
 	if (dx) 
 	{
-		double x1_frac = abs(ceil(line1.x1)  - line1.x1);
+		double x1_frac = ceil(line1.x1)  - line1.x1;
 		if (x1_frac) {
 
 			z1 += (x1_frac * (line2.z1 - line1.z1))/dx;
 			w1 += (x1_frac* (line2.w1 - line1.w1))/dx;
 
-			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++) 
+			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++)
 				attributes[i] += (attribute_steps[i] * x1_frac);
 		}
 	}

@@ -96,9 +96,9 @@ public:
 
 	double dot (const Vector3 &v) const
 	{
-		return 
-			data[0] * v.data[0] + 
-			data[1] * v.data[1] + 
+		return
+			data[0] * v.data[0] +
+			data[1] * v.data[1] +
 			data[2] * v.data[2];
 	}
 

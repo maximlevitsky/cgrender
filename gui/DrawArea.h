@@ -36,7 +36,9 @@ public:
 	DrawArea(QWidget *parent);
 	virtual ~DrawArea();
 
-	void invalidateScene();
+	void invalidateScene(bool force = false);
+	void suspendRendering(bool suspend);
+
 private:
 	// events for painting
 	void paintEvent(QPaintEvent *event);
@@ -47,6 +49,7 @@ private:
 	void wheelEvent (QWheelEvent * event );
 	void keyPressEvent ( QKeyEvent * event );
 	void keyReleaseEvent ( QKeyEvent * event );
+	void enterEvent(QEvent * event);
 
 
 private:
@@ -58,6 +61,7 @@ private:
 	QPoint startMousePos;
 
 	bool sceneValid;
+	bool renderingSuspended;
 };
 
 #endif /* DRAWAREA_H_ */

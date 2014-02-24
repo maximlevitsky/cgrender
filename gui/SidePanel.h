@@ -30,6 +30,8 @@
 
 
 class MainWindow;
+class Engine;
+
 class SidePanel: public QDockWidget, private Ui::SidePanel
 {
 	Q_OBJECT
@@ -41,8 +43,20 @@ private:
 	void closeEvent (QCloseEvent *event);
 	QWidget *panel;
 
+private slots:
+
+	/* general/fog panel*/
+	void fogPanelUpdate();
+	void fogPanelSetup();
+	void fogReset();
+
+	/* bottom bar*/
+	void onSuspendRendering(bool checked);
+	void onFastRendering(bool checked);
+
 private:
 	MainWindow* mainWindow;
+	Engine* engine;
 };
 
 #endif /* ENVIRONMENTDIALOG_H_ */

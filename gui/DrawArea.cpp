@@ -49,6 +49,7 @@ DrawArea::DrawArea(QWidget *parent) : QWidget(parent), _image(NULL), _outputText
 	mainWindow = dynamic_cast<MainWindow*>(parent->parent());
 	engine = mainWindow->getEngine();
 	sceneValid = false;
+	renderingSuspended = false;
 
 	setFocusPolicy(Qt::ClickFocus);
 }
@@ -62,8 +63,11 @@ DrawArea::~DrawArea()
 
 /***************************************************************************************/
 
-void DrawArea::invalidateScene()
+void DrawArea::invalidateScene(bool force)
 {
+	if (renderingSuspended && !force)
+		return;
+
 	sceneValid = false;
 	repaint();
 }
@@ -142,7 +146,7 @@ void DrawArea::resizeEvent (QResizeEvent * event)
 
 
 	mainWindow->getEngine()->setOutput(_outputTexture, newSize.width(), newSize.height());
-	invalidateScene();
+	invalidateScene(true);
 }
 
 
@@ -151,6 +155,9 @@ void DrawArea::mouseMoveEvent(QMouseEvent* event)
 {
 	QPoint pos = event->pos();
 	QPoint screenDist = pos - startMousePos;
+
+	if (renderingSuspended)
+		return;
 
 	if (event->buttons() & Qt::RightButton)
 	{
@@ -237,6 +244,9 @@ void DrawArea::wheelEvent (QWheelEvent * event )
 {
 	int degrees = event->delta() / 8;
 
+	if (renderingSuspended)
+		return;
+
 	Vector3 p1 = engine->deviceToNDC(0, 0, 0);
 	Vector3 p2 = engine->deviceToNDC(0, 0, 0.01*(degrees));
 	double scaleDist = p1.z() - p2.z();
@@ -256,6 +266,10 @@ void DrawArea::wheelEvent (QWheelEvent * event )
 
 void DrawArea::mousePressEvent(QMouseEvent* event)
 {
+
+	if (renderingSuspended)
+		return;
+
 	startMousePos = event->pos();
 
 	if (engine->getDrawSeparateObjects() && (event->modifiers() == 0))
@@ -273,6 +287,9 @@ void DrawArea::mousePressEvent(QMouseEvent* event)
 
 void DrawArea::keyPressEvent ( QKeyEvent * event )
 {
+	if (renderingSuspended)
+		return;
+
 	switch (event->modifiers()) {
 	case Qt::ShiftModifier:
 		/* move */
@@ -294,3 +311,17 @@ void DrawArea::keyReleaseEvent ( QKeyEvent * event )
 {
 	setCursor(Qt::ArrowCursor);
 }
+
+void DrawArea::enterEvent(QEvent * event)
+{
+	setFocus();
+}
+
+
+void DrawArea::suspendRendering(bool suspend)
+{
+	renderingSuspended = suspend;
+	if (!renderingSuspended)
+		invalidateScene();
+}
+

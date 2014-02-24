@@ -28,6 +28,27 @@ class FileChooser : public QWidget, Ui::FileChooser
 	Q_OBJECT
 public:
 	FileChooser(QWidget *parent);
+
+	/* Initialization*/
+	void setDefaultFilename(QString filename) { defaultFilename = filename; }
+	void setFileFilter(QString filter) { fileFilter = filter; }
+
+	/* IO */
+	QString getFileName() {return filename; }
+	void setFileName(QString newfileName);
+
+public slots:
+	void onFileChooseCalled();
+	void onFileResetCalled();
+signals:
+	void contentsChanged();
+
+private:
+	QString filename;
+	QString defaultFilename;
+	QString fileFilter;
+
+	void updateUI();
 };
 
 #endif

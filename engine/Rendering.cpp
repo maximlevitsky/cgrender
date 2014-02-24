@@ -112,7 +112,7 @@ void useGouraldShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrec
 
 void usePhongShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrect)
 {
-	int attribCount = 2;
+	unsigned char attribCount = 2;
 
 	if (u->textureSampler.isBound())
 		attribCount++;
@@ -170,6 +170,7 @@ void useSimpleWireframeShader(Renderer *render, UniformBuffer *u)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void Engine::render()
 {
+
 	if (_shadingMode != SHADING_NONE)
 		updateShadowMaps();
 

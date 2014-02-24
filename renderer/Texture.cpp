@@ -104,7 +104,7 @@ Texture* Texture::load(const char* name, bool mipmaps)
 		for (int x = 0 ; x < t->_width ; x++) 
 		{
 			int value = p.GetValue(x,y);
-			t->setPixelValue(x,y, DEVICE_PIXEL(GET_R(value), GET_G(value), GET_B(value)));
+			t->setPixelValue(x,y, DEVICE_PIXEL((uint8_t)GET_R(value), (uint8_t)GET_G(value), (uint8_t)GET_B(value)));
 		}
 
 	p.ClosePng();
