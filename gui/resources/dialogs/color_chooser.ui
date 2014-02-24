@@ -217,13 +217,6 @@
        </widget>
       </item>
      </layout>
-     <zorder>redBox</zorder>
-     <zorder>horizontalSpacer</zorder>
-     <zorder>horizontalSpacer_2</zorder>
-     <zorder>greenBox</zorder>
-     <zorder>blueBox</zorder>
-     <zorder>resetButton</zorder>
-     <zorder>chooseButton</zorder>
     </widget>
    </item>
   </layout>

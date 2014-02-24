@@ -45,8 +45,8 @@ Renderer::Renderer(void) :
 
 Renderer::~Renderer(void)
 {
-	if (_zBuffer) delete _zBuffer;
-	if (_selBuffer) delete _selBuffer;
+	delete _zBuffer;
+	delete _selBuffer;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -30,24 +30,13 @@
 Engine::Engine( void ) : 
 
 	// settings
-	_drawWireFrame(false), 
-	_drawPolygonNormals(false), 
-	_drawVertexNormals(false), 
-	_drawBoundingBox(false), 
 	_drawSeparateObjects(false),
-	_drawAxes(false),
 	_shadingMode(SHADING_PHONG),
-	_backfaceCulling(false),
-	_depthRendering(false),
-	_perspectiveCorrect(true),
 	_invertNormals(false),
 	_invertFaces(false),
 	_tile_background(true),
-	_lightBackfaces(false),
 	_backgroundTexture(NULL),
 	_texSampleMode(TMS_BILINEAR_MIPMAPS),
-	_lightAllFaces(false),
-	_draw_light_sources(false),
 
 	// models
 	_itemCount(0), _sceneItems(NULL),
@@ -66,6 +55,19 @@ Engine::Engine( void ) :
 	_shadowMapsValid(false),
 	_normalsScale (0.06)
 {
+
+	_flags.backFaceCulling = false;
+	_flags.depthBufferVisualization = false;
+	_flags.drawAxes = false;
+	_flags.drawBoundingBox = false;
+	_flags.drawFaces = false;
+	_flags.drawVertexNormals = false;
+	_flags.drawWireFrame = false;
+	_flags.forceFrontFaces = false;
+	_flags.leftcoordinateSystem = false;
+	_flags.perspectiveCorrect = true;
+	_flags.twofaceLighting = false;
+
 	resetLighting();
 	resetMaterials();
 	resetBackground();
@@ -244,20 +246,13 @@ void Engine::processScene()
 
 void Engine::resetScene()
 {
-	if (_itemCount) {
-		_itemCount = 0;
-		delete [] _sceneItems;
-	}
-
+	_itemCount = 0;
+	delete [] _sceneItems;
 	_sceneItems = NULL;
 
 	// and global scene model
-	if (_sceneBoxModel)
-		delete _sceneBoxModel;
-
-	if (_axesModel)
-		delete _axesModel;
-
+	delete _sceneBoxModel;
+	delete _axesModel;
 	_sceneBoxModel = NULL;
 	_axesModel = NULL;
 
@@ -267,7 +262,6 @@ void Engine::resetScene()
 	invalidateShadowMaps();
 	resetBackground();
 	freeShadowMaps();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +314,6 @@ void Engine::setInvertNormals( bool enable )
 		_sceneItems[i]._mainModel->invertVertexNormals();
 
 	_invertNormals = enable;
-
 	invalidateNormalModels();
 }
 
@@ -363,7 +356,7 @@ void Engine::createNormalModels()
 		Mat4 normalScale = _globalObjectTransform.getInvScaleMatrix() * item._modelTransform.getInvScaleMatrix();
 
 		try {
-			if (_drawVertexNormals && !item._vertexNormalModel) 
+			if (_flags.drawVertexNormals && !item._vertexNormalModel)
 				item._vertexNormalModel = WireFrameModel::createVertexNormalModel(item._mainModel,scalefactor,normalScale);
 		} catch(...) {
 			item._vertexNormalModel = NULL;
@@ -371,7 +364,7 @@ void Engine::createNormalModels()
 		}
 
 		try {
-			if (_drawPolygonNormals && !item._polygonNormalModel) 
+			if (_flags.drawFaces && !item._polygonNormalModel)
 				item._polygonNormalModel = WireFrameModel::createPolygonNormalModel(item._mainModel, scalefactor,normalScale);
 		} catch(...) {
 			item._polygonNormalModel = NULL;
@@ -381,3 +374,15 @@ void Engine::createNormalModels()
 	}
 }
 
+void Engine::setNormalScale(double newscale)
+{
+	invalidateNormalModels();
+	_normalsScale = newscale;
+}
+
+
+void Engine::setEngineOperationFlags(const EngineOperationFlags newFlags)
+{
+	_flags = newFlags;
+	_cameraTransform.setInvert(_flags.leftcoordinateSystem);
+}

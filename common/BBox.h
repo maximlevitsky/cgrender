@@ -72,14 +72,19 @@ public:
 		point2[2] -= point[2];
 	}
 
-	Vector3 getSizes() const { return point2 - point1; }
-	Vector3 getCenter() const { return (point2 + point1) / 2; }
+	Vector3 getSizes() const
+	{
+		return point2 - point1;
+	}
+
+	Vector3 getCenter() const
+	{
+		return (point2 + point1) / 2;
+	}
 
 public:
 	Vector3 point1;
 	Vector3 point2;
 
-	};
-
-
+};
 #endif

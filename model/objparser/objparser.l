@@ -35,6 +35,7 @@
 %option never-interactive 
 %option nounistd
 %option bison-bridge
+%option nounput
 %option prefix="obj_"
 
 %x IDENTIFER

@@ -19,13 +19,12 @@
 #ifndef COMMON_TRANSFORMATIONS_H
 #define COMMON_TRANSFORMATIONS_H
 
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include "Mat4.h"
 #include "Vector4.h"
+#include <cmath>
 
-namespace Transformations {
-
+namespace Transformations
+{
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static inline Mat4 getOrthoProjMatrix(double L, double R, double T, double B, double N, double F)
@@ -50,7 +49,7 @@ static inline Mat4 getPerspectiveMatrix(double L, double R, double T, double B, 
 
 static inline Mat4 getPerspectiveMatrix(double fov, double aspect, double N, double F)
 {
-	double f = 1.0 / tan(fov * 0.5 * (M_PI / 180));
+	double f = 1.0 / std::tan(fov * 0.5 * (M_PI / 180));
 
 	return Mat4(
 		f / aspect,			0,					0,					0,
@@ -59,39 +58,29 @@ static inline Mat4 getPerspectiveMatrix(double fov, double aspect, double N, dou
 		0,					0,					(-2.0*F*N)/(F-N),	0);
 }
 
-
-static inline Mat4 getGershonPerspectiveMatrix(double N, double F)
-{
-	return Mat4(
-		1,					0,					0,					0,
-		0,					1,					0,					0,
-		0,					0,					F/(F-N),			1/F,
-		0,					0,					-(N*F)/(F-N),		0);
-}
-
 static inline Mat4 getRotationalMatrix(const Vector3 &rot)
 {
 
 	// rotate by X
 	Mat4 rotX(
 		1,					0,		   			0,					0,
-		0,					cos(-rot[0]),		sin(-rot[0]),		0,
-		0,					-sin(-rot[0]),		cos(-rot[0]),		0,
+		0,					std::cos(-rot[0]),	std::sin(-rot[0]),	0,
+		0,					-std::sin(-rot[0]),	std::cos(-rot[0]),	0,
 		0,					0,					0,					1
 	);
 
 	// rotate by Y
 	Mat4 rotY(
-		cos(-rot[1]) ,		0,					sin(-rot[1]),	    0,
+		std::cos(-rot[1]) ,	0,					std::sin(-rot[1]),	0,
 		0,					1,					0,					0,
-		-sin(-rot[1]),		0,					cos(-rot[1]),	    0,
+		-std::sin(-rot[1]),	0,					std::cos(-rot[1]),	0,
 		0,					0,					0,					1
 	);
 
 	// rotate by Z
 	Mat4 rotZ(
-		cos(-rot[2]) ,		sin(-rot[2]),		0,					0,
-		-sin(-rot[2]),		cos(-rot[2]),		0,					0,
+		std::cos(-rot[2]) ,	std::sin(-rot[2]),	0,					0,
+		-std::sin(-rot[2]),	std::cos(-rot[2]),	0,					0,
 		0,					0,					1,					0,
 		0,					0,					0,					1
 	);

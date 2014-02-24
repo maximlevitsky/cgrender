@@ -312,13 +312,6 @@
            </widget>
           </item>
          </layout>
-         <zorder>fogModeComboBox</zorder>
-         <zorder>linearFogArea</zorder>
-         <zorder>exponentialFogArea</zorder>
-         <zorder>_6</zorder>
-         <zorder>fogColorArea</zorder>
-         <zorder>fogResetButton</zorder>
-         <zorder>_4</zorder>
         </widget>
        </item>
        <item>
@@ -958,11 +951,6 @@
         </spacer>
        </item>
       </layout>
-      <zorder>_14</zorder>
-      <zorder>groupBox</zorder>
-      <zorder>groupBox_5</zorder>
-      <zorder>pushButton_5</zorder>
-      <zorder>buttonSaveShadowMaps</zorder>
      </widget>
      <widget class="QWidget" name="tabMaterials">
       <attribute name="title">
@@ -1417,11 +1405,6 @@
         </spacer>
        </item>
       </layout>
-      <zorder>groupBox_4</zorder>
-      <zorder>groupBox_9</zorder>
-      <zorder>_12</zorder>
-      <zorder>groupBox_10</zorder>
-      <zorder>pushButton_8</zorder>
      </widget>
     </widget>
    </item>
@@ -1457,11 +1440,6 @@
     </layout>
    </item>
   </layout>
-  <zorder>tabbedArea</zorder>
-  <zorder>pauseRenderingButton</zorder>
-  <zorder>renderToFileButton</zorder>
-  <zorder>fastRenderingModeButton</zorder>
-  <zorder>_9</zorder>
  </widget>
  <customwidgets>
   <customwidget>

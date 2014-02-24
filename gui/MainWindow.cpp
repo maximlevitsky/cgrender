@@ -66,7 +66,6 @@ MainWindow::MainWindow()
 	connect(actionNormals, SIGNAL(toggled(bool)), this, SLOT(onDrawNormals(bool)));
 	connect(actionFaces, SIGNAL(toggled(bool)), this, SLOT(onDrawfaceNormals(bool)));
 	connect(actionWireframe, SIGNAL(toggled(bool)), this, SLOT(onDrawWireframe(bool)));
-	connect(actionLight_sources, SIGNAL(toggled(bool)), this, SLOT(onDrawLightSources(bool)));
 	connect(actionBack_face_culling, SIGNAL(toggled(bool)), this, SLOT(onBackFaceCulling(bool)));
 	connect(actionDepth_buffer_visualization, SIGNAL(toggled(bool)), this, SLOT(onDrawDepthbuffer(bool)));
 
@@ -110,30 +109,30 @@ MainWindow::MainWindow()
 
 void MainWindow::updateStatus()
 {
+
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+
 	/* scene menu*/
-	actionLeft_coordinate_system->setChecked(engine->getInvertDepth());
+	actionLeft_coordinate_system->setChecked(flags.leftcoordinateSystem);
 
 	/* view menu*/
-	actionBounding_box->setChecked(engine->getDrawBoundingBox());
-	actionAxes->setChecked(engine->getDrawAxes());
-	actionNormals->setChecked(engine->getdrawVertexNormals());
-	actionFaces->setChecked(engine->getdrawPolygonNormals());
-	actionWireframe->setChecked(engine->getdrawWireFrame());
-	actionLight_sources->setChecked(engine->getDrawLightSources());
-	actionBack_face_culling->setChecked(engine->getBackfaceCulling());
-	actionDepth_buffer_visualization->setChecked(engine->getDepthRendering());
+	actionBounding_box->setChecked(flags.drawBoundingBox);
+	actionAxes->setChecked(flags.drawAxes);
+	actionNormals->setChecked(flags.drawVertexNormals);
+	actionFaces->setChecked(flags.drawFaces);
+	actionWireframe->setChecked(flags.drawWireFrame);
+	actionBack_face_culling->setChecked(flags.backFaceCulling);
+	actionDepth_buffer_visualization->setChecked(flags.depthBufferVisualization);
 
 	/* Shading menu*/
-	actionPhong->setChecked(engine->getShadingMode() == Engine::SHADING_PHONG);
-	actionGourald->setChecked(engine->getShadingMode() == Engine::SHADING_GOURAD);
-	actionFlat->setChecked(engine->getShadingMode() == Engine::SHADING_FLAT);
+	actionPhong->setChecked(engine->getShadingMode() == SHADING_PHONG);
+	actionGourald->setChecked(engine->getShadingMode() == SHADING_GOURAD);
+	actionFlat->setChecked(engine->getShadingMode() == SHADING_FLAT);
 
 	actionInvert_vertex_normals->setChecked(engine->getInvertNormals());
 	actionInvert_faces->setChecked(engine->getInvertFaces());
-	actionDual_face_lighting->setChecked(engine->getLightBackFaces());
-	actionAll_face_lighting->setChecked(engine->getLightAllFaces());
-
-	/* TODO: update contents of all subdialogs here*/
+	actionDual_face_lighting->setChecked(flags.twofaceLighting);
+	actionAll_face_lighting->setChecked(flags.forceFrontFaces);
 }
 
 MainWindow::~MainWindow()
@@ -204,45 +203,55 @@ void MainWindow::onSidePanelShowHide(bool checked)
 
 void MainWindow::onDrawBoundingBox(bool checked)
 {
-	engine->setDrawBoundingBox(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.drawBoundingBox = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 
 void MainWindow::onDrawAxes(bool checked)
 {
-	engine->setDrawAxes(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.drawAxes = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 
 void MainWindow::onDrawNormals(bool checked)
 {
-	engine->setDrawVertexNormals(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.drawVertexNormals = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 void MainWindow::onDrawfaceNormals(bool checked)
 {
-	engine->setDrawPolygonNormals(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.drawFaces = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 void MainWindow::onDrawWireframe(bool checked)
 {
-	engine->setDrawWireFrame(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.drawWireFrame = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
-void MainWindow::onDrawLightSources(bool checked)
-{
-	engine->setDrawLightSources(checked);
-	drawArea->invalidateScene();
-}
+
 void MainWindow::onBackFaceCulling(bool checked)
 {
-	engine->setBackFaceCulling(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.backFaceCulling = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 
 void MainWindow::onDrawDepthbuffer(bool checked)
 {
-	engine->setDepthRendering(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.depthBufferVisualization = checked;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 
@@ -255,7 +264,7 @@ void MainWindow::onShadingFlat(bool checked)
 	if (!checked)
 		return;
 
-	engine->setShadingMode(Engine::SHADING_FLAT);
+	engine->setShadingMode(SHADING_FLAT);
 	drawArea->invalidateScene();
 }
 
@@ -264,7 +273,7 @@ void MainWindow::onShadingGorald(bool checked)
 	if (!checked)
 		return;
 
-	engine->setShadingMode(Engine::SHADING_GOURAD);
+	engine->setShadingMode(SHADING_GOURAD);
 	drawArea->invalidateScene();
 }
 
@@ -273,7 +282,7 @@ void MainWindow::onShadingPhong(bool checked)
 	if (!checked)
 		return;
 
-	engine->setShadingMode(Engine::SHADING_PHONG);
+	engine->setShadingMode(SHADING_PHONG);
 	drawArea->invalidateScene();
 }
 
@@ -291,13 +300,19 @@ void MainWindow::onInvertFaces(bool checked)
 
 void MainWindow::onDualfaceLighting(bool checked)
 {
-	engine->setLightBackFaces(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.twofaceLighting = checked;
+	engine->setEngineOperationFlags(flags);
+
 	drawArea->invalidateScene();
 }
 
 void MainWindow::onAllFaceLighting(bool checked)
 {
-	engine->setLightAllFaces(checked);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.forceFrontFaces = checked;
+	engine->setEngineOperationFlags(flags);
+
 	drawArea->invalidateScene();
 }
 
@@ -339,7 +354,9 @@ void MainWindow::onTransformationsReset()
 
 void MainWindow::onLeftCoordinateSystem(bool enable)
 {
-	engine->setInvertDepth(enable);
+	EngineOperationFlags flags = engine->getEngineOperationFlags();
+	flags.leftcoordinateSystem = enable;
+	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
 }
 

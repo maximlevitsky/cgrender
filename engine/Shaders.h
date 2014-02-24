@@ -24,6 +24,7 @@
 #include "renderer/Texture.h"
 #include "renderer/Samplers.h"
 #include "model/Material.h"
+#include "EngineAPI.h"
 
 struct ShaderFogData
 {
@@ -62,39 +63,6 @@ struct ShaderLightData
 	Mat4 shadowMapTransfrom[6];
 };
 
-
-struct ShadowParams
-{
-	ShadowParams() { reset(); }
-
-	int shadowMapRes;
-
-	bool pcf;
-	bool poison;
-
-	int pcf_taps;
-
-	double z_bias_mul;
-	double z_bias_max;
-
-	void reset() {
-		pcf = true;
-		poison = true;
-
-		pcf_taps = 4;
-		z_bias_max = 0.01;
-		z_bias_mul = 0.05;
-		shadowMapRes = 1024;
-	}
-};
-
-
-enum TextureSampleMode
-{
-	TMS_NEARST,
-	TMS_BILINEAR,
-	TMS_BILINEAR_MIPMAPS
-};
 
 struct UniformBuffer 
 {

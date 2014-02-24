@@ -250,7 +250,7 @@ Vector3 Engine::deviceToNDC( double X, double Y, double Z )
 
 Engine::FACE_TYPE Engine::translateFaceType( FACE_TYPE given )
 {
-	if (_lightAllFaces)
+	if (_flags.forceFrontFaces)
 		return FACE_FRONT;
 
 	bool b = (bool)given;

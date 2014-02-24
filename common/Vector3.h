@@ -20,10 +20,6 @@
 #define VECTOR3_H
 
 #include "common/Utilities.h"
-#include <math.h>
-#include <string.h>
-#include <utility>
-#include "Mat4.h"
 
 class Vector3 
 {
@@ -40,12 +36,6 @@ public:
 		data[0] = x;
 		data[1] = y;
 		data[2] = z;
-	}
-
-	Vector3& operator=(const Vector3& v) 
-	{
-		memcpy(data, v.data, sizeof(data));
-		return *this;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +57,7 @@ public:
 	}
 
 	bool isBadFP() const {
-		return is_bad_fp(data[0]) || is_bad_fp(data[1]) || is_bad_fp(data[2]);
+		return !isfinite(data[0]) || !isfinite(data[1]) || !isfinite(data[2]);
 	}
 
 

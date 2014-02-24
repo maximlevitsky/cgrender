@@ -18,7 +18,6 @@
 */
 #include "Renderer.h"
 #include "common/Utilities.h"
-#include <vector>
 
 struct point 
 {

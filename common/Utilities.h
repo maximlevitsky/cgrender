@@ -20,18 +20,19 @@
 #ifndef UTILITES_H
 #define UTILITES_H
 
-#include <math.h>
-#include <assert.h>
-#include <utility>
-#include <vector>
-#include <string>
-#include <sstream>
+#include <cmath>
 #include <algorithm>
+#include <assert.h>
 
 using std::min;
 using std::max;
 using std::swap;
+using std::floor;
+using std::ceil;
 
+#ifndef MSC_VER
+	using std::isfinite;
+#endif
 
 /**************************************************************************************
  * Floating point helpers
@@ -62,7 +63,7 @@ static double log2( double n )
 	return log( n ) / log( 2.0 );  
 }
 
-static bool is_bad_fp(double val)
+static bool isfinite(double val)
 {
 	switch(_fpclass(val))
 	{
@@ -72,41 +73,12 @@ static bool is_bad_fp(double val)
 	case _FPCLASS_ND:
 	case _FPCLASS_PD:
 	case _FPCLASS_PINF:
-		return true;
-	default:
 		return false;
+	default:
+		return true;
 	}
-}
-#else
-static bool is_bad_fp(double x)
-{
-	return !std::isfinite(x);
 }
 #endif
 
-
-/**************************************************************************************
- * Strings
- *
- * ************************************************************************************
- */
-
-static inline std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems)
-{
-	std::stringstream ss(s);
-	std::string item;
-	while (std::getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
-	return elems;
-}
-
-
-static inline std::vector<std::string> split(const std::string &s, char delim)
-{
-	std::vector<std::string> elems;
-	split(s, delim, elems);
-	return elems;
-}
 
 #endif

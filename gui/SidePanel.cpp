@@ -70,7 +70,7 @@ void SidePanel::fogPanelUpdate()
 	params.enabled = mode != 0;
 
 	if (params.enabled)
-		params.type = (FogType)(mode - 1);
+		params.type = (FogParams::FogType)(mode - 1);
 
 	params.startPoint = fogStartDepthBox->value();
 	params.endPoint = fogEndDepthBox->value();

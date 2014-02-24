@@ -92,8 +92,8 @@ void Engine::setupFogShaderData()
 	if (fp.enabled) {
 
 		fp.color = _fogParams.color / 255;
-		fp.linear = _fogParams.type == FOG_LINEAR;
-		fp.exp2 = _fogParams.type == FOG_EXPONETIAL2;
+		fp.linear = _fogParams.type == FogParams::FOG_LINEAR;
+		fp.exp2 = _fogParams.type == FogParams::FOG_EXPONETIAL2;
 
 		fp.start = _fogParams.startPoint;
 		fp.end = _fogParams.endPoint;

@@ -32,16 +32,16 @@ void Engine::setupLightingShaderData(int objectID)
 	_shaderData.lightsCount = 0;
 	for (int i = 0 ; i < MAX_LIGHT ; i++) 
 	{
-		LightParams &lp = _lightParams[i];
+		LightSource &lp = _lightParams[i];
 
 		if (!lp.enabled)
 			continue;
 
 		ShaderLightData &light = _shaderData.lights[_shaderData.lightsCount++];
-		light.is_point = lp.type == LIGHT_TYPE_POINT || lp.type == LIGHT_TYPE_SPOT;
-		light.is_spot = lp.type == LIGHT_TYPE_SPOT;
+		light.is_point = lp.type == LightSource::LIGHT_TYPE_POINT || lp.type == LightSource::LIGHT_TYPE_SPOT;
+		light.is_spot = lp.type == LightSource::LIGHT_TYPE_SPOT;
 
-		if (lp.type == LIGHT_TYPE_SPOT) {
+		if (lp.type == LightSource::LIGHT_TYPE_SPOT) {
 			light.cutoffCOsine = cos(lp.cutoffAngle / 2 * M_PI / 180);
 			light.startCutofAttenuationCosine = cos(lp.cutoffAngle / 3 * M_PI / 180);
 		}
@@ -49,7 +49,7 @@ void Engine::setupLightingShaderData(int objectID)
 		// transform direction and location of lights to camera space
 		/* we are given true light direction, but we need opposite light direction for light model (eg : direction to light source)*/
 
-		if (lp.space == LIGHT_SPACE_LOCAL ) 
+		if (lp.space == LightSource::LIGHT_SPACE_LOCAL )
 		{
 			/* direction doesn't need homogenus coodrinates transform */
 			light.direction = vmul3dir(-lp.direction, _globalObjectTransform.getNormalTransformMatrix()  * _cameraTransform.getNormalTransformMatrix());
@@ -77,8 +77,8 @@ void Engine::resetLighting()
 	// setup light #0 as said in 
 
 	_lightParams[0].enabled = true;
-	_lightParams[0].type = LIGHT_TYPE_DIRECTIONAL;
-	_lightParams[0].space = LIGHT_SPACE_VIEW;
+	_lightParams[0].type = LightSource::LIGHT_TYPE_DIRECTIONAL;
+	_lightParams[0].space = LightSource::LIGHT_SPACE_VIEW;
 	_lightParams[0].direction = Vector3(0,0,-1);
 	_lightParams[0].color = Color(255,255,255);
 	invalidateShadowMaps();
@@ -114,7 +114,7 @@ void Engine::createLighSourcesModels()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Engine::drawLightSources()
+void Engine::renderLightSources()
 {
 	useSimpleShader(_renderer, &_shaderData);
 
@@ -122,30 +122,30 @@ void Engine::drawLightSources()
 
 	for (int i = 0 ; i < MAX_LIGHT ; i++) {
 
-		LightParams &lp = _lightParams[i];
-		if (!lp.enabled)
+		LightSource &lp = _lightParams[i];
+		if (!lp.enabled || !lp.debugDraw)
 			continue;
 
-		Mat4 objTransform = lp.space == LIGHT_SPACE_LOCAL ? _globalObjectTransform.getMatrix()  : Mat4::createUnit();
+		Mat4 objTransform = lp.space == LightSource::LIGHT_SPACE_LOCAL ? _globalObjectTransform.getMatrix()  : Mat4::createUnit();
 
 		double factor = 5 * _normalsScale / calculateInitialScaleFactor();
 
 		switch(lp.type) {
-		case LIGHT_TYPE_DIRECTIONAL:
+		case LightSource::LIGHT_TYPE_DIRECTIONAL:
 			_shaderData.mat_objectToClipSpaceTransform = 
 				Transformations::getScaleMatrix(Vector3(factor, factor, factor)) *
 				Transformations::lookAt(Vector3(0,0,3 * factor), lp.direction, Vector3(1,1,1)) * objTransform *view;
 			renderMiscModelWireframe(_light_dir_model, Color(0,1,0), true);
 			break;
 
-		case LIGHT_TYPE_POINT:
+		case LightSource::LIGHT_TYPE_POINT:
 			_shaderData.mat_objectToClipSpaceTransform = 
 				Transformations::getScaleMatrix(Vector3(factor, factor, factor)) *
 				Transformations::getTranlationMatrix(lp.position) *
 				objTransform *_cameraTransform.getMatrix() * _projectionTransform.getMatrix();
 			renderMiscModelPolygonWireframe(_light_point_model, Color(0,1,0), true);
 			break;
-		case LIGHT_TYPE_SPOT:
+		case LightSource::LIGHT_TYPE_SPOT:
 			_shaderData.mat_objectToClipSpaceTransform = 
 				Transformations::getScaleMatrix(Vector3(factor, factor, factor)) *
 				Transformations::lookAt(lp.position, lp.direction, Vector3(1,1,1)) * objTransform *view;

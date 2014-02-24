@@ -185,7 +185,7 @@ void Engine::render()
 
 	// global settings
 	_renderer->setAspectRatio(_initialsceneBox.getSizes().x() / _initialsceneBox.getSizes().y() );
-	_renderer->setDebugDepthRendering(_depthRendering);
+	_renderer->setDebugDepthRendering(_flags.depthBufferVisualization);
 
 	createNormalModels();
 	setupFogShaderData();
@@ -205,10 +205,10 @@ void Engine::render()
 		switch(_shadingMode) 
 		{
 		case SHADING_GOURAD:
-			useGouraldShader(_renderer, &_shaderData, _perspectiveCorrect);
+			useGouraldShader(_renderer, &_shaderData, _flags.perspectiveCorrect);
 			break;
 		case SHADING_PHONG:
-			usePhongShader(_renderer, &_shaderData, _perspectiveCorrect);
+			usePhongShader(_renderer, &_shaderData, _flags.perspectiveCorrect);
 			break;
 		case SHADING_FLAT:
 			useFlatShader(_renderer, &_shaderData);
@@ -219,7 +219,7 @@ void Engine::render()
 		}
 
 		// setup culling
-		if (_backfaceCulling) 
+		if (_flags.backFaceCulling)
 		{
 			FACE_TYPE culledFace = translateFaceType(FACE_BACK);
 			_renderer->setBackFaceCulling(culledFace == FACE_BACK);
@@ -242,7 +242,7 @@ void Engine::render()
 		_renderer->setOutputTexture(_outputTexture );
 
 		// draw black wireframe over model when we asked to draw a wireframe in addition to shading
-		if (_drawWireFrame && _shadingMode != SHADING_NONE)
+		if (_flags.drawWireFrame && _shadingMode != SHADING_NONE)
 			_renderer->renderWireFrame(m.polygons, m.getNumberOfPolygons(), Color(0,0,0), true);
 
 		// draw wireframe in object color when we don't draw anything else
@@ -265,18 +265,18 @@ void Engine::render()
 			} else 
 			{
 				// for other objects draw box if setting is up in green
-				if (_drawBoundingBox)
+				if (_flags.drawBoundingBox)
 					renderMiscModelWireframe(item._boxModel, Color(0,1,0), true);
 
 				// and always draw axes in their color
-				if (_drawAxes)
+				if (_flags.drawAxes)
 					renderMiscModelWireframe(_axesModel);
 			}
 		}
 
-		if (_drawVertexNormals)
+		if (_flags.drawVertexNormals)
 			renderMiscModelWireframe(item._vertexNormalModel);
-		if (_drawPolygonNormals)
+		if (_flags.drawFaces)
 			renderMiscModelWireframe(item._polygonNormalModel);
 
 	}
@@ -284,19 +284,17 @@ void Engine::render()
 	// bounding box and axes of whole model
 	setupTransformationShaderData(-1);
 
-	if (_drawBoundingBox)
+	if (_flags.drawBoundingBox)
 		renderMiscModelWireframe(_sceneBoxModel, Color(0,0,1), true);
 
-	if (_drawAxes)
+	if (_flags.drawAxes)
 		renderMiscModelWireframe(_axesModel);
 
-
-	// render light sources
-	if (_draw_light_sources)
-		drawLightSources();
+	renderLightSources();
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::renderMiscModelWireframe( const WireFrameModel *m, Color c /*= Color(0,0,0)*/, bool colorValid /*= false*/ )
 {
@@ -307,6 +305,7 @@ void Engine::renderMiscModelWireframe( const WireFrameModel *m, Color c /*= Colo
 	_renderer->uploadVertices(m->vertices, sizeof(WireFrameModel::Vertex), m->getNumberOfVertices());
 	_renderer->renderWireFrame(m->polygons, m->getNumberOfPolygons(), c, colorValid);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::renderMiscModelPolygonWireframe(const WireFrameModel *m, Color c, bool colorValid) 
 {

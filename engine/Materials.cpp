@@ -18,8 +18,8 @@
 */
 #include "Shaders.h"
 #include "Engine.h"
-#include <assert.h>
 #include "model/Material.h"
+#include <assert.h>
 
 void Engine::resetMaterials()
 {
@@ -65,7 +65,7 @@ void Engine::setupMaterialsShaderData( int objectID )
 	/* setup misc settings*/
 	_shaderData.textureSampler.bindTexture(currentItem.texture);
 	_shaderData.shineness = material->getShineness();
-	_shaderData.lightBackfaces = _lightBackfaces;
+	_shaderData.lightBackfaces = _flags.twofaceLighting;
 	_shaderData.kA =  (_ambientLight.color / 255) * material->getAmbient();
 	_shaderData.objectColor =  material->getObjectColor() / 255;
 

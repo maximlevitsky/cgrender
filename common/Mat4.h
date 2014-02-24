@@ -19,14 +19,12 @@
 #ifndef MAT4_H
 #define MAT4_H
 
-#include <math.h>
+#include <cmath>
 #include <assert.h>
 
 #define EPSILON 1e-10
 #define IS_DOUBLE_EQUAL(d1,d2) \
 	((d1) <= (d2) + EPSILON && (d1) >= (d2) - EPSILON)
-
-class MatrixSingularException {};
 
 class Mat4
 {
@@ -142,7 +140,7 @@ public:
 			}			
 		}
 
-		throw MatrixSingularException();
+		assert(0);
 	}
 
 	//leading is the first cell in a row that is not zero.
@@ -154,7 +152,7 @@ public:
 				return (*this)(R, i);
 			}
 		}
-		throw MatrixSingularException();
+		assert(0);
 	}
 
 	int getLeadingCol(int R) {
@@ -164,7 +162,7 @@ public:
 				return i;
 			}
 		}
-		throw MatrixSingularException();
+		assert(0);
 	}
 
 	Mat4 inverse() const {

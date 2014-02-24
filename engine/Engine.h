@@ -29,113 +29,24 @@
 #include "model/Model.h"
 
 #include "Shaders.h"
-
-
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <memory>
-
-enum LightID {
-	LIGHT_ID_AMBIENT=-1,LIGHT_ID_1=0, LIGHT_ID_2,
-	LIGHT_ID_3, LIGHT_ID_4, LIGHT_ID_5, LIGHT_ID_6,
-	LIGHT_ID_7, LIGHT_ID_8, MAX_LIGHT
-};
-
-enum LightType {
-	LIGHT_TYPE_DIRECTIONAL,
-	LIGHT_TYPE_POINT,
-	LIGHT_TYPE_SPOT
-};
-
-enum LightSpace
-{
-	LIGHT_SPACE_VIEW,
-	LIGHT_SPACE_LOCAL
-};
-
-
-struct LightParams
-{
-	LightParams() {reset();}
-
-	//light enabled
-	bool enabled;
-	//type directional,point,spot
-	LightType type;
-	//local or view space
-	LightSpace space;
-
-	//color 0-255 RGB
-	Color color;
-
-	int cutoffAngle;
-
-
-	Vector3 position;
-	Vector3 direction;
-	bool shadow;
-
-	void reset() 
-	{
-		enabled = false;
-		type =  LIGHT_TYPE_DIRECTIONAL;
-		space = LIGHT_SPACE_VIEW;
-		color = Color(255,255,255);
-		position = Vector3(0,0,0);
-		direction  = Vector3(0,0,0);
-
-		cutoffAngle = 30;
-		shadow = false;
-	}
-};
-
-enum FogType {
-	FOG_LINEAR,
-	FOG_EXPONETIAL,
-	FOG_EXPONETIAL2,
-
-};
-
-struct FogParams 
-{
-	bool enabled;
-	enum FogType type;
-
-	Color color; /* fog color */
-
-	double startPoint;
-	double endPoint;
-	double density;
-
-
-	void reset() 
-	{
-		enabled = false;
-		type = FOG_LINEAR;
-		startPoint = 0;
-		endPoint = 1;
-		density = 1;
-	}
-
-	FogParams() {
-		reset();
-	}
-};
-
+#include "EngineAPI.h"
 
 struct SceneItem 
 {
-	SceneItem() : _mainModel(NULL), _boxModel(NULL), 
-		_vertexNormalModel(NULL), _polygonNormalModel(NULL), texture(NULL)
+	SceneItem() :
+		_mainModel(NULL),
+		_boxModel(NULL),
+		_vertexNormalModel(NULL),
+		_polygonNormalModel(NULL),
+		texture(NULL)
 	{}
 
 	~SceneItem() 
 	{
-		if (_mainModel) delete _mainModel;
-		if (_boxModel) delete _boxModel;
-		if (_vertexNormalModel) delete _vertexNormalModel;
-		if (_polygonNormalModel) delete _polygonNormalModel;
+		delete _mainModel;
+		delete _boxModel;
+		delete _vertexNormalModel;
+		delete _polygonNormalModel;
 		if (texture) Texture::unloadCached(texture);
 	}
 
@@ -166,14 +77,10 @@ public:
 
 	// initialization
 	Engine(void);
-
-	void createLighSourcesModels();
-
 	~Engine(void);
 
 	void setRenderer(Renderer *renderer);
 	void setOutput(Texture* output, int width, int height);
-	enum SHADING_MODE {SHADING_NONE, SHADING_FLAT, SHADING_GOURAD, SHADING_PHONG};
 
 	// model loading
 	bool loadSceneFromOBJ(const char* file);
@@ -181,23 +88,18 @@ public:
 	void resetScene();
 
 
-	// resetting of settings
-	void resetTransformations();
-	void resetLighting();
-	void resetMaterials();
-
 	// transformations
 	void rotateObject(int axis, double angleDelta);
 	void moveObject( int axis, double delta);
 	void scaleObject(int axis, double delta);
+	void resetTransformations();
+
+	// camera settings
 	void rotateCamera(int axis, double angleDelta);
 	void moveCamera(int axis, double delta);
-
-	// perspective settings
 	void setOrtographicRendering() {_projectionTransform.setPerspectiveEnabled(false);}
 	void setPerspectiveRendering() {_projectionTransform.setPerspectiveEnabled(true);}
 	bool isPerspectiveRendering() const { return _projectionTransform.getPerspectiveEnabled(); }
-
 	void setPerspectiveD(double d);
 	double getPerspectiveD() const  { return _projectionTransform.getDistance(); }
 
@@ -208,73 +110,25 @@ public:
 	void setInvertFaces(bool enable);
 	bool getInvertFaces() { return _invertFaces; }
 
-	// lightning tweaks
-	void setLightAllFaces(bool enable) { _lightAllFaces = enable;}
-	bool getLightAllFaces() { return _lightAllFaces; }
-	void setLightBackFaces(bool enable) { _lightBackfaces = enable; }
-	bool getLightBackFaces() { return _lightBackfaces; }
-
-
 	// shading mode
 	enum SHADING_MODE getShadingMode()  { return _shadingMode; };
 	void setShadingMode(enum SHADING_MODE mode) { _shadingMode = mode; };
 
 
-	// global and local settings 
-	LightParams* getLightParams(int id) { return (id == -1) ? &_ambientLight : &_lightParams[id];}
+	// lighting settings
+	LightSource* getLightParams(int id) { return (id == -1) ? &_ambientLight : &_lightParams[id];}
+	void invalidateShadowMaps();
+	void resetLighting();
+
+	// Shadow settings
+	ShadowParams getShadowParams() { return _shadowParams; }
+	void setShadowParams(ShadowParams * params);
+
+	// Material settings (currently of selected object)
 	MaterialParams& getMatrialParams();
-	void reloadTextures();
+	void resetMaterials();
 
-	// object selection helpers
-	Vector3 deviceToNDC(double X, double Y, double Z);
-	bool selectObject(int mouseCX, int mouseCY);
-
-	void setDrawSeperateObjects(bool enable);
-	bool getDrawSeparateObjects() { return _drawSeparateObjects; }
-
-	// misc settings
-	void setDrawBoundingBox(bool enable) { _drawBoundingBox = enable; }
-	bool getDrawBoundingBox() const  { return _drawBoundingBox;}
-
-	void setDrawVertexNormals(bool enable) { _drawVertexNormals = enable; }
-	bool getdrawVertexNormals() const  { return _drawVertexNormals;}
-
-	void setDrawPolygonNormals(bool enable) { _drawPolygonNormals = enable; }
-	bool getdrawPolygonNormals() const  { return _drawPolygonNormals;}
-
-	void setDrawWireFrame(bool enable)  {_drawWireFrame = enable; }
-	bool getdrawWireFrame() const { return _drawWireFrame || _shadingMode == SHADING_NONE;}
-
-	void setDrawAxes(bool enable) { _drawAxes = enable;}
-	bool getDrawAxes() const { return _drawAxes; }
-
-	bool getBackfaceCulling() { return _backfaceCulling;}
-	void setBackFaceCulling(bool enable) { _backfaceCulling = enable; }
-
-	bool getDepthRendering() { return _depthRendering; }
-	void setDepthRendering(bool enable) { _depthRendering = enable; }
-
-	bool getPerspectiveCorrect() { return _perspectiveCorrect; }
-	void setPerspectiveCorrect(bool enable) { _perspectiveCorrect = enable; }
-
-	void setInvertDepth(bool enable) { _cameraTransform.setInvert(enable); }
-	bool getInvertDepth() { return _cameraTransform.getInvert();}
-
-	void setDrawLightSources(bool enable) { _draw_light_sources = enable; }
-	bool getDrawLightSources() { return _draw_light_sources; }
-
-	double getNormalScale() { return _normalsScale; }
-	void setNormalScale(double newscale)
-	{
-		invalidateNormalModels();
-		_normalsScale = newscale;
-	}
-
-	TextureSampleMode getTextureSampleMode() { return _texSampleMode; }
-	void setTextureSampleMode(TextureSampleMode mode) { _texSampleMode = mode; }
-	void resetTextureMode() { _texSampleMode = TMS_BILINEAR_MIPMAPS; }
-	
-	// background
+	// background settings
 	bool loadBackgroundImage(const char* file);
 	void resetBackground();
 	bool getTileBackground() { return _tile_background; }
@@ -282,70 +136,71 @@ public:
 	void setBackgroundColor(Color c) {_backGroundColor = c;}
 	Color getBackgroundColor() const { return _backGroundColor; }
 
-	// fog
+	// fog settings
 	FogParams getFogParams();
 	void setFogParams(const FogParams &params);
 	void resetFog();
 
+	// simple engine flags
+	EngineOperationFlags getEngineOperationFlags() const { return _flags; }
+	void setEngineOperationFlags(const EngineOperationFlags newFlags);
+
+	// misc settings
+	double getNormalScale() { return _normalsScale; }
+	void setNormalScale(double newscale);
+	TextureSampleMode getTextureSampleMode() { return _texSampleMode; }
+	void setTextureSampleMode(TextureSampleMode mode) { _texSampleMode = mode; }
+	void resetTextureSampleMode() { _texSampleMode = TMS_BILINEAR_MIPMAPS; }
+
+	// object selection helpers
+	Vector3 deviceToNDC(double X, double Y, double Z);
+	bool selectObject(int mouseCX, int mouseCY);
+	void setDrawSeperateObjects(bool enable);
+	bool getDrawSeparateObjects() { return _drawSeparateObjects; }
+
+
 	// rendering
 	void render();
 
-	// shadow maps
-	void invalidateShadowMaps();
-	void updateShadowMaps();
-	void freeShadowMaps();
+	// debug access for shadow maps
 	const DepthTexture* getShadowMap(int i)  { return _shadowMaps[i]; }
-	ShadowParams getShadowParams() { return _shadowParams; }
-	void setShadowParams(ShadowParams * params);
 
 private:
 	// all the objects to render and their properties
 	SceneItem *_sceneItems;
 	unsigned int _itemCount;
+	int _selectedObject;
 	BOUNDING_BOX _sceneBox;
 	BOUNDING_BOX _initialsceneBox;
-
-	WireFrameModel* _sceneBoxModel;
-	WireFrameModel* _axesModel;
-	WireFrameModel* _light_spot_model;
-	WireFrameModel* _light_dir_model;
-	WireFrameModel* _light_point_model;
-
-	// camera properties
-	Transformations::CameraTransformation _cameraTransform;
-	Transformations::ProjectionTransformation _projectionTransform;
-
-	FogParams _fogParams;
 
 	// global object settings
 	Transformations::AffineTransformation _globalObjectTransform;
 	MaterialParams _globalObjectMaterial;
 
-	TextureSampleMode _texSampleMode;
-
-	// Lighting
-	LightParams _lightParams[8];
-	LightParams _ambientLight;
+	// camera properties
+	Transformations::CameraTransformation _cameraTransform;
+	Transformations::ProjectionTransformation _projectionTransform;
 
 	// settings
-	SHADING_MODE _shadingMode;
-	bool _drawWireFrame;
-	bool _drawVertexNormals;
-	bool _drawPolygonNormals;
-	bool _drawBoundingBox;
+	EngineOperationFlags _flags;
+	FogParams _fogParams;
+	ShadowParams _shadowParams;
 	bool _drawSeparateObjects;
-	bool _drawAxes;
-	bool _backfaceCulling;
-	bool _lightBackfaces;
-	bool _draw_light_sources;
-
-	// debug settings
-	bool _lightAllFaces;
-	bool _depthRendering;
-	bool _perspectiveCorrect;
 	bool _invertNormals;
 	bool _invertFaces;
 	double _normalsScale;
+	TextureSampleMode _texSampleMode;
+	SHADING_MODE _shadingMode;
+
+
+	// background
+	const Texture* _backgroundTexture;
+	Color _backGroundColor;
+	bool _tile_background;
+
+	// Lighting
+	LightSource _lightParams[8];
+	LightSource _ambientLight;
 
 	// shader data and its setup
 	UniformBuffer _shaderData;
@@ -355,12 +210,6 @@ private:
 	void setupMaterialsShaderData(int objectID);
 	void setupShadowMapShaderData(int objectID);
 
-	// background
-	const Texture* _backgroundTexture;
-	Color _backGroundColor;
-	bool _tile_background;
-
-	int _selectedObject;
 
 	/* output buffers */
 	int _outputSizeX;
@@ -370,11 +219,17 @@ private:
 	IntegerTexture* _outputSelBuffer;
 	Renderer *_renderer;
 
-	// shadow data
+	// shadow maps
 	DepthTexture* _shadowMaps[MAX_LIGHT*6];
 	Mat4 _shadowMapsMatrices[MAX_LIGHT*6];
 	bool _shadowMapsValid;
-	ShadowParams _shadowParams;
+
+	/* misc models */
+	WireFrameModel* _sceneBoxModel;
+	WireFrameModel* _axesModel;
+	WireFrameModel* _light_spot_model;
+	WireFrameModel* _light_dir_model;
+	WireFrameModel* _light_point_model;
 
 private:
 	Transformations::AffineTransformation *getTransformationSettings();
@@ -385,14 +240,17 @@ private:
 	void recomputeBoundingBox();
 	void recomputeDepth();
 	void updateOutputs();
+	void reloadTextures();
 
 	void createShadowMap(int i, const Vector3 &direction, const Vector3 &position, bool projective, double maxFov);
-	void renderBackground();
+	void updateShadowMaps();
+	void freeShadowMaps();
 
+	void renderBackground();
 	void renderMiscModelWireframe(const WireFrameModel *m, Color c = Color(0,0,0), bool colorValid = false);
 	void renderMiscModelPolygonWireframe(const WireFrameModel* m, Color c = Color(0,0,0), bool colorValid = false);
-
-	void drawLightSources();
+	void renderLightSources();
+	void createLighSourcesModels();
 
 	enum FACE_TYPE {
 		FACE_FRONT,

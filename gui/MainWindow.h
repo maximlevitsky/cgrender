@@ -75,7 +75,6 @@ public slots:
 	void onDrawNormals(bool);
 	void onDrawfaceNormals(bool);
 	void onDrawWireframe(bool);
-	void onDrawLightSources(bool);
 	void onBackFaceCulling(bool);
 	void onDrawDepthbuffer(bool);
 

@@ -30,35 +30,35 @@ void Engine::updateShadowMaps()
 
 	for (int i = 0 ; i < MAX_LIGHT ; i++) 
 	{
-		LightParams &lp = _lightParams[i];
+		LightSource &lp = _lightParams[i];
 		if (!lp.shadow || !lp.enabled)
 			continue;
 
 		/* check the direction for invalid data */
-		if (lp.type != LIGHT_TYPE_POINT && lp.direction.len() == 0)
+		if (lp.type != LightSource::LIGHT_TYPE_POINT && lp.direction.len() == 0)
 			continue;
 
 		/* Translate direction and position to correct space */
 		Vector3 direction = lp.direction, position = lp.position;
 
-		if (lp.space == LIGHT_SPACE_LOCAL) 
+		if (lp.space == LightSource::LIGHT_SPACE_LOCAL)
 		{
-			if (lp.type != LIGHT_TYPE_POINT) 
+			if (lp.type != LightSource::LIGHT_TYPE_POINT)
 				direction = vmul3dir(direction,_globalObjectTransform.getNormalTransformMatrix());
-			if (lp.type != LIGHT_TYPE_DIRECTIONAL)
+			if (lp.type != LightSource::LIGHT_TYPE_DIRECTIONAL)
 				position = vmul3point(position ,_globalObjectTransform.getMatrix());
 		}
 
 		direction.makeNormal();
 
 		switch (lp.type) {
-		case LIGHT_TYPE_DIRECTIONAL:
+		case LightSource::LIGHT_TYPE_DIRECTIONAL:
 			createShadowMap(i*6, -direction, Vector3(0,0,0), false,  0);
 			break;
-		case LIGHT_TYPE_SPOT:
+		case LightSource::LIGHT_TYPE_SPOT:
 			createShadowMap(i*6, -direction, position, true, lp.cutoffAngle);
 			break;
-		case LIGHT_TYPE_POINT:
+		case LightSource::LIGHT_TYPE_POINT:
 			createShadowMap(i*6+0,Vector3(-1,0,0), position, true, 100);
 			createShadowMap(i*6+1,Vector3(+1,0,0), position, true, 100);
 			createShadowMap(i*6+2,Vector3(0,-1,0), position, true, 100);
@@ -225,7 +225,7 @@ void Engine::setupShadowMapShaderData( int objectID )
 	int lightID = 0;
 	for (int i = 0 ; i < MAX_LIGHT ; i++) 
 	{
-		LightParams &lp = _lightParams[i];
+		LightSource &lp = _lightParams[i];
 		if (!lp.enabled) continue;
 
 		ShaderLightData &light = _shaderData.lights[lightID++];
@@ -243,10 +243,10 @@ void Engine::setupShadowMapShaderData( int objectID )
 			0.5, 0.5, 0.5, 1.0
 			);
 
-		if (lp.type != LIGHT_TYPE_POINT) {
+		if (lp.type != LightSource::LIGHT_TYPE_POINT) {
+
 			light._shadowMapSampler.bindTexture(_shadowMaps[i*6]);
 			light.shadowMapTransfrom[0] = 
-				
 				_shaderData.mat_cameraToWorldSpace * _shadowMapsMatrices[i*6] * clipToTextureSpace;
 					
 		} else 

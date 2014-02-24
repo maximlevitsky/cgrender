@@ -34,6 +34,7 @@
 %option never-interactive
 %option nounistd
 %option bison-bridge
+%option nounput
 %option prefix="mtl_"
 
 %%

@@ -26,7 +26,7 @@ void phongVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const Model::Vertex& v = *(const Model::Vertex*)in;
 
-	attribs_out[0] = vmul4point(v.position,u->mat_objectToCameraSpace).xyz();
+	attribs_out[0] = vmul3point(v.position,u->mat_objectToCameraSpace);
 	attribs_out[1] = vmul3dir(v.normal,u->mat_objectToCameraSpaceNormalTransform).returnNormal();
 
 	if (u->textureSampler.isBound())

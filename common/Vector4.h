@@ -19,8 +19,8 @@
 #ifndef VECTOR4_H
 #define VECTOR4_H
 
-#include <math.h>
-#include "Mat4.h"
+#include "common/Utilities.h"
+#include "common/Mat4.h"
 #include "Vector3.h"
 
 class Vector4 
@@ -32,7 +32,8 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	Vector4() {}
 
-	bool operator<(const  Vector4& other) const {
+	bool operator<(const  Vector4& other) const
+	{
 		if (x() != other.x())
 			return x() < other.x();
 
@@ -54,15 +55,6 @@ public:
 		data[3] = w;
 	}
 
-	Vector4& operator=(const Vector4& v) 
-	{
-		data[0] = v.data[0];
-		data[1] = v.data[1];
-		data[2] = v.data[2];
-		data[3] = v.data[3];
-		return *this;
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	const double& operator[](int i) const  {return data[i];}
 	double& operator[](int i)  { return data[i]; }
@@ -79,7 +71,7 @@ public:
 
 	bool isBadFP() const
 	{
-		return is_bad_fp(data[0]) || is_bad_fp(data[1]) || is_bad_fp(data[2]) || is_bad_fp(data[3]);
+		return !isfinite(data[0]) || !isfinite(data[1]) || !isfinite(data[2]) || !isfinite(data[3]);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
