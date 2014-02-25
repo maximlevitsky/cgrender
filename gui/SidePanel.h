@@ -46,9 +46,14 @@ private:
 private slots:
 
 	/* general/fog panel*/
-	void fogPanelUpdate();
-	void fogPanelSetup();
+	void fogPanelReadControls();
+	void fogPanelWriteControls();
 	void fogReset();
+
+	/* general/background panel*/
+	void backgroundPanelReadControls();
+	void backgroundPanelWriteControls();
+	void backgroundReset();
 
 	/* bottom bar*/
 	void onSuspendRendering(bool checked);

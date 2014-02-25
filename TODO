@@ -5,18 +5,19 @@
 
 * materials:
 	* think about meaning of kd,ks,etc
-	* verify texture loading
+	* use Qt for texture loading instead of pngwrapper
 
 * misc
 	* implement shading mode == none - EASY
 	* implement app title consistently - EASY
 	* implement render to file
-	* refactor Engine get/set inteface
+	* add wheel event handler to color chooser to change brighness of whole color
+	* add drag-drop of colors for colorchooser
+	* think about camera settings
+	
 
 
 * implemement side panel
-	* fog panel
-	* background panel
 	* ambient light panel
 	* lights panel
 	* shadows panel

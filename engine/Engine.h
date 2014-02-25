@@ -103,13 +103,6 @@ public:
 	void setPerspectiveD(double d);
 	double getPerspectiveD() const  { return _projectionTransform.getDistance(); }
 
-
-	// normals
-	void setInvertNormals(bool enable);
-	bool getInvertNormals() { return _invertNormals; }
-	void setInvertFaces(bool enable);
-	bool getInvertFaces() { return _invertFaces; }
-
 	// shading mode
 	enum SHADING_MODE getShadingMode()  { return _shadingMode; };
 	void setShadingMode(enum SHADING_MODE mode) { _shadingMode = mode; };
@@ -129,12 +122,9 @@ public:
 	void resetMaterials();
 
 	// background settings
-	bool loadBackgroundImage(const char* file);
+	BackgroundParams getBackgroundSettings() const { return _backgroundSettings; }
+	void setBackGroundSettings(const BackgroundParams newSettings);
 	void resetBackground();
-	bool getTileBackground() { return _tile_background; }
-	void setTileBackground(bool enable);
-	void setBackgroundColor(Color c) {_backGroundColor = c;}
-	Color getBackgroundColor() const { return _backGroundColor; }
 
 	// fog settings
 	FogParams getFogParams();
@@ -151,6 +141,11 @@ public:
 	TextureSampleMode getTextureSampleMode() { return _texSampleMode; }
 	void setTextureSampleMode(TextureSampleMode mode) { _texSampleMode = mode; }
 	void resetTextureSampleMode() { _texSampleMode = TMS_BILINEAR_MIPMAPS; }
+	void setInvertNormals(bool enable);
+	bool getInvertNormals() { return _invertNormals; }
+	void setInvertFaces(bool enable);
+	bool getInvertFaces() { return _invertFaces; }
+
 
 	// object selection helpers
 	Vector3 deviceToNDC(double X, double Y, double Z);
@@ -185,6 +180,8 @@ private:
 	EngineOperationFlags _flags;
 	FogParams _fogParams;
 	ShadowParams _shadowParams;
+	BackgroundParams _backgroundSettings;
+
 	bool _drawSeparateObjects;
 	bool _invertNormals;
 	bool _invertFaces;
@@ -192,11 +189,6 @@ private:
 	TextureSampleMode _texSampleMode;
 	SHADING_MODE _shadingMode;
 
-
-	// background
-	const Texture* _backgroundTexture;
-	Color _backGroundColor;
-	bool _tile_background;
 
 	// Lighting
 	LightSource _lightParams[8];
@@ -223,6 +215,9 @@ private:
 	DepthTexture* _shadowMaps[MAX_LIGHT*6];
 	Mat4 _shadowMapsMatrices[MAX_LIGHT*6];
 	bool _shadowMapsValid;
+
+	// background texture
+	const Texture* _backgroundTexture;
 
 	/* misc models */
 	WireFrameModel* _sceneBoxModel;

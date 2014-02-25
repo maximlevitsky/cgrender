@@ -18,7 +18,6 @@
 */
 
 #include <DrawArea.h>
-#include <math.h>
 #include <QPainter>
 #include <QResizeEvent>
 #include <QPaintEvent>
@@ -28,6 +27,8 @@
 #include <stdint.h>
 #include "MainWindow.h"
 #include <stdio.h>
+
+#include <cmath>
 
 /***************************************************************************************/
 static double translateSensivety(double value)
@@ -89,7 +90,7 @@ void DrawArea::paintEvent(QPaintEvent *)
 		struct timeval t,t2,t3;
 		gettimeofday(&t, NULL);
 
-		Color bkgcolor = engine->getBackgroundColor();
+		Color bkgcolor = engine->getBackgroundSettings().color * 255;
 
 		engine->render();
 		sceneValid = true;

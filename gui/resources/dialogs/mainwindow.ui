@@ -69,7 +69,6 @@
     <addaction name="actionNormals"/>
     <addaction name="actionFaces"/>
     <addaction name="actionWireframe"/>
-    <addaction name="actionLight_sources"/>
     <addaction name="actionBack_face_culling"/>
     <addaction name="actionDepth_buffer_visualization"/>
    </widget>
@@ -153,14 +152,6 @@
     <string>Back/front faces</string>
    </property>
   </action>
-  <action name="actionLight_sources">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Light sources</string>
-   </property>
-  </action>
   <action name="actionBack_face_culling">
    <property name="checkable">
     <bool>true</bool>
@@ -215,11 +206,6 @@
    </property>
    <property name="text">
     <string>Wireframe</string>
-   </property>
-  </action>
-  <action name="actionMaterial">
-   <property name="text">
-    <string>Materials....</string>
    </property>
   </action>
   <action name="actionInvert_vertex_normals">
@@ -304,11 +290,6 @@
   <action name="actionMouse_sensivety">
    <property name="text">
     <string>Mouse sensivety...</string>
-   </property>
-  </action>
-  <action name="actionCamera_properties">
-   <property name="text">
-    <string>Camera...</string>
    </property>
   </action>
   <action name="actionSidePanel">

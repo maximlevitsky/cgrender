@@ -18,7 +18,7 @@
 */
 #include "FileChooser.h"
 #include <QWidget>
-#include <QFileDialog>
+#include "PreviewFileDialog.h"
 
 FileChooser::FileChooser(QWidget *parent) : QWidget(parent)
 {
@@ -36,12 +36,17 @@ void FileChooser::setFileName(QString newfileName)
 
 void FileChooser::onFileChooseCalled()
 {
-	QString result = QFileDialog::getOpenFileName(this, QString(), filename, fileFilter);
+	PreviewFileDialog *dlg  = new PreviewFileDialog(this);
+	dlg->setAcceptMode(QFileDialog::AcceptOpen);
 
-	if (result.isNull())
+	QStringList filters;
+	filters << fileFilter;
+	dlg->setNameFilters(filters);
+	if (!dlg->exec())
 		return;
 
-	filename = result;
+	filename = dlg->selectedFiles().first();
+
 	updateUI();
 	emit contentsChanged();
 }

@@ -22,45 +22,67 @@
 #include "Engine.h"
 #include <assert.h>
 
-bool Engine::loadBackgroundImage( const char* file )
-{
-
-	resetBackground();
-	_backgroundTexture = Texture::loadCached(file, true);
-	return true;
-}
-
 void Engine::resetBackground()
 {
-	if (_backgroundTexture) {
+	if (_backgroundTexture)
+	{
 		Texture::unloadCached(_backgroundTexture);
 		_backgroundTexture = NULL;
 	}
-	_backGroundColor = Color(100,100,100);
+
+	_backgroundSettings.color = Color(0.4,0.4,0.4);
+	_backgroundSettings.mode = BackgroundParams::COLOR;
+	_backgroundSettings.textureScalingMode = BackgroundParams::STRETCH;
+	_backgroundSettings.textureFile = "";
 }
 
-void Engine::setTileBackground( bool enable )
+
+void Engine::setBackGroundSettings(const BackgroundParams newSettings)
 {
-	_tile_background = enable;
+	bool textureUpdate =
+			newSettings.mode != _backgroundSettings.mode ||
+			newSettings.textureFile != _backgroundSettings.textureFile;
+
+
+	if (textureUpdate) {
+
+		if (_backgroundTexture)
+		{
+			Texture::unloadCached(_backgroundTexture);
+			_backgroundTexture = NULL;
+		}
+
+		if (newSettings.mode == BackgroundParams::TEXTURE) {
+			_backgroundTexture = Texture::loadCached(newSettings.textureFile.c_str(), false);
+		}
+	}
+
+	_backgroundSettings = newSettings;
 }
 
 void Engine::renderBackground()
 {
 	double scaleX, scaleY;
 
-	if (_backgroundTexture) 
+	if (_backgroundSettings.mode ==  BackgroundParams::COLOR || !_backgroundTexture)
 	{
-		if (_tile_background) {
-			scaleX = _outputSizeX, scaleY = _outputSizeY;
-		} else  {
-			scaleX = _backgroundTexture->getWidth(), scaleY = _backgroundTexture->getHeight();
-		}
-
-		_renderer->fillBackgroundTexture(*_backgroundTexture, scaleX, scaleY);
+		_renderer->fillBackground(_backgroundSettings.color);
 		return;
 	}
-	
-	_renderer->fillBackground(_backGroundColor / 255);
+
+	switch(_backgroundSettings.textureScalingMode)
+	{
+	case BackgroundParams::TILE:
+		scaleX = _outputSizeX, scaleY = _outputSizeY;
+		_renderer->fillBackgroundTexture(*_backgroundTexture, scaleX, scaleY);
+		break;
+	case BackgroundParams::STRETCH:
+		scaleX = _backgroundTexture->getWidth(), scaleY = _backgroundTexture->getHeight();
+		_renderer->fillBackgroundTexture(*_backgroundTexture, scaleX, scaleY);
+		break;
+	default:
+		assert(0);
+	}
 }
 
 
@@ -78,7 +100,7 @@ void Engine::setFogParams(const FogParams &params)
 
 void Engine::resetFog() {
 	_fogParams.reset();
-	_fogParams.color = _backGroundColor;
+	_fogParams.color = _backgroundSettings.color;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +113,7 @@ void Engine::setupFogShaderData()
 
 	if (fp.enabled) {
 
-		fp.color = _fogParams.color / 255;
+		fp.color = _fogParams.color;
 		fp.linear = _fogParams.type == FogParams::FOG_LINEAR;
 		fp.exp2 = _fogParams.type == FogParams::FOG_EXPONETIAL2;
 

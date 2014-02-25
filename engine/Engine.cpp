@@ -34,9 +34,8 @@ Engine::Engine( void ) :
 	_shadingMode(SHADING_PHONG),
 	_invertNormals(false),
 	_invertFaces(false),
-	_tile_background(true),
-	_backgroundTexture(NULL),
 	_texSampleMode(TMS_BILINEAR_MIPMAPS),
+	_normalsScale (0.06),
 
 	// models
 	_itemCount(0), _sceneItems(NULL),
@@ -52,8 +51,10 @@ Engine::Engine( void ) :
 	_outputTexture(NULL),
 	_outputZBuffer(NULL),
 	_outputSelBuffer(NULL),
+
+	// cache
 	_shadowMapsValid(false),
-	_normalsScale (0.06)
+	_backgroundTexture(NULL)
 {
 
 	_flags.backFaceCulling = false;
@@ -260,7 +261,6 @@ void Engine::resetScene()
 	_invertNormals = false;
 
 	invalidateShadowMaps();
-	resetBackground();
 	freeShadowMaps();
 }
 

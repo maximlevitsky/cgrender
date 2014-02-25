@@ -37,17 +37,26 @@ SidePanel::SidePanel(MainWindow* parent) : QDockWidget(parent)
 
 
 	/* setup general tab/fog */
-	connect(fogModeComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fogPanelUpdate()));
-	connect(fogStartDepthBox, SIGNAL(valueChanged(double)), this, SLOT(fogPanelUpdate()));
-	connect(fogEndDepthBox, SIGNAL(valueChanged(double)), this, SLOT(fogPanelUpdate()));
-	connect(fogDensityBox, SIGNAL(valueChanged(double)), this, SLOT(fogPanelUpdate()));
-	connect(fogColorChooser, SIGNAL(contentsChanged()), this, SLOT(fogPanelUpdate()));
+	connect(fogModeComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fogPanelReadControls()));
+	connect(fogStartDepthBox, SIGNAL(valueChanged(double)), this, SLOT(fogPanelReadControls()));
+	connect(fogEndDepthBox, SIGNAL(valueChanged(double)), this, SLOT(fogPanelReadControls()));
+	connect(fogDensityBox, SIGNAL(valueChanged(double)), this, SLOT(fogPanelReadControls()));
+	connect(fogColorChooser, SIGNAL(contentsChanged()), this, SLOT(fogPanelReadControls()));
 	connect(fogResetButton, SIGNAL(clicked(bool)), this, SLOT(fogReset()));
 	FogParams params = engine->getFogParams();
 	fogColorChooser->setDefaultValue(params.color);
-	fogPanelSetup();
+	fogPanelWriteControls();
 
 	/* setup general tab/background */
+	backgroundTextureChooser->setDefaultFilename("");
+	backgroundColorChooser->setDefaultValue(engine->getBackgroundSettings().color);
+	backgroundPanelWriteControls();
+
+
+	connect(backgroundColorChooser, SIGNAL(contentsChanged()), this, SLOT(backgroundPanelReadControls()));
+	connect(backgroundTextureChooser, SIGNAL(contentsChanged()), this, SLOT(backgroundPanelReadControls()));
+	connect(backgroundScalingMode, SIGNAL(currentIndexChanged(int)), this, SLOT(backgroundPanelReadControls()));
+	connect(backgroundResetButton, SIGNAL(clicked(bool)), this, SLOT(backgroundReset()));
 
 
 	/* bottom bar*/
@@ -57,10 +66,10 @@ SidePanel::SidePanel(MainWindow* parent) : QDockWidget(parent)
 
 
 /******************************************************************************************/
-/* GENERAL TAB */
+/* GENERAL TAB / FOG */
 /******************************************************************************************/
 
-void SidePanel::fogPanelUpdate()
+void SidePanel::fogPanelReadControls()
 {
 	/* update program state when user changes something in fog control panel */
 	int mode = fogModeComboBox->currentIndex();
@@ -75,7 +84,7 @@ void SidePanel::fogPanelUpdate()
 	params.startPoint = fogStartDepthBox->value();
 	params.endPoint = fogEndDepthBox->value();
 	params.density = fogDensityBox->value();
-	params.color = fogColorChooser->getColor() * 255;
+	params.color = fogColorChooser->getColor();
 	engine->setFogParams(params);
 
 	/* update visable controls */
@@ -107,7 +116,7 @@ void SidePanel::fogPanelUpdate()
 	mainWindow->drawArea->invalidateScene();
 }
 
-void SidePanel::fogPanelSetup()
+void SidePanel::fogPanelWriteControls()
 {
 	FogParams params = engine->getFogParams();
 
@@ -119,9 +128,7 @@ void SidePanel::fogPanelSetup()
 	fogStartDepthBox->setValue(params.startPoint);
 	fogEndDepthBox->setValue(params.endPoint);
 	fogDensityBox->setValue(params.density);
-	fogColorChooser->setColor(params.color / 255);
-
-
+	fogColorChooser->setColor(params.color);
 }
 
 void SidePanel::fogReset()
@@ -129,9 +136,41 @@ void SidePanel::fogReset()
 	FogParams params = engine->getFogParams();
 	params.reset();
 	engine->setFogParams(params);
-	fogPanelSetup();
+	fogPanelWriteControls();
 	mainWindow->drawArea->invalidateScene();
 }
+
+/******************************************************************************************/
+/* GENERAL TAB / BACKGROUND */
+/******************************************************************************************/
+void SidePanel::backgroundPanelReadControls()
+{
+	BackgroundParams params = engine->getBackgroundSettings();
+	params.textureFile = backgroundTextureChooser->getFileName().toStdString();
+	params.color = backgroundColorChooser->getColor();
+	params.mode = backgroundTextureChooser->getFileName().isEmpty() ? BackgroundParams::COLOR : BackgroundParams::TEXTURE;
+	params.textureScalingMode = (BackgroundParams::ScalingMode) backgroundScalingMode->currentIndex();
+	engine->setBackGroundSettings(params);
+	fogColorChooser->setDefaultValue(params.color);
+	mainWindow->drawArea->invalidateScene();
+}
+
+void SidePanel::backgroundPanelWriteControls()
+{
+	BackgroundParams params = engine->getBackgroundSettings();
+	backgroundTextureChooser->setFileName(QString::fromStdString(params.textureFile));
+	backgroundColorChooser->setColor(params.color);
+	backgroundScalingMode->setCurrentIndex(params.textureScalingMode);
+}
+
+void SidePanel::backgroundReset()
+{
+	engine->resetBackground();
+	backgroundPanelWriteControls();
+	mainWindow->drawArea->invalidateScene();
+}
+
+
 
 /***********************************************************************************/
 /* BOTTOM BAR */
