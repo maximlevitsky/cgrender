@@ -18,7 +18,6 @@
 */
 
 #include "Engine.h"
-#include "common/Transformations.h"
 #include <cmath>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,9 +43,9 @@ void Engine::updateShadowMaps()
 		if (lp.space == LightSource::LIGHT_SPACE_LOCAL)
 		{
 			if (lp.type != LightSource::LIGHT_TYPE_POINT)
-				direction = vmul3dir(direction,_globalObjectTransform.getNormalTransformMatrix());
+				direction = vmul3dir(direction,_mainTR.getNormalTransformMatrix());
 			if (lp.type != LightSource::LIGHT_TYPE_DIRECTIONAL)
-				position = vmul3point(position ,_globalObjectTransform.getMatrix());
+				position = vmul3point(position ,_mainTR.getMat());
 		}
 
 		direction.makeNormal();
@@ -119,10 +118,10 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 	Vector3 up =  (std::abs(cameraAngleVsup) < (sqrt(2.0) / 2.0)) ? Vector3(0,-1.0,0) : Vector3(-1.0,0,0 );
 
 	// set up camera matrix that we will apply on the scene (so its inverse)
-	Mat4 cameraMatrix = Transformations::lookAt(position, direction, up).inverse();
+	Mat4 cameraMatrix = Mat4::lookAt(position, direction, up).inv();
 
 	// calculate bounding box of the scene from POV of camera using just created camera matrix
-	BOUNDING_BOX sceneBoxFromLightPOV = _sceneBox *  (_globalObjectTransform.getMatrix() * cameraMatrix);
+	BOUNDING_BOX sceneBoxFromLightPOV = _sceneBox *  (_mainTR.getMat() * cameraMatrix);
 
 	double rangeMax = 0;
 	double rangeMin = 0;
@@ -172,9 +171,9 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 			rangeMin = rangeMax / 20;
 		}
 
-		proj = Transformations::getPerspectiveMatrix(maxFov, 1, rangeMin, rangeMax);
+		proj = Mat4::getPersMat(maxFov, 1, rangeMin, rangeMax);
 	} else {
-		proj = Transformations::getOrthoProjMatrix(sceneBoxFromLightPOV.point1.x(), sceneBoxFromLightPOV.point2.x(), sceneBoxFromLightPOV.point2.y(), sceneBoxFromLightPOV.point1.y(), sceneBoxFromLightPOV.point1.z(), sceneBoxFromLightPOV.point2.z());
+		proj = Mat4::getOrthoProjMatrix(sceneBoxFromLightPOV.point1.x(), sceneBoxFromLightPOV.point2.x(), sceneBoxFromLightPOV.point2.y(), sceneBoxFromLightPOV.point1.y(), sceneBoxFromLightPOV.point1.z(), sceneBoxFromLightPOV.point2.z());
 	}
 
 	_shadowMapsMatrices[i] = cameraMatrix * proj;
@@ -210,7 +209,7 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 	for (unsigned int i = 0 ; i < _itemCount; i++) 
 	{
 		SceneItem &item = _sceneItems[i];
-		uniforms.mat_objectToLightSpace = item._modelTransform.getMatrix() * _globalObjectTransform.getMatrix() * cameraMatrix * proj;
+		uniforms.mat_objectToLightSpace = item._itemTR.getMat() * _mainTR.getMat() * cameraMatrix * proj;
 		_renderer->uploadVertices(item._mainModel->vertices, sizeof(Model::Vertex), item._mainModel->getNumberOfVertices());
 		_renderer->renderPolygons(item._mainModel->polygons, item._mainModel->getNumberOfPolygons(),-1);
 	}

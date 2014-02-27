@@ -39,7 +39,7 @@ Engine::Engine( void ) :
 
 	// models
 	_itemCount(0), _sceneItems(NULL),
-	_selectedObject(-1),
+	_selObj(-1),
 	
 	// box and axes generic model
 	_sceneBoxModel(NULL),
@@ -69,12 +69,14 @@ Engine::Engine( void ) :
 	_flags.perspectiveCorrect = true;
 	_flags.twofaceLighting = false;
 
+	rotCoofs = Vector3(0,0,0);
+
 	resetLighting();
 	resetMaterials();
 	resetBackground();
 	resetFog();
 	createLighSourcesModels();
-	_projectionTransform.setPerspectiveEnabled(true);
+	_projTR.setPerspectiveEnabled(false);
 
 	for (int i = 0 ; i < MAX_LIGHT*6 ; i++)
 		_shadowMaps[i] = NULL;
@@ -273,7 +275,7 @@ void Engine::setDrawSeperateObjects( bool enable )
 
 	_drawSeparateObjects = enable;
 	if (_drawSeparateObjects)
-		_selectedObject = -1;
+		_selObj = -1;
 
 	// update output buffers
 	setOutput(_outputTexture, _outputSizeX, _outputSizeY);
@@ -296,10 +298,10 @@ bool Engine::selectObject( int mouseCX, int mouseCY )
 	int candidateObject = _outputSelBuffer->getPixelValue(mouseCX,mouseCY) - 1;
 
 	// didn't select anything or selected the same object
-	if ((_selectedObject == candidateObject) || (candidateObject != -1 && candidateObject >= (int)_itemCount))
+	if ((_selObj == candidateObject) || (candidateObject != -1 && candidateObject >= (int)_itemCount))
 		return false;
 
-	_selectedObject = candidateObject;
+	_selObj = candidateObject;
 	return true;
 }
 
@@ -353,7 +355,7 @@ void Engine::createNormalModels()
 	{
 		SceneItem &item = _sceneItems[i];
 
-		Mat4 normalScale = _globalObjectTransform.getInvScaleMatrix() * item._modelTransform.getInvScaleMatrix();
+		Mat4 normalScale = _mainTR.getInvScaleMatrix() * item._itemTR.getInvScaleMatrix();
 
 		try {
 			if (_flags.drawVertexNormals && !item._vertexNormalModel)
@@ -384,5 +386,5 @@ void Engine::setNormalScale(double newscale)
 void Engine::setEngineOperationFlags(const EngineOperationFlags newFlags)
 {
 	_flags = newFlags;
-	_cameraTransform.setInvert(_flags.leftcoordinateSystem);
+	_cameraTR.setInvert(_flags.leftcoordinateSystem);
 }

@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <assert.h>
+#include "Vector3.h"
 
 #define EPSILON 1e-10
 #define IS_DOUBLE_EQUAL(d1,d2) \
@@ -71,17 +72,7 @@ public:
 	}
 
 	// creates unit Mat4
-	static Mat4 createUnit() 
-	{
-		Mat4 result;
-		for (int i=0; i<4; i++) {
-			result(i,i) = 1;
-		}
-		return result;
-
-	}
-
-	Mat4 operator*(const Mat4& other) const {
+		Mat4 operator*(const Mat4& other) const {
 		Mat4 result;
 		for (int r = 0; r < 4; r++) {
 			for (int c = 0; c < 4; c++) {
@@ -165,7 +156,7 @@ public:
 		assert(0);
 	}
 
-	Mat4 inverse() const {
+	Mat4 inv() const {
 
 		Mat4 source = *this; // will be a unit Mat4
 		Mat4 result = createUnit(); // will be the inverse Mat4 (if invertible)
@@ -207,6 +198,111 @@ public:
 				result(j,i) = m[j][i];
 
 		return result;
+	}
+
+
+	static Mat4 createUnit()
+	{
+		Mat4 result;
+		for (int i=0; i<4; i++) {
+			result(i,i) = 1;
+		}
+		return result;
+
+	}
+
+	static  Mat4 getOrthoProjMatrix(double L, double R, double T, double B, double N, double F)
+	{
+		return Mat4 (
+			(2.0)/(R-L),		0,					0,					0,
+			0,					(2.0)/(T-B),		0,					0,
+			0,					0,					-2.0/(F-N),			0,
+			-(R+L)/(R-L),		-(T+B)/(T-B),		-(F+N)/(F-N),		1
+			);
+	}
+
+	static  Mat4 getPerspMat(double L, double R, double T, double B, double N, double F)
+	{
+		return Mat4 (
+			(2.0 *N)/(R-L),		0,					0,					0,
+			0,					(2.0*N)/(T-B),		0,					0,
+			(R+L)/(R-L),		(T+B)/(T-B),		-(F+N)/(F-N),	   -1,
+			0,					0,					(-2.0*F*N)/(F-N),	0
+			);
+	}
+
+	static  Mat4 getPersMat(double fov, double aspect, double N, double F)
+	{
+		double f = 1.0 / std::tan(fov * 0.5 * (M_PI / 180));
+
+		return Mat4(
+			f / aspect,			0,					0,					0,
+			0,					f,					0,					0,
+			0,					0,					-(F+N)/(F-N),		-1,
+			0,					0,					(-2.0*F*N)/(F-N),	0);
+	}
+
+	static  Mat4 getRotMat(const Vector3 &rot)
+	{
+		// rotate by X
+		Mat4 rotX(
+			1,					0,		   			0,					0,
+			0,					std::cos(-rot[0]),	std::sin(-rot[0]),	0,
+			0,					-std::sin(-rot[0]),	std::cos(-rot[0]),	0,
+			0,					0,					0,					1
+		);
+
+		// rotate by Y
+		Mat4 rotY(
+			std::cos(-rot[1]) ,	0,					std::sin(-rot[1]),	0,
+			0,					1,					0,					0,
+			-std::sin(-rot[1]),	0,					std::cos(-rot[1]),	0,
+			0,					0,					0,					1
+		);
+
+		// rotate by Z
+		Mat4 rotZ(
+			std::cos(-rot[2]) ,	std::sin(-rot[2]),	0,					0,
+			-std::sin(-rot[2]),	std::cos(-rot[2]),	0,					0,
+			0,					0,					1,					0,
+			0,					0,					0,					1
+		);
+
+		return rotX * rotY * rotZ;
+	}
+
+
+	static  Mat4 getScaleMatrix(const Vector3 &scales)
+	{
+		return Mat4(
+			scales[0],			0,					0,					0,
+			0,					scales[1],			0,					0,
+			0,					0,					scales[2],			0,
+			0,					0,					0,					1
+		);
+	}
+
+	static inline Mat4 getMoveMat(const Vector3 &trans)
+	{
+		return Mat4(
+			1,					0,					0,					0,
+			0,					1,					0,					0,
+			0,					0,					1,					0,
+			trans[0],			trans[1],			trans[2],			1
+		);
+	}
+
+	static inline Mat4 lookAt(Vector3 p, Vector3 direction, Vector3 up)
+	{
+		Vector3 n = direction.returnNormal();
+		Vector3 u = n.cross(up).returnNormal();
+		Vector3 v = n.cross(u);
+
+		return Mat4(
+			u[0], u[1], u[2], 0,
+			v[0], v[1], v[2], 0,
+			n[0], n[1], n[2], 0,
+			p[0], p[1], p[2], 1);
 	}
 
 };

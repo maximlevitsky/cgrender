@@ -18,6 +18,13 @@
 */
 
 
+%name-prefix "mtl_"
+%define api.pure
+
+%lex-param   { yyscan_t scanner }
+%parse-param { MtlLoader *loader }
+%parse-param { yyscan_t scanner }
+
 /************************************************************************************/
 /* source preamble */
 /************************************************************************************/
@@ -34,12 +41,6 @@
 	}
 %}
 
-%name-prefix "mtl_"
-%define api.pure
-
-%lex-param   { yyscan_t scanner }
-%parse-param { MtlLoader *loader }
-%parse-param { yyscan_t scanner }
 
 /************************************************************************************/
 /* tokens */

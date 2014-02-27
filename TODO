@@ -13,12 +13,15 @@
 	* implement render to file
 	* add wheel event handler to color chooser to change brighness of whole color
 	* add drag-drop of colors for colorchooser
-	* think about camera settings
+	* think about camera settings - done
 	
-
 
 * implemement side panel
 	* ambient light panel
 	* lights panel
 	* shadows panel
 	....
+
+* transformations:
+	* need camera trans rework too
+	

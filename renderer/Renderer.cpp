@@ -20,7 +20,6 @@
 #include "Texture.h"
 #include "Samplers.h"
 
-#include "common/Transformations.h"
 #include "common/Mat4.h"
 #include "common/Vector4.h"
 #include "common/Vector3.h"
@@ -446,11 +445,11 @@ void Renderer::updateNDCToDisplayTransform()
 	}
 
 	mat_NDCtoDeviceTransform =
-		Transformations::getScaleMatrix(Vector3(scaleFactorX, -scaleFactorY, 0.5)) *
-		Transformations::getTranlationMatrix(Vector3(_viewportSizeX / 2, _viewportSizeY / 2, 0.5));
+			Mat4::getScaleMatrix(Vector3(scaleFactorX, -scaleFactorY, 0.5)) *
+			Mat4::getMoveMat(Vector3(_viewportSizeX / 2, _viewportSizeY / 2, 0.5));
 
 	if (scaleFactorX >0 && scaleFactorY > 0)
-		mat_DeviceToNDCTransform = mat_NDCtoDeviceTransform.inverse();
+		mat_DeviceToNDCTransform = mat_NDCtoDeviceTransform.inv();
 
 
 	clip_x = (double)_viewportSizeX / (2 * scaleFactorX);

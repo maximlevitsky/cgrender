@@ -19,7 +19,6 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "common/Transformations.h"
 #include "common/Mat4.h"
 #include "common/Vector4.h"
 #include "common/BBox.h"
@@ -29,6 +28,7 @@
 #include "model/Model.h"
 
 #include "Shaders.h"
+#include "Transformations.h"
 #include "EngineAPI.h"
 
 struct SceneItem 
@@ -63,7 +63,7 @@ struct SceneItem
 	WireFrameModel* _polygonNormalModel;
 
 	// Model transformation and material
-	Transformations::AffineTransformation _modelTransform;
+	ObjectTransformation _itemTR;
 	MaterialParams _material;
 
 	const Texture *texture;
@@ -92,16 +92,18 @@ public:
 	void rotateObject(int axis, double angleDelta);
 	void moveObject( int axis, double delta);
 	void scaleObject(int axis, double delta);
+
+	void commitRotation();
 	void resetTransformations();
 
 	// camera settings
 	void rotateCamera(int axis, double angleDelta);
 	void moveCamera(int axis, double delta);
-	void setOrtographicRendering() {_projectionTransform.setPerspectiveEnabled(false);}
-	void setPerspectiveRendering() {_projectionTransform.setPerspectiveEnabled(true);}
-	bool isPerspectiveRendering() const { return _projectionTransform.getPerspectiveEnabled(); }
+	void setOrtographicRendering() {_projTR.setPerspectiveEnabled(false);}
+	void setPerspectiveRendering() {_projTR.setPerspectiveEnabled(true);}
+	bool isPerspectiveRendering() const { return _projTR.getPerspectiveEnabled(); }
 	void setPerspectiveD(double d);
-	double getPerspectiveD() const  { return _projectionTransform.getDistance(); }
+	double getPerspectiveD() const  { return _projTR.getDistance(); }
 
 	// shading mode
 	enum SHADING_MODE getShadingMode()  { return _shadingMode; };
@@ -148,7 +150,8 @@ public:
 
 
 	// object selection helpers
-	Vector3 deviceToNDC(double X, double Y, double Z);
+	double getZStep();
+	Vector3 deviceToNDC(double X, double Y);
 	bool selectObject(int mouseCX, int mouseCY);
 	void setDrawSeperateObjects(bool enable);
 	bool getDrawSeparateObjects() { return _drawSeparateObjects; }
@@ -164,17 +167,17 @@ private:
 	// all the objects to render and their properties
 	SceneItem *_sceneItems;
 	unsigned int _itemCount;
-	int _selectedObject;
+	int _selObj;
 	BOUNDING_BOX _sceneBox;
 	BOUNDING_BOX _initialsceneBox;
 
 	// global object settings
-	Transformations::AffineTransformation _globalObjectTransform;
+	ObjectTransformation _mainTR;
 	MaterialParams _globalObjectMaterial;
 
 	// camera properties
-	Transformations::CameraTransformation _cameraTransform;
-	Transformations::ProjectionTransformation _projectionTransform;
+	CameraTransformation _cameraTR;
+	ProjectionTransformation _projTR;
 
 	// settings
 	EngineOperationFlags _flags;
@@ -226,8 +229,9 @@ private:
 	WireFrameModel* _light_dir_model;
 	WireFrameModel* _light_point_model;
 
+	Vector3 rotCoofs;
+
 private:
-	Transformations::AffineTransformation *getTransformationSettings();
 	double calculateInitialScaleFactor() const;
 	void processScene();
 	void createNormalModels();

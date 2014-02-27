@@ -35,11 +35,14 @@ DUMPS=$(patsubst %.o,%*_dump.c, $(OBJS_))
 
 $(OUT)/%.o:%.cpp
 	@echo  "Compiling $*.cpp...."
-	@mkdir -p $(dir $@)
-	@echo -n "$(OUT)/" > $(OUT)/$*.d
-	@$(CXX) $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
 	@$(CXX) ${CXXFLAGS} -o $@  -c $< 
 	@objdump --disassembler-options=intel-mnemonic   -S $@ > $(OUT)/$*_dump.c
+	
+$(OUT)/%.d:%.cpp
+	@mkdir -p $(dir $@)
+	@echo -n "$(OUT)/$*.d $(OUT)/" > $(OUT)/$*.d
+	@$(CXX) $(CXXFLAGS) -M -c -o - $< >> $(OUT)/$*.d || rm $(OUT)/$*.d
+
 
 
 ${TARGET}: $(OBJS_)
@@ -50,4 +53,4 @@ clean:
 	@rm -f $(TARGET) $(CLEAN_EXTRA)
 	@rm -rf $(OBJS_) $(DEPS) $(DUMPS)
 
--include $(wildcard $(OUT)/*.d)
+-include $(DEPS)

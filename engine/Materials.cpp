@@ -48,8 +48,8 @@ void Engine::reloadTextures()
 
 MaterialParams& Engine::getMatrialParams()
 {
-	if (_drawSeparateObjects && _selectedObject != -1)
-		return _sceneItems[_selectedObject]._material;
+	if (_drawSeparateObjects && _selObj != -1)
+		return _sceneItems[_selObj]._material;
 	return _globalObjectMaterial;
 }
 

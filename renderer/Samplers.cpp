@@ -24,7 +24,6 @@
 #include "Texture.h"
 #include "Samplers.h"
 
-#include "common/Transformations.h"
 #include "common/Mat4.h"
 #include "common/Vector4.h"
 #include "common/Utilities.h"

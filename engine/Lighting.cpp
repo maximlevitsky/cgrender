@@ -52,11 +52,11 @@ void Engine::setupLightingShaderData(int objectID)
 		if (lp.space == LightSource::LIGHT_SPACE_LOCAL )
 		{
 			/* direction doesn't need homogenus coodrinates transform */
-			light.direction = vmul3dir(-lp.direction, _globalObjectTransform.getNormalTransformMatrix()  * _cameraTransform.getNormalTransformMatrix());
-			light.location = vmul3point(lp.position ,_globalObjectTransform.getMatrix() *  _cameraTransform.getMatrix());
+			light.direction = vmul3dir(-lp.direction, _mainTR.getNormalTransformMatrix()  * _cameraTR.getNormalTransformMatrix());
+			light.location = vmul3point(lp.position ,_mainTR.getMat() *  _cameraTR.getMat());
 		} else {
-			light.direction = vmul3dir(-lp.direction,_cameraTransform.getNormalTransformMatrix());
-			light.location = vmul3point(lp.position,_cameraTransform.getMatrix());
+			light.direction = vmul3dir(-lp.direction,_cameraTR.getNormalTransformMatrix());
+			light.location = vmul3point(lp.position,_cameraTR.getMat());
 		}
 
 		light.kD = (lp.color / 255) * material->getDiffuse();
@@ -118,7 +118,7 @@ void Engine::renderLightSources()
 {
 	useSimpleShader(_renderer, &_shaderData);
 
-	Mat4 view = _cameraTransform.getMatrix() * _projectionTransform.getMatrix();
+	Mat4 view = _cameraTR.getMat() * _projTR.getMatrix();
 
 	for (int i = 0 ; i < MAX_LIGHT ; i++) {
 
@@ -126,29 +126,29 @@ void Engine::renderLightSources()
 		if (!lp.enabled || !lp.debugDraw)
 			continue;
 
-		Mat4 objTransform = lp.space == LightSource::LIGHT_SPACE_LOCAL ? _globalObjectTransform.getMatrix()  : Mat4::createUnit();
+		Mat4 objTransform = lp.space == LightSource::LIGHT_SPACE_LOCAL ? _mainTR.getMat()  : Mat4::createUnit();
 
 		double factor = 5 * _normalsScale / calculateInitialScaleFactor();
 
 		switch(lp.type) {
 		case LightSource::LIGHT_TYPE_DIRECTIONAL:
 			_shaderData.mat_objectToClipSpaceTransform = 
-				Transformations::getScaleMatrix(Vector3(factor, factor, factor)) *
-				Transformations::lookAt(Vector3(0,0,3 * factor), lp.direction, Vector3(1,1,1)) * objTransform *view;
+				Mat4::getScaleMatrix(Vector3(factor, factor, factor)) *
+				Mat4::lookAt(Vector3(0,0,3 * factor), lp.direction, Vector3(1,1,1)) * objTransform *view;
 			renderMiscModelWireframe(_light_dir_model, Color(0,1,0), true);
 			break;
 
 		case LightSource::LIGHT_TYPE_POINT:
 			_shaderData.mat_objectToClipSpaceTransform = 
-				Transformations::getScaleMatrix(Vector3(factor, factor, factor)) *
-				Transformations::getTranlationMatrix(lp.position) *
-				objTransform *_cameraTransform.getMatrix() * _projectionTransform.getMatrix();
+				Mat4::getScaleMatrix(Vector3(factor, factor, factor)) *
+				Mat4::getMoveMat(lp.position) *
+				objTransform *_cameraTR.getMat() * _projTR.getMatrix();
 			renderMiscModelPolygonWireframe(_light_point_model, Color(0,1,0), true);
 			break;
 		case LightSource::LIGHT_TYPE_SPOT:
 			_shaderData.mat_objectToClipSpaceTransform = 
-				Transformations::getScaleMatrix(Vector3(factor, factor, factor)) *
-				Transformations::lookAt(lp.position, lp.direction, Vector3(1,1,1)) * objTransform *view;
+				Mat4::getScaleMatrix(Vector3(factor, factor, factor)) *
+				Mat4::lookAt(lp.position, lp.direction, Vector3(1,1,1)) * objTransform *view;
 			renderMiscModelPolygonWireframe(_light_spot_model, Color(0,1,0), true);
 			break;
 		}

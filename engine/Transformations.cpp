@@ -16,8 +16,9 @@
     You should have received a copy of the GNU General Public License
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "Engine.h"
 
+#include "Engine.h"
+#include "common/Mat4.h"
 
 void Engine::setupTransformationShaderData( int objectID )
 {
@@ -25,25 +26,25 @@ void Engine::setupTransformationShaderData( int objectID )
 	// if objectID <0 then only take in account globlal transformations
 
 	SceneItem &item = _sceneItems[objectID];
-	Mat4 objectTransform = objectID >= 0 ? item._modelTransform.getMatrix() : Mat4::createUnit();
-	Mat4 objectNormalTransform = objectID >= 0 ? item._modelTransform.getNormalTransformMatrix() : Mat4::createUnit();
+	Mat4 objectTransform = objectID >= 0 ? item._itemTR.getMat() : Mat4::createUnit();
+	Mat4 objectNormalTransform = objectID >= 0 ? item._itemTR.getNormalTransformMatrix() : Mat4::createUnit();
 
 	// setup transformations
 	_shaderData.mat_objectToCameraSpace =
-		objectTransform *  _globalObjectTransform.getMatrix() * _cameraTransform.getMatrix();
+		objectTransform *  _mainTR.getMat() * _cameraTR.getMat();
 
 
 	_shaderData.mat_objectToClipSpaceTransform =  
-		_shaderData.mat_objectToCameraSpace * _projectionTransform.getMatrix();
+		_shaderData.mat_objectToCameraSpace * _projTR.getMatrix();
 
 	_shaderData.mat_objectToCameraSpaceNormalTransform =  objectNormalTransform * 
-		_globalObjectTransform.getNormalTransformMatrix() * _cameraTransform.getNormalTransformMatrix();
+		_mainTR.getNormalTransformMatrix() * _cameraTR.getNormalTransformMatrix();
 
-	_shaderData.mat_cameraToWorldSpace = _cameraTransform.getMatrix().inverse();
-	_shaderData.mat_cameraToObjectSpace = (_shaderData.mat_cameraToWorldSpace * _globalObjectTransform.getMatrix()).inverse();
-
-	//_shaderData.projNormaltransform = _shaderData.mat_objectToCameraSpaceNormalTransform * _projectionTransform.getMatrix().inverse().transpose();
+	_shaderData.mat_cameraToWorldSpace = _cameraTR.getMat().inv();
+	_shaderData.mat_cameraToObjectSpace = (_shaderData.mat_cameraToWorldSpace * _mainTR.getMat()).inv();
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::resetTransformations() 
 {
@@ -51,27 +52,27 @@ void Engine::resetTransformations()
 
 	// reset per object transformation and move objects to their positions
 	for (unsigned int i = 0 ; i < _itemCount ; i++) {
-		_sceneItems[i]._modelTransform.reset();
-		_sceneItems[i]._modelTransform.setTranslation(_sceneItems[i]._position);
+		_sceneItems[i]._itemTR.reset();
+		_sceneItems[i]._itemTR.setMoveFactors(_sceneItems[i]._position);
 	}
 
 	// reset global object transformation
-	_globalObjectTransform.reset();
+	_mainTR.reset();
 
 	// set camera params
 	double distance = boxSizes.x(); // distance from front boundary of scene box and camera
-	_projectionTransform.setFrontPlane(distance, distance/ (boxSizes.x() / boxSizes.y()));
-	_projectionTransform.setDistance(distance);
+	_projTR.setFrontPlane(distance, distance/ (boxSizes.x() / boxSizes.y()));
+	_projTR.setDistance(distance);
 
 
 	// set depth of the clip box to length of diagonal of the scene box
 	double depth = boxSizes.z();
-	_projectionTransform.setDepth(depth);
-	_projectionTransform.setPerspectiveEnabled(true);
+	_projTR.setDepth(depth);
+	_projTR.setPerspectiveEnabled(true);
 
 	// distance from center of scene box and camera
-	_cameraTransform.reset();
-	_cameraTransform.setTranslation(Vector3(0,0, boxSizes.x()+depth/2));
+	_cameraTR.reset();
+	_cameraTR.setMoveFactors(Vector3(0,0, boxSizes.x()+depth/2));
 
 	recomputeBoundingBox();
 	recomputeDepth();
@@ -79,110 +80,133 @@ void Engine::resetTransformations()
 	invalidateNormalModels();
 	invalidateShadowMaps();
 }
-
-Transformations::AffineTransformation * Engine::getTransformationSettings()
-{
-	if (_drawSeparateObjects) {
-		if (_selectedObject != -1)
-			return &_sceneItems[_selectedObject]._modelTransform;
-		return &_globalObjectTransform;
-	} else
-		return &_globalObjectTransform;
-}
-
-void Engine::rotateObject( int axis, double angleDelta )
-{
-	if(!_itemCount) return;
-
-	Transformations::AffineTransformation *t = getTransformationSettings();
-	if (!t) return; 
-
-	/* account for inverted depth mode*/
-	if (_cameraTransform.getInvert() && (axis == 0 || axis == 1))
-		angleDelta *= -1;
-
-	/* inverse object rotation so it appears a bit more friendly (more camera related)*/
-	Vector3 rotation = t->getRotation();
-	rotation[axis] -= (M_PI) * angleDelta / 180;
-	t->setRotation(rotation);
-
-	if (_drawSeparateObjects && _selectedObject != -1)
-		recomputeBoundingBox();
-
-	recomputeDepth();
-	invalidateShadowMaps();
-}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::scaleObject( int axis, double delta )
 {
 	if(!_itemCount) return;
 
-	Transformations::AffineTransformation *t = getTransformationSettings();
-	if (!t) return; 
+	/* TODO: implement adaptive scale*/
+
+	ObjectTransformation *t = (_drawSeparateObjects && _selObj != -1) ?
+			&_sceneItems[_selObj]._itemTR : &_mainTR;
 
 	// take in account that scene might be already scaled, so need to keep sane scaling speed
 
 	double factor = 1.0;
-	if (_drawSeparateObjects) factor *= _globalObjectTransform.getScale()[axis];
+	if (_drawSeparateObjects) factor *= _mainTR.getScaleFactors()[axis];
 
 	factor /= calculateInitialScaleFactor();
 
-	Vector3 scale = t->getScale();
+	Vector3 scale = t->getScaleFactors();
 	scale[axis] += (delta / factor);
 
 	// don't allow negative scale and limit scale a bit
 	if (scale[axis] <= 0.001)
 		scale[axis] = 0.001;
 
-	t->setScale(scale);
+	t->setScaleFactors(scale);
 	invalidateNormalModels();
 
-	if (_drawSeparateObjects && _selectedObject != -1)
+	if (_drawSeparateObjects && _selObj != -1)
 		recomputeBoundingBox();
 
 	recomputeDepth();
 	invalidateShadowMaps();
 
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Engine::rotateObject( int axis, double angleDelta )
+{
+	if(!_itemCount) return;
+	rotCoofs[axis] -= ((M_PI) * angleDelta / 180);
+
+	if (_drawSeparateObjects && _selObj != -1)
+	{
+		/* apply to selected item*/
+		_sceneItems[_selObj]._itemTR.setRotationMatrix2 (
+			_mainTR.getRotMat() *_cameraTR.getRotMatI() *
+			Mat4::getRotMat(rotCoofs) *
+			_cameraTR.getRotMatI().inv() * _mainTR.getRotMat().inv()
+		);
+
+		recomputeBoundingBox();
+	} else {
+		/* apply to whole world*/
+		_mainTR.setRotationMatrix2 (_cameraTR.getRotMatI() *
+				Mat4::getRotMat(rotCoofs) * _cameraTR.getRotMatI().inv()
+		);
+	}
+
+	recomputeDepth();
+	invalidateShadowMaps();
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::moveObject( int axis, double delta )
 {
 	if(!_itemCount) return;
 
-	Transformations::AffineTransformation *t = getTransformationSettings();
-	if (!t) return; 
-
-	// take in account that object might be scaled, so change step accordantly
-	double factor = 1.0;
-	if (_drawSeparateObjects) factor *= _globalObjectTransform.getScale()[axis];
-
-	Vector3 move = t->getTranlation();
-	move[axis] += (delta / factor);
-	t->setTranslation(move);
-
-	if (_drawSeparateObjects && _selectedObject != -1)
-		recomputeBoundingBox();
+	if (_drawSeparateObjects && _selObj != -1) {
+		Vector3 sceneCenter = _sceneItems[_selObj]._itemTR.getMoveFactors();
+		sceneCenter = vmul3point(sceneCenter, _mainTR.getMat() * _cameraTR.getMat());
+		sceneCenter[axis] += delta;
+		sceneCenter = vmul3point(sceneCenter, _cameraTR.getMat().inv() * _mainTR.getMat().inv());
+		_sceneItems[_selObj]._itemTR.setMoveFactors(sceneCenter);
+	} else {
+		// global object move
+		Vector3 sceneCenter = _mainTR.getMoveFactors();
+		sceneCenter = vmul3point(sceneCenter, _cameraTR.getMat());
+		sceneCenter[axis] += delta;
+		sceneCenter = vmul3point(sceneCenter, _cameraTR.getMat().inv());
+		_mainTR.setMoveFactors(sceneCenter);
+	}
 
 	invalidateShadowMaps();
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::rotateCamera( int axis, double angleDelta )
 {
-	Vector3 rotation = _cameraTransform.getRotation();
-	rotation[axis] += (M_PI) * angleDelta / 180;
-	_cameraTransform.setRotation(rotation);
+	/* TODO: make camera rotation dual stepped as well */
+
+	Mat4 combinedRotation = _cameraTR.getRotationMatrix();
+
+	Vector3 rotCoofs = Vector3(0,0,0);
+	rotCoofs[axis] = - (M_PI) * angleDelta / 180;
+
+	combinedRotation = combinedRotation * Mat4::getRotMat(rotCoofs);
+	_cameraTR.setRotationMatrix(combinedRotation);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::moveCamera( int axis, double delta )
 {
-	Vector3 move = _cameraTransform.getTranlation();
+	/* TODO account for camera rotation */
+
+	Vector3 move = _cameraTR.getMoveFactors();
 	move[axis] += delta;
-	_cameraTransform.setTranslation(move);
+	_cameraTR.setMoveFactors(move);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Engine::commitRotation()
+{
+	if(!_itemCount) return;
+
+	if (_drawSeparateObjects && _selObj != -1)
+		_sceneItems[_selObj]._itemTR.mergeRotationFactors();
+	else
+		_mainTR.mergeRotationFactors();
+
+	rotCoofs = Vector3(0,0,0);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::setPerspectiveD( double d )
 {
-	_projectionTransform.setDistance(d);
+	_projTR.setDistance(d);
 }
 
 double Engine::calculateInitialScaleFactor() const 
@@ -191,11 +215,11 @@ double Engine::calculateInitialScaleFactor() const
 	double boxScalingFactor = max(sizes[0], max(sizes[1], sizes[2]));
 	return (1 / boxScalingFactor) * 2;
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void Engine::recomputeBoundingBox() 
 {
-
 	if (!_itemCount)
 		return;
 
@@ -205,7 +229,7 @@ void Engine::recomputeBoundingBox()
 	{
 		SceneItem &item = _sceneItems[i];
 
-		BOUNDING_BOX itemBox = item._modelBox * item._modelTransform.getMatrix();
+		BOUNDING_BOX itemBox = item._modelBox * item._itemTR.getMat();
 
 		if (i > 0) 
 			box += itemBox;
@@ -214,39 +238,56 @@ void Engine::recomputeBoundingBox()
 	}
 
 	_sceneBox = box;
-
-	if (_sceneBoxModel)
-		delete _sceneBoxModel;
-
+	delete _sceneBoxModel;
 	_sceneBoxModel = WireFrameModel::createBoxModel(_sceneBox, Color(0,0,1));
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::recomputeDepth() 
 {
 	//return;
-	Vector3 sizes = (_initialsceneBox * _globalObjectTransform.getMatrix()).getSizes();
+	Vector3 sizes = (_initialsceneBox * _mainTR.getMat()).getSizes();
 	double depth = sizes.z();
 
-	Vector3 move = _cameraTransform.getTranlation();
-	move.z() -= (_projectionTransform.getDepth() / 2);
+	Vector3 move = _cameraTR.getMoveFactors();
+	move.z() -= (_projTR.getDepth() / 2);
 	move.z() += (depth / 2);
-	_cameraTransform.setTranslation(move);
-
-	_projectionTransform.setDepth(depth);
+	_cameraTR.setMoveFactors(move);
+	_projTR.setDepth(depth);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-Vector3 Engine::deviceToNDC( double X, double Y, double Z )
+Vector3 Engine::deviceToNDC( double X, double Y)
 {
-	if (!_itemCount)
-		return Vector3(0,0,0);
+	if (!_itemCount) return Vector3(0,0,0);
 
-	Mat4 mat = _renderer->getDeviceToScreenMatrix() * _projectionTransform.getMatrix().inverse();
+	Mat4 additinalMat = (_drawSeparateObjects && _selObj != -1) ?
+			_sceneItems[_selObj]._itemTR.getMat() : Mat4::createUnit();
 
-	Vector4 res = (Vector4(X,Y,Z,1) * mat);
+	Vector4 center = Vector4(0,0,0,1) * additinalMat *
+			(_mainTR.getMat() * _cameraTR.getMat() * _projTR.getMatrix());
+
+	center.canonicalize();
+	center = center * _renderer->getNDCTODeviceMatrix();
+
+	double Z = center.z();
+
+	Vector4 res = (Vector4(X,Y,Z,1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
 	res.canonicalize();
 	return res.xyz();
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+double Engine::getZStep()
+{
+	BOUNDING_BOX box = _sceneBox * (_mainTR.getMat() * _cameraTR.getMat());
+	double depth = box.getSizes().z();
+	return depth / max (_outputSizeX, _outputSizeY);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Engine::FACE_TYPE Engine::translateFaceType( FACE_TYPE given )
 {
@@ -254,5 +295,5 @@ Engine::FACE_TYPE Engine::translateFaceType( FACE_TYPE given )
 		return FACE_FRONT;
 
 	bool b = (bool)given;
-	return (FACE_TYPE)(b ^ _invertFaces ^ _cameraTransform.getInvert());
+	return (FACE_TYPE)(b ^ _invertFaces ^ _cameraTR.getInvert());
 }

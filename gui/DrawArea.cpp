@@ -160,78 +160,42 @@ void DrawArea::mouseMoveEvent(QMouseEvent* event)
 	if (renderingSuspended)
 		return;
 
-	if (event->buttons() & Qt::RightButton)
-	{
-		Vector3 dist =
-				engine->deviceToNDC(pos.x(), 0, 0) -
-				engine->deviceToNDC(startMousePos.x(), 0, 0);
+	Vector3 dist =
+			engine->deviceToNDC(pos.x(), pos.y()) -
+			engine->deviceToNDC(startMousePos.x(), startMousePos.y());
 
-		switch(mainWindow->_transformMode)
-		{
-		case TRANSFORM_CAMERA:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveCamera(2, dist.x() * translateSensivety(mainWindow->movementSensivety));
-				break;
-			default:
-				engine->rotateCamera(2, screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
-				break;
-			}
+	switch(mainWindow->_transformMode)
+	{
+	case TRANSFORM_CAMERA:
+		switch(QApplication::keyboardModifiers()) {
+		case Qt::ShiftModifier:
+			engine->moveCamera(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
+			engine->moveCamera(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
 			break;
-		case TRANSFORM_OBJECT:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveObject(2, dist.x() * translateSensivety(mainWindow->movementSensivety));
-				break;
-			case Qt::ControlModifier:
-				engine->scaleObject(2, dist.x() * translateSensivety(mainWindow->scaleSensivety));
-				break;
-			default:
-				engine->rotateObject(2, screenDist.x()  * translateSensivety(mainWindow->rotationSensivety));
-				break;
-			}
+		default:
+			engine->rotateCamera(0, screenDist.y() * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateCamera(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
 			break;
 		}
-
-	} else
-	{
-		Vector3 dist =
-				engine->deviceToNDC(pos.x(), pos.y(), 0) -
-				engine->deviceToNDC(startMousePos.x(), startMousePos.y(), 0);
-
-		switch(mainWindow->_transformMode)
-		{
-		case TRANSFORM_CAMERA:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveCamera(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
-				engine->moveCamera(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
-				break;
-			default:
-				engine->rotateCamera(0, screenDist.y() * translateSensivety(mainWindow->rotationSensivety));
-				engine->rotateCamera(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
-				break;
-			}
+		break;
+	case TRANSFORM_OBJECT:
+		switch(QApplication::keyboardModifiers()) {
+		case Qt::ShiftModifier:
+			engine->moveObject(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
+			engine->moveObject(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
 			break;
-		case TRANSFORM_OBJECT:
-			switch(QApplication::keyboardModifiers()) {
-			case Qt::ShiftModifier:
-				engine->moveObject(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
-				engine->moveObject(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
-				break;
-			case Qt::ControlModifier:
-				engine->scaleObject(0, dist.x() * translateSensivety(mainWindow->scaleSensivety));
-				engine->scaleObject(1, dist.y() * translateSensivety(mainWindow->scaleSensivety));
-				break;
-			default:
-				engine->rotateObject(0, screenDist.y()  * translateSensivety(mainWindow->rotationSensivety));
-				engine->rotateObject(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
-				break;
-			}
+		case Qt::ControlModifier:
+			engine->scaleObject(0, dist.x() * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(1, dist.y() * translateSensivety(mainWindow->scaleSensivety));
+			break;
+		default:
+			engine->rotateObject(0, screenDist.y()  * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateObject(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
 			break;
 		}
-
+		break;
 	}
+
 
 
 	startMousePos = pos;
@@ -244,21 +208,44 @@ void DrawArea::mouseMoveEvent(QMouseEvent* event)
 void DrawArea::wheelEvent (QWheelEvent * event )
 {
 	int degrees = event->delta() / 8;
+	double rotdist = degrees / 4;
 
 	if (renderingSuspended)
 		return;
 
-	Vector3 p1 = engine->deviceToNDC(0, 0, 0);
-	Vector3 p2 = engine->deviceToNDC(0, 0, 0.01*(degrees));
-	double scaleDist = p1.z() - p2.z();
+	double dist = engine->getZStep() * degrees / 4;
 
-	if (mainWindow->_transformMode == TRANSFORM_OBJECT) {
-		engine->scaleObject(0, scaleDist * translateSensivety(mainWindow->scaleSensivety));
-		engine->scaleObject(1, scaleDist * translateSensivety(mainWindow->scaleSensivety));
-		engine->scaleObject(2, scaleDist * translateSensivety(mainWindow->scaleSensivety));
+	switch(mainWindow->_transformMode)
+	{
+	case TRANSFORM_CAMERA:
+		switch(QApplication::keyboardModifiers()) {
+		case Qt::ShiftModifier:
+			engine->moveCamera(2, dist * translateSensivety(mainWindow->movementSensivety));
+			break;
+		default:
+			engine->rotateCamera(2, rotdist * translateSensivety(mainWindow->rotationSensivety));
+			break;
+		}
+		break;
+	case TRANSFORM_OBJECT:
+		switch(QApplication::keyboardModifiers()) {
+		case Qt::ShiftModifier:
+			engine->moveObject(2, dist * translateSensivety(mainWindow->movementSensivety));
+			break;
+		case Qt::ControlModifier:
+			engine->scaleObject(0, dist * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(1, dist * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(2, dist * translateSensivety(mainWindow->scaleSensivety));
+			break;
+		default:
+			engine->rotateObject(2, rotdist  * translateSensivety(mainWindow->rotationSensivety));
+			break;
+		}
+		break;
 	}
 
 	invalidateScene();
+	engine->commitRotation();
 
 }
 
@@ -282,6 +269,11 @@ void DrawArea::mousePressEvent(QMouseEvent* event)
 			invalidateScene();
 		}
 	}
+}
+
+void DrawArea::mouseReleaseEvent(QMouseEvent * event)
+{
+	engine->commitRotation();
 }
 
 /***************************************************************************************/

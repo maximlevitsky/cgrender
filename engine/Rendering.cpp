@@ -257,11 +257,11 @@ void Engine::render()
 		// draw per object bounding box and axes
 		if (_drawSeparateObjects) 
 		{
-			if (_selectedObject >= 0 && i == (unsigned int)_selectedObject)
+			if (_selObj >= 0 && i == (unsigned int)_selObj)
 			{
 				// for selected object always draw axes and bounding box in red
 				renderMiscModelWireframe(item._boxModel, Color(1,0,0), true);
-				renderMiscModelWireframe(_axesModel, Color(1,0,0), true);
+				//renderMiscModelWireframe(_axesModel, Color(1,0,0), true);
 			} else 
 			{
 				// for other objects draw box if setting is up in green
