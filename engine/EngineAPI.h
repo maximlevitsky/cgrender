@@ -168,25 +168,6 @@ struct ShadowParams
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-struct CameraParams
-{
-	enum Mode
-	{
-		ORTOGRAPHIC,
-		PERSPECITVE
-	} cameraMode;
-
-
-	/* distance to front sensor */
-	double d;
-
-	/* size of front sensor */
-	double sx;
-	double sy;
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
 struct EngineOperationFlags
 {
 	/* here we put all engine tweak flags that don't deserve its own getter/setter*/
@@ -224,5 +205,13 @@ struct BackgroundParams
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+
+
+enum ROTATION_MODE
+{
+	ROTATION_X = 1,
+	ROTATION_Y = 2,
+	ROTATION_Z = 4
+};
 
 #endif

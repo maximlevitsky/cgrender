@@ -97,6 +97,10 @@ public slots:
 	void onMouseSensivetyDialog();
 	void onLeftCoordinateSystem(bool);
 
+	void onRotationTopBottom();
+	void onRotationLeftRight();
+	void onRotationCombined();
+
 	/* help menu */
 	void onAboutDialog();
 

@@ -196,9 +196,6 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 	{
 		_psInputs.frontface = !determineBackface(iter);
 
-		if ((!_psInputs.frontface && _backFaceCulling) || (_psInputs.frontface && _frontFaceCulling))
-			continue;
-
 		/* setup flat attributes*/
 		for (int i = 0 ; i < _vertexFlatAttributeCount ; i++)
 			_psInputs.attributes[i] = _vertexBuffer[iter[0]][i];
@@ -217,6 +214,10 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 
 			if (v1.w() > 0 && v2.w() > 0 && v3.w() > 0)
 			{
+
+				if ((!_psInputs.frontface && _backFaceCulling) || (_psInputs.frontface && _frontFaceCulling))
+					continue;
+
 				if (!fastClipTriangle(v1,v2, v3)) {
 					Vector4 p1 = NDC_to_DeviceSpace(&v1);
 					Vector4 p2 = NDC_to_DeviceSpace(&v2);

@@ -95,6 +95,7 @@ public:
 
 	void commitRotation();
 	void resetTransformations();
+	void setRotationmode(ROTATION_MODE mode) { _rotMode = mode; }
 
 	// camera settings
 	void rotateCamera(int axis, double angleDelta);
@@ -150,8 +151,7 @@ public:
 
 
 	// object selection helpers
-	double getZStep();
-	Vector3 deviceToNDC(double X, double Y);
+	Vector3 getSteps(double X, double Y);
 	bool selectObject(int mouseCX, int mouseCY);
 	void setDrawSeperateObjects(bool enable);
 	bool getDrawSeparateObjects() { return _drawSeparateObjects; }
@@ -191,6 +191,7 @@ private:
 	double _normalsScale;
 	TextureSampleMode _texSampleMode;
 	SHADING_MODE _shadingMode;
+	ROTATION_MODE _rotMode;
 
 
 	// Lighting
@@ -250,6 +251,7 @@ private:
 	void renderMiscModelPolygonWireframe(const WireFrameModel* m, Color c = Color(0,0,0), bool colorValid = false);
 	void renderLightSources();
 	void createLighSourcesModels();
+	bool rotationAxisEnabled(int axis);
 
 	enum FACE_TYPE {
 		FACE_FRONT,

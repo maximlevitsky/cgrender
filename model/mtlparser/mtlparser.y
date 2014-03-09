@@ -17,9 +17,8 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-%name-prefix "mtl_"
-%define api.pure
+%name-prefix = "mtl_"
+%pure-parser
 
 %lex-param   { yyscan_t scanner }
 %parse-param { MtlLoader *loader }
@@ -45,7 +44,7 @@
 /************************************************************************************/
 /* tokens */
 /************************************************************************************/
-%token TOK_NUMBER
+%token MTL_NUMBER
 
 %%
 /************************************************************************************/
@@ -54,5 +53,5 @@
 
 FILE : Statements;
 Statements : Statement Statements | Statement;
-Statement : TOK_NUMBER
+Statement : MTL_NUMBER
 %%

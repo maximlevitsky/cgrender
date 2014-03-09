@@ -268,7 +268,7 @@ public:
 			0,					0,					0,					1
 		);
 
-		return rotX * rotY * rotZ;
+		return rotY * rotX *  rotZ;
 	}
 
 

@@ -17,8 +17,8 @@
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-%name-prefix "obj_"
-%define api.pure
+%name-prefix = "obj_"
+%pure-parser
 %lex-param   { yyscan_t scanner }
 %parse-param { ObjLoader *loader }
 %parse-param { yyscan_t scanner }

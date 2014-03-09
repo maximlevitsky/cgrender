@@ -74,6 +74,16 @@ MainWindow::MainWindow()
 	actionCamera->setActionGroup(transformGroup);
 	actionWorld->setActionGroup(transformGroup);
 	actionWorld_separate_objects->setActionGroup(transformGroup);
+
+	QActionGroup* rotationModeGroup = new QActionGroup(this);
+	actionRotationLeft_right->setActionGroup(rotationModeGroup);
+	actionRotationTop_bottom->setActionGroup(rotationModeGroup);
+	actionRotationCombined->setActionGroup(rotationModeGroup);
+	actionRotationCombined->setChecked(true);
+	connect(actionRotationLeft_right, SIGNAL(toggled(bool)), this, SLOT(onRotationLeftRight()));
+	connect(actionRotationTop_bottom, SIGNAL(toggled(bool)), this, SLOT(onRotationTopBottom()));
+	connect(actionRotationCombined, SIGNAL(toggled(bool)), this, SLOT(onRotationCombined()));
+
 	_transformMode = TRANSFORM_OBJECT;
 	actionWorld->setChecked(true);
 	connect(actionLeft_coordinate_system, SIGNAL(toggled(bool)), this, SLOT(onLeftCoordinateSystem(bool)));
@@ -109,7 +119,6 @@ MainWindow::MainWindow()
 
 void MainWindow::updateStatus()
 {
-
 	EngineOperationFlags flags = engine->getEngineOperationFlags();
 
 	/* scene menu*/
@@ -358,6 +367,21 @@ void MainWindow::onLeftCoordinateSystem(bool enable)
 	flags.leftcoordinateSystem = enable;
 	engine->setEngineOperationFlags(flags);
 	drawArea->invalidateScene();
+}
+
+void MainWindow::onRotationTopBottom()
+{
+	engine->setRotationmode((ROTATION_MODE)(ROTATION_X | ROTATION_Z));
+}
+
+void MainWindow::onRotationLeftRight()
+{
+	engine->setRotationmode((ROTATION_MODE)(ROTATION_Y | ROTATION_Z));
+}
+
+void MainWindow::onRotationCombined()
+{
+	engine->setRotationmode((ROTATION_MODE)(ROTATION_X | ROTATION_Y | ROTATION_Z));
 }
 
 

@@ -1,0 +1,31 @@
+
+* loader:
+	* implement material loading - MEDIUM
+	* implement appearence of same group more that once in obj file - MEDIUM
+
+* materials:
+	* think about meaning of kd,ks,etc
+	* use Qt for texture loading instead of pngwrapper
+	* decouple texture from renderer
+
+* misc
+	* implement shading mode == none - EASY
+	* implement app title consistently - EASY
+	* implement render to file
+	* add wheel event handler to color chooser to change brighness of whole color
+	* add drag-drop of colors for colorchooser
+	
+
+* gui: implemement side panel
+	* ambient light panel
+	* lights panel
+	* shadows panel
+	....
+	* transformation panel/right menu
+
+
+* transformations:
+	* implement camera with fov and skew angles
+	
+* refactoring & optimizations:
+	* refactor clipping

@@ -62,6 +62,14 @@ SidePanel::SidePanel(MainWindow* parent) : QDockWidget(parent)
 	/* bottom bar*/
 	connect(pauseRenderingButton, SIGNAL(clicked(bool)), this, SLOT(onSuspendRendering(bool)));
 	connect(fastRenderingModeButton, SIGNAL(clicked(bool)), this, SLOT(onFastRendering(bool)));
+
+	transLeftRightButton->setAction(mainWindow->actionRotationLeft_right);
+	transTopBottomButton->setAction(mainWindow->actionRotationTop_bottom);
+	transCombinedButton->setAction(mainWindow->actionRotationCombined);
+
+	transCameraButton->setAction(mainWindow->actionCamera);
+	transWorldButton->setAction(mainWindow->actionWorld);
+	transObjectsButton->setAction(mainWindow->actionWorld_separate_objects);
 }
 
 
@@ -86,6 +94,9 @@ void SidePanel::fogPanelReadControls()
 	params.density = fogDensityBox->value();
 	params.color = fogColorChooser->getColor();
 	engine->setFogParams(params);
+
+	setUpdatesEnabled(false);
+
 
 	/* update visable controls */
 	switch (fogModeComboBox->currentIndex())
@@ -113,6 +124,9 @@ void SidePanel::fogPanelReadControls()
 		assert(0);
 	}
 
+
+	setUpdatesEnabled(true);
+
 	mainWindow->drawArea->invalidateScene();
 }
 
@@ -120,15 +134,16 @@ void SidePanel::fogPanelWriteControls()
 {
 	FogParams params = engine->getFogParams();
 
+	fogStartDepthBox->setValue(params.startPoint);
+	fogEndDepthBox->setValue(params.endPoint);
+	fogDensityBox->setValue(params.density);
+	fogColorChooser->setColor(params.color);
+
 	if (params.enabled == false)
 		fogModeComboBox->setCurrentIndex(0);
 	else
 		fogModeComboBox->setCurrentIndex(params.type + 1);
 
-	fogStartDepthBox->setValue(params.startPoint);
-	fogEndDepthBox->setValue(params.endPoint);
-	fogDensityBox->setValue(params.density);
-	fogColorChooser->setColor(params.color);
 }
 
 void SidePanel::fogReset()

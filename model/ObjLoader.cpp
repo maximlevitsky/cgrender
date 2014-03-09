@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <assert.h>
+#include <algorithm>
 #include "ObjLoader.h"
 
 using std::cout;
@@ -230,7 +231,7 @@ void ObjLoader::addFace(std::list<RawVertex>& vertexes)
 	}
 
 	geometry_buffer.push_back(vertexIndexes.size());
-	geometry_buffer.insert(geometry_buffer.end(), std::begin(vertexIndexes), std::end(vertexIndexes));
+	geometry_buffer.insert(geometry_buffer.end(), vertexIndexes.begin(), vertexIndexes.end());
 }
 
 /*********************************************************************************/

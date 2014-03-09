@@ -154,51 +154,50 @@ void DrawArea::resizeEvent (QResizeEvent * event)
 /***************************************************************************************/
 void DrawArea::mouseMoveEvent(QMouseEvent* event)
 {
-	QPoint pos = event->pos();
-	QPoint screenDist = pos - startMousePos;
-
 	if (renderingSuspended)
 		return;
 
-	Vector3 dist =
-			engine->deviceToNDC(pos.x(), pos.y()) -
-			engine->deviceToNDC(startMousePos.x(), startMousePos.y());
+	QPoint screenDist = event->pos() - startMousePos;
+	Vector3 steps = engine->getSteps(event->pos().x(), event->pos().y());
+
+	double stepXabs = screenDist.rx();
+	double stepYabs = screenDist.ry();
+	double stepX = steps.x() * stepXabs;
+	double stepY = steps.y() * stepYabs;
 
 	switch(mainWindow->_transformMode)
 	{
 	case TRANSFORM_CAMERA:
 		switch(QApplication::keyboardModifiers()) {
 		case Qt::ShiftModifier:
-			engine->moveCamera(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
-			engine->moveCamera(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
+			engine->moveCamera(0, stepX * translateSensivety(mainWindow->movementSensivety));
+			engine->moveCamera(1, stepY * translateSensivety(mainWindow->movementSensivety));
 			break;
 		default:
-			engine->rotateCamera(0, screenDist.y() * translateSensivety(mainWindow->rotationSensivety));
-			engine->rotateCamera(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateCamera(0, stepYabs * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateCamera(1, -stepXabs * translateSensivety(mainWindow->rotationSensivety));
 			break;
 		}
 		break;
 	case TRANSFORM_OBJECT:
 		switch(QApplication::keyboardModifiers()) {
 		case Qt::ShiftModifier:
-			engine->moveObject(0, dist.x() * translateSensivety(mainWindow->movementSensivety));
-			engine->moveObject(1, dist.y() * translateSensivety(mainWindow->movementSensivety));
+			engine->moveObject(0, stepX * translateSensivety(mainWindow->movementSensivety));
+			engine->moveObject(1, stepY * translateSensivety(mainWindow->movementSensivety));
 			break;
 		case Qt::ControlModifier:
-			engine->scaleObject(0, dist.x() * translateSensivety(mainWindow->scaleSensivety));
-			engine->scaleObject(1, dist.y() * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(0, stepX * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(1, stepY * translateSensivety(mainWindow->scaleSensivety));
 			break;
 		default:
-			engine->rotateObject(0, screenDist.y()  * translateSensivety(mainWindow->rotationSensivety));
-			engine->rotateObject(1, -screenDist.x() * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateObject(0, stepYabs  * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateObject(1, -stepXabs * translateSensivety(mainWindow->rotationSensivety));
 			break;
 		}
 		break;
 	}
 
-
-
-	startMousePos = pos;
+	startMousePos = event->pos();
 	invalidateScene();
 
 }
@@ -207,38 +206,39 @@ void DrawArea::mouseMoveEvent(QMouseEvent* event)
 
 void DrawArea::wheelEvent (QWheelEvent * event )
 {
-	int degrees = event->delta() / 8;
-	double rotdist = degrees / 4;
-
 	if (renderingSuspended)
 		return;
 
-	double dist = engine->getZStep() * degrees / 4;
+	double stepZabs = (event->delta() / 8) / 4;
+	double stepZ = engine->getSteps(0,0).z() * stepZabs;
 
 	switch(mainWindow->_transformMode)
 	{
 	case TRANSFORM_CAMERA:
 		switch(QApplication::keyboardModifiers()) {
 		case Qt::ShiftModifier:
-			engine->moveCamera(2, dist * translateSensivety(mainWindow->movementSensivety));
+			engine->moveCamera(2, stepZ * translateSensivety(mainWindow->movementSensivety));
 			break;
 		default:
-			engine->rotateCamera(2, rotdist * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateCamera(2, stepZabs * translateSensivety(mainWindow->rotationSensivety));
 			break;
 		}
 		break;
 	case TRANSFORM_OBJECT:
 		switch(QApplication::keyboardModifiers()) {
 		case Qt::ShiftModifier:
-			engine->moveObject(2, dist * translateSensivety(mainWindow->movementSensivety));
+			engine->moveObject(2, stepZ * translateSensivety(mainWindow->movementSensivety));
 			break;
+		//case Qt::ShiftModifier | Qt::ControlModifier:
+		//	engine->scaleObject(2, stepZ * translateSensivety(mainWindow->scaleSensivety));
+		//	break;
 		case Qt::ControlModifier:
-			engine->scaleObject(0, dist * translateSensivety(mainWindow->scaleSensivety));
-			engine->scaleObject(1, dist * translateSensivety(mainWindow->scaleSensivety));
-			engine->scaleObject(2, dist * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(0, stepZ * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(1, stepZ * translateSensivety(mainWindow->scaleSensivety));
+			engine->scaleObject(2, stepZ * translateSensivety(mainWindow->scaleSensivety));
 			break;
 		default:
-			engine->rotateObject(2, rotdist  * translateSensivety(mainWindow->rotationSensivety));
+			engine->rotateObject(2, stepZabs  * translateSensivety(mainWindow->rotationSensivety));
 			break;
 		}
 		break;
@@ -254,7 +254,6 @@ void DrawArea::wheelEvent (QWheelEvent * event )
 
 void DrawArea::mousePressEvent(QMouseEvent* event)
 {
-
 	if (renderingSuspended)
 		return;
 
@@ -262,12 +261,8 @@ void DrawArea::mousePressEvent(QMouseEvent* event)
 
 	if (engine->getDrawSeparateObjects() && (event->modifiers() == 0))
 	{
-		printf("selecting object at %i, %i\n", startMousePos.x(), startMousePos.y());
-
-		if (engine->selectObject(startMousePos.x(), startMousePos.y())) {
-			printf("selected some object...");
+		if (engine->selectObject(startMousePos.x(), startMousePos.y()))
 			invalidateScene();
-		}
 	}
 }
 
@@ -283,15 +278,24 @@ void DrawArea::keyPressEvent ( QKeyEvent * event )
 	if (renderingSuspended)
 		return;
 
-	switch (event->modifiers()) {
+	switch (event->modifiers())
+	{
 	case Qt::ShiftModifier:
+
 		/* move */
 		setCursor(Qt::ClosedHandCursor);
 		break;
+
 	case Qt::ControlModifier:
+	//case Qt::ShiftModifier | Qt::ControlModifier:
+
 		/* resize */
-		setCursor(Qt::SizeVerCursor);
-		break;
+	//	if (mainWindow->_transformMode != TRANSFORM_CAMERA)
+	//		setCursor(Qt::SizeVerCursor);
+	//	else
+	//		setCursor(Qt::ArrowCursor);
+	//	break;
+
 	default:
 		setCursor(Qt::ArrowCursor);
 		break;

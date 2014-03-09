@@ -76,9 +76,19 @@
     <property name="title">
      <string>Transformation</string>
     </property>
+    <widget class="QMenu" name="menuRotation">
+     <property name="title">
+      <string>Rotation</string>
+     </property>
+     <addaction name="actionRotationLeft_right"/>
+     <addaction name="actionRotationTop_bottom"/>
+     <addaction name="actionRotationCombined"/>
+    </widget>
     <addaction name="actionCamera"/>
     <addaction name="actionWorld"/>
     <addaction name="actionWorld_separate_objects"/>
+    <addaction name="separator"/>
+    <addaction name="menuRotation"/>
     <addaction name="separator"/>
     <addaction name="actionMouse_sensivety"/>
     <addaction name="actionLeft_coordinate_system"/>
@@ -279,7 +289,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>World (separate objects)</string>
+    <string>Objects</string>
    </property>
   </action>
   <action name="actionTransformationsReset">
@@ -311,6 +321,30 @@
   <action name="actionFull_screen">
    <property name="text">
     <string>Full screen</string>
+   </property>
+  </action>
+  <action name="actionRotationLeft_right">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Left-right</string>
+   </property>
+  </action>
+  <action name="actionRotationTop_bottom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Top-bottom</string>
+   </property>
+  </action>
+  <action name="actionRotationCombined">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Combined</string>
    </property>
   </action>
  </widget>

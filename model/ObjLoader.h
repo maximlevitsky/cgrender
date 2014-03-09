@@ -18,6 +18,7 @@
 */
 #include "model/Model.h"
 #include "model/Material.h"
+#include <vector>
 #include <string>
 #include <map>
 #include <list>

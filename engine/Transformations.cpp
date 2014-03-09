@@ -119,7 +119,8 @@ void Engine::scaleObject( int axis, double delta )
 
 void Engine::rotateObject( int axis, double angleDelta )
 {
-	if(!_itemCount) return;
+	if(!_itemCount || !rotationAxisEnabled(axis)) return;
+
 	rotCoofs[axis] -= ((M_PI) * angleDelta / 180);
 
 	if (_drawSeparateObjects && _selObj != -1)
@@ -144,6 +145,30 @@ void Engine::rotateObject( int axis, double angleDelta )
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void Engine::rotateCamera( int axis, double angleDelta )
+{
+	if(!_itemCount || !rotationAxisEnabled(axis)) return;
+
+	rotCoofs[axis] -= ((M_PI) * angleDelta / 180);
+	Mat4 combinedRotation = Mat4::getRotMat(rotCoofs);
+	_cameraTR.setRotationMatrix2(combinedRotation);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Engine::commitRotation()
+{
+	if(!_itemCount) return;
+
+	if (_drawSeparateObjects && _selObj != -1)
+		_sceneItems[_selObj]._itemTR.mergeRotationFactors();
+
+	_mainTR.mergeRotationFactors();
+	_cameraTR.mergeRotationFactors();
+	rotCoofs = Vector3(0,0,0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Engine::moveObject( int axis, double delta )
 {
 	if(!_itemCount) return;
@@ -154,6 +179,7 @@ void Engine::moveObject( int axis, double delta )
 		sceneCenter[axis] += delta;
 		sceneCenter = vmul3point(sceneCenter, _cameraTR.getMat().inv() * _mainTR.getMat().inv());
 		_sceneItems[_selObj]._itemTR.setMoveFactors(sceneCenter);
+		recomputeBoundingBox();
 	} else {
 		// global object move
 		Vector3 sceneCenter = _mainTR.getMoveFactors();
@@ -165,43 +191,18 @@ void Engine::moveObject( int axis, double delta )
 
 	invalidateShadowMaps();
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Engine::rotateCamera( int axis, double angleDelta )
-{
-	/* TODO: make camera rotation dual stepped as well */
-
-	Mat4 combinedRotation = _cameraTR.getRotationMatrix();
-
-	Vector3 rotCoofs = Vector3(0,0,0);
-	rotCoofs[axis] = - (M_PI) * angleDelta / 180;
-
-	combinedRotation = combinedRotation * Mat4::getRotMat(rotCoofs);
-	_cameraTR.setRotationMatrix(combinedRotation);
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::moveCamera( int axis, double delta )
 {
-	/* TODO account for camera rotation */
-
-	Vector3 move = _cameraTR.getMoveFactors();
-	move[axis] += delta;
-	_cameraTR.setMoveFactors(move);
+	Vector3 cameraLoc = _cameraTR.getMoveFactors();
+	cameraLoc = vmul3point(cameraLoc, _cameraTR.getRotationMatrix());
+	cameraLoc[axis] += delta;
+	cameraLoc = vmul3point(cameraLoc, _cameraTR.getRotationMatrix().inv());
+	_cameraTR.setMoveFactors(cameraLoc);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Engine::commitRotation()
-{
-	if(!_itemCount) return;
-
-	if (_drawSeparateObjects && _selObj != -1)
-		_sceneItems[_selObj]._itemTR.mergeRotationFactors();
-	else
-		_mainTR.mergeRotationFactors();
-
-	rotCoofs = Vector3(0,0,0);
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Engine::setPerspectiveD( double d )
@@ -223,21 +224,12 @@ void Engine::recomputeBoundingBox()
 	if (!_itemCount)
 		return;
 
-	BOUNDING_BOX box;
+	/* calculate new scene bounding box*/
+	_sceneBox = _sceneItems[0]._modelBox * _sceneItems[0]._itemTR.getMat();
+	for (unsigned int i = 1 ; i < _itemCount ; i++)
+		_sceneBox += (_sceneItems[i]._modelBox * _sceneItems[i]._itemTR.getMat());
 
-	for (unsigned int i = 0 ; i < _itemCount ; i++) 
-	{
-		SceneItem &item = _sceneItems[i];
-
-		BOUNDING_BOX itemBox = item._modelBox * item._itemTR.getMat();
-
-		if (i > 0) 
-			box += itemBox;
-		else
-			box = itemBox;
-	}
-
-	_sceneBox = box;
+	/* and create wireframe model for it*/
 	delete _sceneBoxModel;
 	_sceneBoxModel = WireFrameModel::createBoxModel(_sceneBox, Color(0,0,1));
 }
@@ -245,7 +237,7 @@ void Engine::recomputeBoundingBox()
 
 void Engine::recomputeDepth() 
 {
-	//return;
+#if 0
 	Vector3 sizes = (_initialsceneBox * _mainTR.getMat()).getSizes();
 	double depth = sizes.z();
 
@@ -254,10 +246,11 @@ void Engine::recomputeDepth()
 	move.z() += (depth / 2);
 	_cameraTR.setMoveFactors(move);
 	_projTR.setDepth(depth);
+#endif
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Vector3 Engine::deviceToNDC( double X, double Y)
+Vector3 Engine::getSteps( double X, double Y)
 {
 	if (!_itemCount) return Vector3(0,0,0);
 
@@ -274,18 +267,19 @@ Vector3 Engine::deviceToNDC( double X, double Y)
 
 	Vector4 res = (Vector4(X,Y,Z,1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
 	res.canonicalize();
-	return res.xyz();
-}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Vector4 res2 = (Vector4(X+1,Y+1,Z,1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
+	res2.canonicalize();
 
-double Engine::getZStep()
-{
+	Vector3 result = (res2 - res).xyz();
+
 	BOUNDING_BOX box = _sceneBox * (_mainTR.getMat() * _cameraTR.getMat());
 	double depth = box.getSizes().z();
-	return depth / max (_outputSizeX, _outputSizeY);
-}
+	result.z() = depth / max (_outputSizeX, _outputSizeY);
 
+
+	return result;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -297,3 +291,15 @@ Engine::FACE_TYPE Engine::translateFaceType( FACE_TYPE given )
 	bool b = (bool)given;
 	return (FACE_TYPE)(b ^ _invertFaces ^ _cameraTR.getInvert());
 }
+
+bool Engine::rotationAxisEnabled(int axis)
+{
+	switch(axis) {
+	case 0: return _rotMode & ROTATION_X;
+	case 1: return _rotMode & ROTATION_Y;
+	case 2: return _rotMode & ROTATION_Z;
+	default:
+		assert(0);
+	}
+}
+

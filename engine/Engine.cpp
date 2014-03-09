@@ -36,6 +36,7 @@ Engine::Engine( void ) :
 	_invertFaces(false),
 	_texSampleMode(TMS_BILINEAR_MIPMAPS),
 	_normalsScale (0.06),
+	_rotMode((ROTATION_MODE)(ROTATION_X | ROTATION_Y | ROTATION_Z)),
 
 	// models
 	_itemCount(0), _sceneItems(NULL),
