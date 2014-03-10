@@ -2,7 +2,7 @@ To build the application on mac you need to:
 
 1. install xcode
 2. run the build_mac.sh script.
-3. the application is found in bin/cgrender.app
+3. the application is found in cgrender.app
 
 
 To build app on Linux you need to install the following depedencies:
