@@ -18,24 +18,20 @@
 #    along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##################################################################################
+include (../common.inc)
+
 TEMPLATE = app
 CONFIG += threads 
 TARGET = cgrender
 
-LIBS += -L.  \
-	-lgui -lrenderer ../utils/pnglib/lib/libpng.a ../utils/pnglib/lib/libz.a -lengine -lmodel -lobjparser -lmtlparser \
-	../gui/.obj/qrc_resources.o
+macx {
+	ICON = ../gui/resources/icon.icns
+}
 
-ICON = ../gui/resources/icon.icns
+LIBS += -L.  -lgui -lrenderer -lengine -lmodel -lobjparser -lmtlparser \
+	$(EXTRA_LIBS) ../gui/.obj/qrc_resources.o
 
-POST_TARGETDEPS += \
-	librenderer.a \
-	libengine.a \
-	libmtlparser.a \
-	libobjparser.a \
-	libmodel.a \
-	libgui.a \
+POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a \
 	../gui/resources/icon.icns
 
-
-QMAKE_CLEAN =  -r *.a cgrender.app
+QMAKE_CLEAN =  -r *.a

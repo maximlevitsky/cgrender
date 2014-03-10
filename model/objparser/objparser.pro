@@ -19,6 +19,8 @@
 #
 ##################################################################################
 include(../../common.inc)
+include (../../utils/bison_lex.inc)
+
 TARGET = ../../bin/objparser
 
 TEMPLATE = lib
