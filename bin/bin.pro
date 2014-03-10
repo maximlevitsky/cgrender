@@ -22,11 +22,9 @@ TEMPLATE = app
 CONFIG += threads 
 TARGET = cgrender
 
-
-LIBS += \
-	-L. -L../utils/pnglib/lib/ \
-	../gui/.obj/qrc_resources.o \
-	-lpng -lrenderer -lengine -lmtlparser -lobjparser -lmodel -lgui -lpng -lz
+LIBS += -L.  \
+	-lgui -lrenderer ../utils/pnglib/lib/libpng.a ../utils/pnglib/lib/libz.a -lengine -lmodel -lobjparser -lmtlparser \
+	../gui/.obj/qrc_resources.o
 
 ICON = ../gui/resources/icon.icns
 
