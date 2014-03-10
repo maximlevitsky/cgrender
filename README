@@ -14,10 +14,14 @@ To build the application on mac you need to:
 --------------------------------------------------------------------------------------------------
 To build app on Linux you need to:
 
+* obivously you need to install gcc
+	on ubuntu, just install the build-essential package
+
 * install following packages (names from ubuntu):
 	qt4-dev-tools libqt4-dev
 	libpng12-dev
 	zlib1g-dev (needed for zlib)
+
 
 * run build_linux.sh script
 * the application will be cgrender
