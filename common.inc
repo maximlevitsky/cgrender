@@ -7,8 +7,10 @@ EXTRA_INCLUDE = . ..
 
 macx {
 
-	EXTRA_INCLUDE += ../utils/include
-	EXTRA_LIBS = ../utils/libpng.a ../utils/lib/libz.a
+	PREBULT=../bin/prebuilt/mac
+
+	EXTRA_INCLUDE += $$PREBULT/include
+	EXTRA_LIBS= $$PREBULT/lib/libpng.a $$PREBULT/lib/libz.a
 
 	QMAKE_CXXFLAGS+= \
 		-g  -flto \

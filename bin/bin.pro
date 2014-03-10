@@ -29,7 +29,7 @@ macx {
 }
 
 LIBS += -L.  -lgui -lrenderer -lengine -lmodel -lobjparser -lmtlparser \
-	$(EXTRA_LIBS) ../gui/.obj/qrc_resources.o
+	$$EXTRA_LIBS ../gui/.obj/qrc_resources.o
 
 POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a \
 	../gui/resources/icon.icns

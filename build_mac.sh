@@ -3,4 +3,7 @@
 qmake -spec macx-g++
 rm -rf ./bin/cgrender.app
 make -j4
-macdeployqt ./bin/cgrender.app
+
+rm -rf cgrender.app
+cp -r ./bin/cgrender.app .
+macdeployqt cgrender.app
