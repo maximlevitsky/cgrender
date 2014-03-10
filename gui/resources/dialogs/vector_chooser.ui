@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>362</width>
-    <height>69</height>
+    <width>354</width>
+    <height>66</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>0</number>
+    <number>4</number>
    </property>
    <property name="margin">
     <number>0</number>
@@ -92,7 +92,7 @@
      <item>
       <widget class="QLabel" name="labelPhi">
        <property name="text">
-        <string>Left-right angle</string>
+        <string>L/R angle:</string>
        </property>
       </widget>
      </item>
@@ -106,6 +106,9 @@
        </property>
        <property name="suffix">
         <string>°</string>
+       </property>
+       <property name="decimals">
+        <number>3</number>
        </property>
        <property name="minimum">
         <double>-180.000000000000000</double>
@@ -124,7 +127,13 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Top/bottom angle:</string>
+        <string>T/B angle</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::AutoText</enum>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -138,6 +147,9 @@
        </property>
        <property name="suffix">
         <string>°</string>
+       </property>
+       <property name="decimals">
+        <number>3</number>
        </property>
        <property name="minimum">
         <double>-90.000000000000000</double>

@@ -2,4 +2,4 @@
 
 qmake -spec
 make -j4
-cp  ./bin/cgrender.app .
+cp  ./bin/cgrender .

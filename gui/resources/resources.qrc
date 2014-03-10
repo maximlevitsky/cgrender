@@ -1,5 +1,7 @@
 <RCC>
   <qresource>
+    <file>edit-undo.png</file>
+    <file>folder-open.png</file>
     <file>icon.png</file>
     <file>about.png</file>
   </qresource>
