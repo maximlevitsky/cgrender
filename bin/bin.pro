@@ -38,3 +38,6 @@ POST_TARGETDEPS += \
 	libmodel.a \
 	libgui.a \
 	../gui/resources/icon.icns
+
+
+QMAKE_CLEAN =  -r *.a cgrender.app

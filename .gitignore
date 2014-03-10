@@ -6,3 +6,5 @@ cgrender
 .obj/
 *.DS_Store
 *.app
+*generated/
+Makefile

@@ -52,6 +52,7 @@ DEPENDSPATH += . .. ../utils/pnglib/include
 
 OBJECTS_DIR = .obj
 
+QMAKE_CLEAN	+= $(TARGET) $(QMAKE_TARGET)
 
 CONFIG -= warn_on
 #CONFIG += silent
