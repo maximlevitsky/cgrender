@@ -1,9 +1,23 @@
+
+--------------------------------------------------------------------------------------------------
 To build the application on mac you need to:
 
-1. install xcode
-2. run the build_mac.sh script.
-3. the application is found in cgrender.app
 
+*. install xcode
+*. install Qt SDK. 
+	you can grab it from 
+	http://download.qt-project.org/official_releases/qt/4.8/4.8.5/qt-mac-opensource-4.8.5.dmg
 
-To build app on Linux you need to install the following depedencies:
-	Qt4, libpng-dev
+*. run the build_mac.sh script
+*. the standalone application will be in cgrender.app
+
+--------------------------------------------------------------------------------------------------
+To build app on Linux you need to:
+
+* install following packages (names from ubuntu):
+	qt4-dev-tools libqt4-dev
+	libpng12-dev
+	zlib1g-dev (needed for zlib)
+
+* run build_linux.sh script
+* the application will be cgrender
