@@ -1,5 +1,6 @@
 <RCC>
   <qresource>
+    <file>applications-graphics.png</file>
     <file>edit-undo.png</file>
     <file>folder-open.png</file>
     <file>icon.png</file>
