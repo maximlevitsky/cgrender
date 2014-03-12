@@ -25,4 +25,4 @@ make -j4
 
 rm -rf cgrender.app
 cp -r ./bin/cgrender.app .
-macdeployqt cgrender.app
+macdeployqt cgrender.app -dmg
