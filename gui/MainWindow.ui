@@ -17,8 +17,8 @@
    <string>OBJ viewer</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../resources.qrc">
-    <normaloff>:/icon.png</normaloff>:/icon.png</iconset>
+   <iconset resource="resources/resources.qrc">
+    <normaloff>:/app.icon</normaloff>:/app.icon</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -357,7 +357,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

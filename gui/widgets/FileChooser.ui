@@ -45,8 +45,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/folder-open.png</normaloff>:/folder-open.png</iconset>
+      <iconset resource="../resources/resources.qrc">
+       <normaloff>:/actions/choose_file.icon</normaloff>:/actions/choose_file.icon</iconset>
      </property>
     </widget>
    </item>
@@ -62,15 +62,15 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/edit-undo.png</normaloff>:/edit-undo.png</iconset>
+      <iconset resource="../resources/resources.qrc">
+       <normaloff>:/actions/reset.icon</normaloff>:/actions/reset.icon</iconset>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

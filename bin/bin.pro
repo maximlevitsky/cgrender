@@ -25,13 +25,12 @@ CONFIG += threads
 TARGET = cgrender
 
 macx {
-	ICON = ../gui/resources/icon.icns
+	ICON = ../gui/resources/appicon/icon.icns
 }
 
 LIBS += -L.  -lgui -lrenderer -lengine -lmodel -lobjparser -lmtlparser \
 	$$EXTRA_LIBS ../gui/.obj/qrc_resources.o
 
-POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a \
-	../gui/resources/icon.icns
+POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a
 
 QMAKE_CLEAN =  -r *.a

@@ -37,41 +37,17 @@
    </property>
    <item>
     <widget class="QTabWidget" name="tabbedArea">
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="tabPosition">
-      <enum>QTabWidget::North</enum>
-     </property>
-     <property name="tabShape">
-      <enum>QTabWidget::Rounded</enum>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <property name="elideMode">
-      <enum>Qt::ElideNone</enum>
-     </property>
-     <property name="usesScrollButtons">
-      <bool>true</bool>
-     </property>
      <widget class="QWidget" name="tabGlobal">
       <attribute name="title">
        <string>Global</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="_14">
        <item>
         <widget class="QGroupBox" name="groupFog">
          <property name="title">
           <string>Fog</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
-          <property name="spacing">
-           <number>3</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
            <layout class="QHBoxLayout" name="_16">
             <property name="spacing">
@@ -302,16 +278,10 @@
           <string>Background:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
-          <property name="spacing">
-           <number>3</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QLabel" name="_2">
+             <widget class="QLabel" name="label_5">
               <property name="minimumSize">
                <size>
                 <width>50</width>
@@ -338,7 +308,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
-             <widget class="QLabel" name="_3">
+             <widget class="QLabel" name="label_4">
               <property name="minimumSize">
                <size>
                 <width>50</width>
@@ -421,16 +391,10 @@
           <string>Ambient Light</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_9">
-          <property name="spacing">
-           <number>3</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <layout class="QHBoxLayout" name="_2">
             <item>
-             <widget class="QLabel" name="_">
+             <widget class="QLabel" name="label_2">
               <property name="minimumSize">
                <size>
                 <width>50</width>
@@ -476,7 +440,7 @@
       <attribute name="title">
        <string>Lights</string>
       </attribute>
-      <layout class="QVBoxLayout" name="_19">
+      <layout class="QVBoxLayout" name="_15">
        <item>
         <layout class="QHBoxLayout" name="layout_12">
          <item>
@@ -618,9 +582,6 @@
           <string>Position:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_14">
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
            <widget class="VectorChooser" name="lightPositionChooser" native="true"/>
           </item>
@@ -633,9 +594,6 @@
           <string>Direction:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
            <widget class="VectorChooser" name="lightDirectionChooser" native="true"/>
           </item>
@@ -741,12 +699,6 @@
           <string>Lighting constants:</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <property name="margin">
-           <number>0</number>
-          </property>
-          <property name="spacing">
-           <number>2</number>
-          </property>
           <item row="3" column="2">
            <widget class="QSpinBox" name="spinBox_8">
             <property name="sizePolicy">
@@ -824,12 +776,6 @@
           <string>Textures:</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
-          <property name="margin">
-           <number>0</number>
-          </property>
-          <property name="spacing">
-           <number>2</number>
-          </property>
           <item row="1" column="1">
            <widget class="FileChooser" name="widget_9" native="true">
             <property name="sizePolicy">
@@ -910,10 +856,7 @@
       <attribute name="title">
        <string>Camera</string>
       </attribute>
-      <layout class="QVBoxLayout" name="_20">
-       <property name="spacing">
-        <number>0</number>
-       </property>
+      <layout class="QVBoxLayout" name="_18">
        <item>
         <widget class="QGroupBox" name="groupBox_4">
          <property name="title">
@@ -1092,10 +1035,7 @@
           <string>Camera position:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_17">
-          <property name="spacing">
-           <number>2</number>
-          </property>
-          <property name="margin">
+          <property name="rightMargin">
            <number>0</number>
           </property>
           <item>
@@ -1117,12 +1057,6 @@
           <string>Camera direction:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_19">
-          <property name="spacing">
-           <number>2</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
            <widget class="VectorChooser" name="cameraDirectionChooser" native="true"/>
           </item>
@@ -1155,22 +1089,13 @@
       <attribute name="title">
        <string>Renderer</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
+      <layout class="QVBoxLayout" name="_19">
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Shadow maps</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
-          <property name="spacing">
-           <number>4</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item>
            <layout class="QHBoxLayout" name="layout_14">
             <property name="spacing">
@@ -1387,15 +1312,6 @@
           <string>Textures</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_6">
-          <property name="horizontalSpacing">
-           <number>0</number>
-          </property>
-          <property name="verticalSpacing">
-           <number>2</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
           <item row="0" column="0" colspan="2">
            <widget class="QCheckBox" name="checkBox_4">
             <property name="text">
@@ -1456,9 +1372,9 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <layout class="QHBoxLayout" name="_23">
      <item>
-      <spacer name="horizontalSpacer_6">
+      <spacer name="spacer_5">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1510,7 +1426,7 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_7">
+      <spacer name="spacer_6">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1525,9 +1441,9 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_8">
+    <layout class="QHBoxLayout" name="_21">
      <item>
-      <spacer name="horizontalSpacer_4">
+      <spacer name="spacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1579,7 +1495,7 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_5">
+      <spacer name="spacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1594,9 +1510,9 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="_20">
      <item>
-      <spacer name="horizontalSpacer_2">
+      <spacer name="spacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1636,7 +1552,7 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_3">
+      <spacer name="spacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1698,7 +1614,7 @@
   <tabstop>radioButtonCameraOrthographic</tabstop>
  </tabstops>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="resources/resources.qrc"/>
  </resources>
  <connections/>
  <buttongroups>

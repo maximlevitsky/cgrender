@@ -1,9 +1,12 @@
 <RCC>
+  <qresource/>
+  <qresource prefix="actions" lang="/">
+    <file alias="choose_color.icon">actions/applications-graphics.png</file>
+    <file alias="reset.icon">actions/edit-undo.png</file>
+    <file alias="choose_file.icon">actions/folder-open.png</file>
+  </qresource>
   <qresource>
-    <file>applications-graphics.png</file>
-    <file>edit-undo.png</file>
-    <file>folder-open.png</file>
-    <file>icon.png</file>
-    <file>about.png</file>
+    <file alias="app.icon">appicon/icon.png</file>
+    <file alias="about.image">about.png</file>
   </qresource>
 </RCC>
