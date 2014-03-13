@@ -20,7 +20,7 @@
 #ifndef VECTORCHOOSER_H_
 #define VECTORCHOOSER_H_
 
-#include "ui_vector_chooser.h"
+#include "ui_VectorChooser.h"
 #include <QWidget>
 
 class VectorChooser : public QWidget, Ui::VectorChooser

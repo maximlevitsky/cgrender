@@ -21,7 +21,7 @@
 #define MOUSESENSIVETYDIALOG_H_
 
 #include <QDialog>
-#include "ui_mouse_sensivity.h"
+#include "ui_MouseSensivetyDialog.h"
 
 class MainWindow;
 

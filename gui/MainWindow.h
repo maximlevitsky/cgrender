@@ -22,7 +22,7 @@
 #define MAINWINDOW_H_
 
 #include <QMainWindow>
-#include "ui_mainwindow.h"
+#include "ui_MainWindow.h"
 
 #include <QMouseEvent>
 #include <QWheelEvent>

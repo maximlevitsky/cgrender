@@ -21,7 +21,7 @@
 #define COLORCHOOSER_H_
 
 #include <qwidget.h>
-#include "ui_color_chooser.h"
+#include "ui_ColorChooser.h"
 
 #include "common/Vector3.h"
 

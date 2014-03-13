@@ -20,7 +20,7 @@
 #ifndef FILECHOOSER_H_
 #define FILECHOOSER_H_
 
-#include "ui_file_chooser.h"
+#include "ui_FileChooser.h"
 #include <QWidget>
 
 class FileChooser : public QWidget, Ui::FileChooser

@@ -21,7 +21,7 @@
 #define ENVIRONMENTDIALOG_H_
 
 #include <qdialog.h>
-#include "ui_sidepanel.h"
+#include "ui_SidePanel.h"
 #include "ColorChooser.h"
 #include "FileChooser.h"
 

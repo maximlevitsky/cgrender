@@ -19,15 +19,12 @@
 
 
 #include "MainWindow.h"
-#include "ui_mainwindow.h"
-#include "ui_about_dialog.h"
-
-#include "engine/Engine.h"
-#include "renderer/Renderer.h"
-
 #include "AboutDialog.h"
 #include "MouseSensivetyDialog.h"
 #include "SidePanel.h"
+
+#include "engine/Engine.h"
+#include "renderer/Renderer.h"
 
 #include <QFileDialog>
 #include <QDockWidget>
