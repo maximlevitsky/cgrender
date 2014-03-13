@@ -6,5 +6,6 @@ cgrender
 .obj/
 *.DS_Store
 *.app
+*.dmg
 *generated/
 Makefile
