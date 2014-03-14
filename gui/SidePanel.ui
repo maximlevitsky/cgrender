@@ -24,24 +24,27 @@
     <number>6</number>
    </property>
    <property name="leftMargin">
-    <number>3</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
     <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>3</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
     <number>6</number>
    </property>
    <item>
     <widget class="QTabWidget" name="tabbedArea">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
      <widget class="QWidget" name="tabGlobal">
       <attribute name="title">
        <string>Global</string>
       </attribute>
-      <layout class="QVBoxLayout" name="_14">
+      <layout class="QVBoxLayout" name="_3">
        <item>
         <widget class="QGroupBox" name="groupFog">
          <property name="title">
@@ -1034,19 +1037,9 @@
          <property name="title">
           <string>Camera position:</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_17">
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
+         <layout class="QVBoxLayout" name="_25">
           <item>
            <widget class="VectorChooser" name="cameraPositionChooser" native="true"/>
-          </item>
-          <item alignment="Qt::AlignRight">
-           <widget class="QPushButton" name="pushButton_9">
-            <property name="text">
-             <string>Reset</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </widget>
@@ -1056,18 +1049,18 @@
          <property name="title">
           <string>Camera direction:</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_19">
+         <layout class="QVBoxLayout" name="_26">
           <item>
            <widget class="VectorChooser" name="cameraDirectionChooser" native="true"/>
           </item>
-          <item alignment="Qt::AlignRight">
-           <widget class="QPushButton" name="pushButton_10">
-            <property name="text">
-             <string>Reset</string>
-            </property>
-           </widget>
-          </item>
          </layout>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignRight">
+        <widget class="QPushButton" name="pushButton_10">
+         <property name="text">
+          <string>Reset</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -1095,7 +1088,7 @@
          <property name="title">
           <string>Shadow maps</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <layout class="QVBoxLayout" name="_14">
           <item>
            <layout class="QHBoxLayout" name="layout_14">
             <property name="spacing">
@@ -1311,7 +1304,7 @@
          <property name="title">
           <string>Textures</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_6">
+         <layout class="QGridLayout" name="_24">
           <item row="0" column="0" colspan="2">
            <widget class="QCheckBox" name="checkBox_4">
             <property name="text">

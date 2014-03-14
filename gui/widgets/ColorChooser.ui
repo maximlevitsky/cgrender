@@ -59,7 +59,7 @@
       <item alignment="Qt::AlignHCenter">
        <widget class="QDoubleSpinBox" name="redBox">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -93,7 +93,7 @@
       <item alignment="Qt::AlignHCenter">
        <widget class="QDoubleSpinBox" name="greenBox">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -127,7 +127,7 @@
       <item alignment="Qt::AlignHCenter">
        <widget class="QDoubleSpinBox" name="blueBox">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
