@@ -194,6 +194,9 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 
 	for (polygonIterator iter(geometry, count); iter.hasmore() ; iter.next()) 
 	{
+		/* TODO: this is wrong when triangle is partially clipped, then calculation will use values with negaitive
+		 * w....
+		 */
 		_psInputs.frontface = !determineBackface(iter);
 
 		/* setup flat attributes*/
@@ -415,7 +418,7 @@ bool Renderer::determineBackface( polygonIterator iter )
 		z += (v1.x() - v2.x()) * (v1.y()+v2.y());
 	}
 
-	return z > 0;
+	return z >= 0;
 }
 
 Vector4 Renderer::NDC_to_DeviceSpace( const Vector4* input )
