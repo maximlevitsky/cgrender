@@ -149,9 +149,10 @@ void Engine::rotateCamera( int axis, double angleDelta )
 {
 	if(!_itemCount || !rotationAxisEnabled(axis)) return;
 
-	rotCoofs[axis] -= ((M_PI) * angleDelta / 180);
-	Mat4 combinedRotation = Mat4::getRotMat(rotCoofs);
-	_cameraTR.setRotationMatrix2(combinedRotation);
+	Vector3 rotCoofs1 = _cameraTR.getRotateFactors();
+	rotCoofs1[axis] -= ((M_PI) * angleDelta / 180);
+	_cameraTR.setRotationFactors(rotCoofs1);
+
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -163,7 +164,6 @@ void Engine::commitRotation()
 		_sceneItems[_selObj]._itemTR.mergeRotationFactors();
 
 	_mainTR.mergeRotationFactors();
-	_cameraTR.mergeRotationFactors();
 	rotCoofs = Vector3(0,0,0);
 }
 
@@ -198,7 +198,7 @@ void Engine::moveCamera( int axis, double delta )
 {
 	Vector3 cameraLoc = _cameraTR.getMoveFactors();
 	cameraLoc = vmul3point(cameraLoc, _cameraTR.getRotationMatrix());
-	cameraLoc[axis] += delta;
+	cameraLoc[axis] -= delta;
 	cameraLoc = vmul3point(cameraLoc, _cameraTR.getRotationMatrix().inv());
 	_cameraTR.setMoveFactors(cameraLoc);
 }
@@ -256,6 +256,11 @@ Vector3 Engine::getSteps( double X, double Y)
 
 	Mat4 additinalMat = (_drawSeparateObjects && _selObj != -1) ?
 			_sceneItems[_selObj]._itemTR.getMat() : Mat4::createUnit();
+
+	/*
+	 * TODO: BUG - if center of the world is behind the camera, then projection transform is wrong.
+	 * need to think about this
+	 */
 
 	Vector4 center = Vector4(0,0,0,1) * additinalMat *
 			(_mainTR.getMat() * _cameraTR.getMat() * _projTR.getMatrix());

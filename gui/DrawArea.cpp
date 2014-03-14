@@ -290,11 +290,11 @@ void DrawArea::keyPressEvent ( QKeyEvent * event )
 	//case Qt::ShiftModifier | Qt::ControlModifier:
 
 		/* resize */
-	//	if (mainWindow->_transformMode != TRANSFORM_CAMERA)
-	//		setCursor(Qt::SizeVerCursor);
-	//	else
-	//		setCursor(Qt::ArrowCursor);
-	//	break;
+		if (mainWindow->_transformMode != TRANSFORM_CAMERA)
+			setCursor(Qt::SizeVerCursor);
+		else
+			setCursor(Qt::ArrowCursor);
+		break;
 
 	default:
 		setCursor(Qt::ArrowCursor);

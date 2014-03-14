@@ -114,39 +114,28 @@ public:
 
 	/* data access */
 	Vector3 getMoveFactors() {return moveFactors;}
-	Mat4 getRotationMatrix() { return rotationMatrix; }
+	Vector3 getRotateFactors() {return rotateFactors;}
 
 	Mat4 getRotMatI()
 	{
 		Mat4 invert = Mat4::getScaleMatrix(Vector3(1,1,_invert ? -1 : 1));
-		return invert * rotationMatrix;
+		return invert * Mat4::getRotMat(rotateFactors);
 	}
+
+	Mat4 getRotationMatrix() {
+		return Mat4::getRotMat(rotateFactors);
+	}
+
 	Mat4 getNormalTransformMatrix() { return normalTransformMatrix; }
 	Mat4 getMat() { return matrix; }
 	bool getInvert() { return _invert; }
 
 
 	/* rotation */
-	void setRotationMatrix(Mat4 matrix) {
-		rotationMatrix = matrix;
+	void setRotationFactors(Vector3 factors) {
+		rotateFactors = factors;
 		updateMatrix();
 	}
-
-	void setRotationMatrix2(Mat4 matrix)
-	{
-		rotationMatrixTemp = matrix;
-		updateMatrix();
-	}
-
-	Mat4 getRotationMatrix2() const
-	{ return rotationMatrixTemp; }
-
-	void mergeRotationFactors() {
-		rotationMatrix = rotationMatrix * rotationMatrixTemp;
-		rotationMatrixTemp = Mat4::createUnit();
-		updateMatrix();
-	}
-
 
 	/* translate */
 	void setMoveFactors(Vector3 translation)
@@ -164,9 +153,8 @@ public:
 
 	void reset()
 	{
-		rotationMatrix = Mat4::createUnit();
-		rotationMatrixTemp = Mat4::createUnit();
 		moveFactors = Vector3(0,0,0);
+		rotateFactors = Vector3(0,0,0);
 		updateMatrix();
 	}
 
@@ -174,14 +162,13 @@ private:
 	void updateMatrix()
 	{
 		Mat4 invert = Mat4::getScaleMatrix(Vector3(1,1,_invert ? -1 : 1));
-		matrix = invert * Mat4::getMoveMat(-moveFactors) * rotationMatrix * rotationMatrixTemp;
-		normalTransformMatrix =  invert *  rotationMatrix * rotationMatrixTemp;
+		matrix = invert * Mat4::getMoveMat(-moveFactors) * Mat4::getRotMat(rotateFactors);
+		normalTransformMatrix =  invert *  Mat4::getRotMat(rotateFactors);
 	}
 
 private:
-	Mat4 rotationMatrix;
-	Mat4 rotationMatrixTemp;
 	Vector3 moveFactors;
+	Vector3 rotateFactors;
 private:
 	Mat4 matrix;
 	Mat4 normalTransformMatrix;
