@@ -24,33 +24,39 @@
     <number>6</number>
    </property>
    <property name="leftMargin">
-    <number>3</number>
+    <number>5</number>
    </property>
    <property name="topMargin">
-    <number>0</number>
+    <number>5</number>
    </property>
    <property name="rightMargin">
-    <number>3</number>
+    <number>5</number>
    </property>
    <property name="bottomMargin">
-    <number>6</number>
+    <number>0</number>
    </property>
    <item>
     <widget class="QTabWidget" name="tabbedArea">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tabGlobal">
       <attribute name="title">
        <string>Global</string>
       </attribute>
       <layout class="QVBoxLayout" name="_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="groupFog">
          <property name="title">
           <string>Fog</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout">
+         <layout class="QVBoxLayout" name="_28">
           <item>
            <layout class="QHBoxLayout" name="_16">
             <property name="spacing">
@@ -280,7 +286,7 @@
          <property name="title">
           <string>Background:</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
+         <layout class="QVBoxLayout" name="_29">
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
@@ -393,7 +399,7 @@
          <property name="title">
           <string>Ambient Light</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
+         <layout class="QVBoxLayout" name="_30">
           <item>
            <layout class="QHBoxLayout" name="_2">
             <item>
@@ -444,6 +450,12 @@
        <string>Lights</string>
       </attribute>
       <layout class="QVBoxLayout" name="_15">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <layout class="QHBoxLayout" name="layout_12">
          <item>
@@ -584,7 +596,7 @@
          <property name="title">
           <string>Position:</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_14">
+         <layout class="QVBoxLayout" name="_31">
           <item>
            <widget class="VectorChooser" name="lightPositionChooser" native="true"/>
           </item>
@@ -596,7 +608,7 @@
          <property name="title">
           <string>Direction:</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
+         <layout class="QVBoxLayout" name="_32">
           <item>
            <widget class="VectorChooser" name="lightDirectionChooser" native="true"/>
           </item>
@@ -670,6 +682,12 @@
        <string>Materials</string>
       </attribute>
       <layout class="QVBoxLayout" name="_17">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QLabel" name="label_9">
          <property name="text">
@@ -860,6 +878,12 @@
        <string>Camera</string>
       </attribute>
       <layout class="QVBoxLayout" name="_18">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="groupBox_4">
          <property name="title">
@@ -868,7 +892,7 @@
          <property name="checkable">
           <bool>false</bool>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_7">
+         <layout class="QVBoxLayout" name="_27">
           <item>
            <widget class="QRadioButton" name="radioButtonCameraPerspective">
             <property name="text">
@@ -1083,6 +1107,12 @@
        <string>Renderer</string>
       </attribute>
       <layout class="QVBoxLayout" name="_19">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
