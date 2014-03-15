@@ -23,6 +23,6 @@
 qmake -spec macx-g++
 make -j4
 
-rm -rf cgrender.app
+rm -rf cgrender.app cgrender.dmg
 cp -r ./bin/cgrender.app .
 macdeployqt cgrender.app -dmg
