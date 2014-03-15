@@ -82,15 +82,12 @@ void DrawArea::paintEvent(QPaintEvent *)
 	if (_outputTexture == NULL)
 	 return;
 
-
 	// make engine render
 	if (!sceneValid) {
 
 		// start measuring time
 		struct timeval t,t2,t3;
 		gettimeofday(&t, NULL);
-
-		Color bkgcolor = engine->getBackgroundSettings().color * 255;
 
 		engine->render();
 		sceneValid = true;
@@ -102,15 +99,10 @@ void DrawArea::paintEvent(QPaintEvent *)
 
 		// draw time report
 		QPainter imgpainter(_image);
-		int w = this->geometry().width();
-		QRect textRect(QPoint(w - 220, 0), QPoint(w,20));
-		imgpainter.fillRect(textRect, QBrush(QColor(bkgcolor[0],bkgcolor[1],bkgcolor[2])));
 		imgpainter.setPen(QColor(255,255,255));
-		imgpainter.drawText(textRect.bottomLeft(),
-		 QString("Rendering took %1 msec (%2 FPS)").
-		 arg(QString::number(msec), QString::number(1000.0/msec)));
-
-		//printf("Rendering took %i msec\n", msec);
+		imgpainter.drawText(0,10,geometry().width() - 10 ,geometry().height(),
+				Qt::AlignTop | Qt::AlignRight,
+				QString("Rendering took %1 msec (%2 FPS)").arg(QString::number(msec), QString::number(1000.0/msec)));
 	}
 
 	// blit the _image
@@ -209,8 +201,8 @@ void DrawArea::wheelEvent (QWheelEvent * event )
 	if (renderingSuspended)
 		return;
 
-	double stepZabs = (event->delta() / 8) / 4;
-	double stepZ = engine->getSteps(0,0).z() * stepZabs;
+	double stepZabs = ((double)event->delta() / 120) /* every wheel event will be 1deg rotation*/;
+	double stepZ = engine->getSteps(0,0).z() * stepZabs * 5;
 
 	switch(mainWindow->_transformMode)
 	{

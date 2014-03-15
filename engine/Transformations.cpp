@@ -253,33 +253,37 @@ void Engine::recomputeDepth()
 Vector3 Engine::getSteps( double X, double Y)
 {
 	if (!_itemCount) return Vector3(0,0,0);
+	Vector4 center(0,0,0,1);
+	BOUNDING_BOX box;
+	Mat4 trans;
 
-	Mat4 additinalMat = (_drawSeparateObjects && _selObj != -1) ?
-			_sceneItems[_selObj]._itemTR.getMat() : Mat4::createUnit();
+	if (_drawSeparateObjects && _selObj != -1) {
+		trans = (_sceneItems[_selObj]._itemTR.getMat() * _mainTR.getMat() * _cameraTR.getMat());
+		box = _sceneItems[_selObj]._modelBox;
+	}
+	else {
+		trans = (_mainTR.getMat() * _cameraTR.getMat());
+		box = _sceneBox;
 
-	/*
-	 * TODO: BUG - if center of the world is behind the camera, then projection transform is wrong.
-	 * need to think about this
-	 */
+	}
 
-	Vector4 center = Vector4(0,0,0,1) * additinalMat *
-			(_mainTR.getMat() * _cameraTR.getMat() * _projTR.getMatrix());
+	center = center * trans;
+	box = box * trans;
+	center.z() = min(center.z(), - (box.getSizes().z() / 10));
 
+	center = center *  _projTR.getMatrix();
 	center.canonicalize();
 	center = center * _renderer->getNDCTODeviceMatrix();
 
-	double Z = center.z();
-
-	Vector4 res = (Vector4(X,Y,Z,1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
+	Vector4 res = (Vector4(X,Y,center.z(),1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
 	res.canonicalize();
-
-	Vector4 res2 = (Vector4(X+1,Y+1,Z,1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
+	Vector4 res2 = (Vector4(X+1,Y+1,center.z(),1) * _renderer->getDeviceToScreenMatrix() * _projTR.getMatrix().inv());
 	res2.canonicalize();
-
 	Vector3 result = (res2 - res).xyz();
 
-	BOUNDING_BOX box = _sceneBox * (_mainTR.getMat() * _cameraTR.getMat());
-	double depth = box.getSizes().z();
+
+	BOUNDING_BOX scenebox = _sceneBox * (_mainTR.getMat() * _cameraTR.getMat());
+	double depth = scenebox.getSizes().z();
 	result.z() = depth / max (_outputSizeX, _outputSizeY);
 
 
