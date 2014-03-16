@@ -26,3 +26,4 @@ CONFIG += staticlib
 SOURCES += *.cpp
 HEADERS += *.h
 INCLUDEPATH += ./mtlparser/$$FLEXBISON_DIR/ ./objparser/$$FLEXBISON_DIR/
+DEPENDSPATH += ./mtlparser/$$FLEXBISON_DIR/ ./objparser/$$FLEXBISON_DIR/

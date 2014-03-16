@@ -24,8 +24,8 @@ mkdir -p debug
 mkdir -p release
 
 cd debug
-qmake -spec macx-g++ CONFIG+=debug `dirname $0`/../ 
+qmake -spec macx-g++ CONFIG+=debug ../`dirname $0`/../
 cd ..
 
 cd release
-qmake -spec macx-g++ CONFIG+=release `dirname $0`/../
+qmake -spec macx-g++ CONFIG+=release ../`dirname $0`/../

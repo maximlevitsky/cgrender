@@ -24,9 +24,9 @@ mkdir -p debug
 mkdir -p release
 
 cd debug
-qmake CONFIG+=debug `dirname $0`/../
+qmake CONFIG+=debug ../`dirname $0`/../
 cd ..
 
 cd release
-qmake CONFIG+=release `dirname $0`/../
+qmake CONFIG+=release ../`dirname $0`/../
 
