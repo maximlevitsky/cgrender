@@ -42,7 +42,7 @@ unix:!macx {
 	EXTRA_LIBS= -lpng -lz
 
 	QMAKE_CXXFLAGS+= \
-		-g  -flto \
+		-flto \
 		-mtune=core2 -march=core2  -O3 -ffast-math   \
 		-std=c++11 -Wall -Wno-reorder  \
 		-mfpmath=sse -mssse3 -msse3 -msse2 \
