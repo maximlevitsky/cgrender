@@ -27,14 +27,13 @@ EXTRA_INCLUDE = . ..
 
 macx {
 
-	PREBULT=../bin/prebuilt/mac
+	PREBULT=$$PWD/bin/prebuilt/mac
 
 	EXTRA_INCLUDE += $$PREBULT/include
 	EXTRA_LIBS= $$PREBULT/lib/libpng.a $$PREBULT/lib/libz.a
 
 	QMAKE_CXXFLAGS+= \
-		-g  -flto \
-		-mtune=core2 -march=core2  -O3 -ffast-math   \
+		-mtune=core2 -march=core2 -ffast-math   \
 		-std=c++11 -Wall -Wno-reorder -Wno-unneeded-internal-declaration
 }
 

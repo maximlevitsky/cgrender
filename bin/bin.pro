@@ -30,12 +30,9 @@ macx {
 
 LIBS += -L.  -lgui -lrenderer -lengine -lmodel -lobjparser -lmtlparser $$EXTRA_LIBS
 
-POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a
+POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a 
 QMAKE_CLEAN =  -r *.a $$TARGET
 
 macx {
-	version.target = $$TARGET.dmg
-	version.commands = rm -rf $$TARGET.dmg && macdeployqt $$TARGET -dmg
-	version.depends = $$TARGET
-	POST_TARGETDEPS += $$TARGET.dmg
+	#QMAKE_POST_LINK = rm -rf $${TARGET}.dmg && macdeployqt $${TARGET}.app -dmg
 }
