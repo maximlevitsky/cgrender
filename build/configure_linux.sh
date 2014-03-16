@@ -20,6 +20,13 @@
 #
 ##################################################################################
 
-qmake -spec
-make -j4
-cp  ./bin/cgrender .
+mkdir -p debug
+mkdir -p release
+
+cd debug
+qmake CONFIG+=debug `dirname $0`/../
+cd ..
+
+cd release
+qmake CONFIG+=release `dirname $0`/../
+

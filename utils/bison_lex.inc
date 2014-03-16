@@ -20,49 +20,57 @@
 ##################################################################################
 
 defineReplace(addToHeaders) {
-    HEADERS += generated/$${1}.h
-    return(generated/$${1}.cpp)
-}
-
-defineReplace(FILE_IN_addToHeaders) {
-    # qmake emits a warning unless this function is defined; not sure why.
+    HEADERS += $${FLEXBISON_DIR}/$${1}.h
+    return($${FLEXBISON_DIR}/$${1}.cpp)
 }
 
 ###########################################################################################
-flex.output_function = addToHeaders
-flex.name = Flex ${QMAKE_FILE_IN}
+flex.name = Flex header ${QMAKE_FILE_IN}
+flex.CONFIG += target_predeps
+
 flex.input = FLEXSOURCES
+flex.variable_out = GENERATED_FILES
+flex.output = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.hpp
+flex.clean = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.hpp $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.cpp
 
 flex.commands = \
-	flex -o ${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.l.cpp \
-	--header-file=${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.l.hpp \
+	flex -o $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.cpp \
+	--header-file=$${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.hpp \
 	${QMAKE_FILE_IN}
 
-flex.CONFIG += target_predeps
-flex.clean = ${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.l.hpp \
- 	${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.l.cpp
-
-flex.variable_out = SOURCES
 silent:flex.commands = @echo Lex ${QMAKE_FILE_IN} && $$flex.commands
-QMAKE_EXTRA_COMPILERS += flex
+
+flex_impl.name = Flex source for ${QMAKE_FILE_IN}
+flex_impl.input = FLEXSOURCES
+flex_impl.output = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.cpp
+flex_impl.variable_out = GENERATED_SOURCES
+
+flex_impl.commands = $$escape_expand(\\n)
+flex_impl.depends = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.l.hpp
+
+QMAKE_EXTRA_COMPILERS += flex flex_impl
 
 ###########################################################################################
-bison.name = Bison ${QMAKE_FILE_IN}
-bison.input = BISONSOURCES
-bison.output_function = addToHeaders
 
-bison.commands = \
-	bison -d -o ${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.y.cpp \
-	${QMAKE_FILE_IN}
-
+bison.name = Bison header ${QMAKE_FILE_IN}
 bison.CONFIG += target_predeps
-bison.variable_out = SOURCES
+bison.input = BISONSOURCES
+bison.variable_out = GENERATED_FILES
+bison.output = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.y.hpp
+bison.clean = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.y.hpp $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.y.cpp
+
+bison.commands = bison -d -o $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.y.cpp ${QMAKE_FILE_IN}
+
+bison_impl.name = Bison source for ${QMAKE_FILE_IN}
+bison_impl.input = BISONSOURCES
+bison_impl.variable_out = GENERATED_SOURCES
+bison_impl.commands = $$escape_expand(\\n)
+bison_impl.depends = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.y.hpp
+bison_impl.output = $${FLEXBISON_DIR}/${QMAKE_FILE_BASE}.y.cpp
+
+QMAKE_EXTRA_COMPILERS += bison bison_impl
 silent:bison.commands = @echo Bison ${QMAKE_FILE_IN} && $$bison.commands
 
-bison.clean = \
-	${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.y.hpp \
- 	${QMAKE_FILE_PATH}/generated/${QMAKE_FILE_BASE}.y.cpp
-
-QMAKE_EXTRA_COMPILERS += bison
+QMAKE_CXXFLAGS += -DYYDEBUG=1
 
 ###########################################################################################

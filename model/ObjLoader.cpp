@@ -27,11 +27,11 @@ using std::cout;
 
 typedef void* yyscan_t;
 
-#include "objparser/generated/objparser.y.hpp"
-#include "objparser/generated/objparser.l.hpp"
+#include "objparser.y.hpp"
+#include "objparser.l.hpp"
 
-#include "mtlparser/generated/mtlparser.y.hpp"
-#include "mtlparser/generated/mtlparser.l.hpp"
+#include "mtlparser.y.hpp"
+#include "mtlparser.l.hpp"
 
 extern int obj_parse (ObjLoader *loader, yyscan_t scanner);
 extern int mtl_parse (MtlLoader *loader, yyscan_t scanner);

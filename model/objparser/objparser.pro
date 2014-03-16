@@ -19,15 +19,16 @@
 #
 ##################################################################################
 include(../../common.inc)
-include (../../utils/bison_lex.inc)
 
 TARGET = ../../bin/objparser
-
 TEMPLATE = lib
 CONFIG += staticlib
-
 DEPENDPATH += ../../
 INCLUDEPATH += ../../
 
 FLEXSOURCES=objparser.l
 BISONSOURCES=objparser.y
+
+include (../../utils/bison_lex.inc)
+
+

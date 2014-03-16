@@ -32,16 +32,18 @@ int main(int argc, char** argv)
     }
 #endif
 
-	 QApplication *app = new QApplication(argc, argv);
-	 MainWindow *mainwindow = new MainWindow();
+	Q_INIT_RESOURCE(resources);
 
-	 mainwindow->show();
+	QApplication *app = new QApplication(argc, argv);
+	MainWindow *mainwindow = new MainWindow();
+
+	mainwindow->show();
 
 	 if (argc > 1)
 		 mainwindow->getEngine()->loadSceneFromOBJ(argv[1]);
 
-	 app->exec();
+	app->exec();
 
-	 delete mainwindow;
-	 delete app;
+	delete mainwindow;
+	delete app;
 }

@@ -34,8 +34,6 @@
 	#include <list>
 	#include <iostream>
 	
-	#define YYDEBUG 1
-	
 	int yyerror(ObjLoader *loader, yyscan_t scanner, const char* p) 
 	{ 
 		std::cout << "syntax error at " << obj_get_lineno(scanner) << std::endl;

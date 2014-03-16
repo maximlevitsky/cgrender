@@ -1,3 +1,4 @@
+#!/bin/bash
 #################################################################################
 #
 #	This file is part of CG4.
@@ -19,9 +20,12 @@
 #
 ##################################################################################
 
-TEMPLATE = subdirs
-SUBDIRS = renderer engine model/mtlparser model/objparser model gui
+mkdir -p debug
+mkdir -p release
 
-# build must be last:
-CONFIG += ordered
-SUBDIRS += bin
+cd debug
+qmake -spec macx-g++ CONFIG+=debug `dirname $0`/../ 
+cd ..
+
+cd release
+qmake -spec macx-g++ CONFIG+=release `dirname $0`/../

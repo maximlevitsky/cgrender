@@ -19,10 +19,10 @@
 #
 ##################################################################################
 include(../common.inc)
-TARGET = ../bin/model
 
+TARGET = ../bin/model
 TEMPLATE = lib
 CONFIG += staticlib
-
 SOURCES += *.cpp
 HEADERS += *.h
+INCLUDEPATH += ./mtlparser/$$FLEXBISON_DIR/ ./objparser/$$FLEXBISON_DIR/

@@ -19,15 +19,16 @@
 #
 ##################################################################################
 include(../../common.inc)
-include (../../utils/bison_lex.inc)
 
 TARGET = ../../bin/mtlparser
-
 TEMPLATE = lib
 CONFIG += staticlib
-
 DEPENDPATH += ../../
 INCLUDEPATH += ../../
 
 FLEXSOURCES=mtlparser.l
 BISONSOURCES=mtlparser.y
+
+include (../../utils/bison_lex.inc)
+
+

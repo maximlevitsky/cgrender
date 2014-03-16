@@ -1,4 +1,3 @@
-#!/bin/bash
 #################################################################################
 #
 #	This file is part of CG4.
@@ -20,9 +19,6 @@
 #
 ##################################################################################
 
-qmake -spec macx-g++
-make -j4
-
-rm -rf cgrender.app cgrender.dmg
-cp -r ./bin/cgrender.app .
-macdeployqt cgrender.app -dmg
+TEMPLATE = subdirs
+CONFIG += ordered
+SUBDIRS = renderer engine model/mtlparser model/objparser model gui bin
