@@ -35,8 +35,10 @@ typedef void* yyscan_t;
 
 extern int obj_parse (ObjLoader *loader, yyscan_t scanner);
 extern int mtl_parse (MtlLoader *loader, yyscan_t scanner);
-extern int obj_debug,mtl_debug;
 
+#ifdef  YYDEBUG
+extern int obj_debug,mtl_debug;
+#endif
 /*********************************************************************************/
 
 bool MtlLoader::loadMaterials(std::string file)
@@ -83,9 +85,13 @@ bool ObjLoader::load(std::string file)
 	yyscan_t scanner;
 	obj_lex_init(&scanner);
 	obj_set_in(f, scanner);
-	obj_set_out(stdout, &scanner);
-	obj_set_debug(1, &scanner);
+	obj_set_out(stdout, scanner);
+	obj_set_debug(1, scanner);
+
+	#ifdef  YYDEBUG
 	obj_debug = 0;
+	#endif
+
 	int retval = obj_parse(this, scanner);
 	obj_lex_destroy(scanner);
 
