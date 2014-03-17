@@ -1,4 +1,4 @@
-#################################################################################
+############################################################################################
 #
 #	This file is part of CG4.
 #
@@ -17,7 +17,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 #
-##################################################################################
+############################################################################################
 
 CONFIG -= warn_on
 OBJECTS_DIR =  .obj
@@ -30,25 +30,36 @@ macx {
 
 	EXTRA_INCLUDE += $$PREBULT/include
 	EXTRA_LIBS= $$PREBULT/lib/libpng.a $$PREBULT/lib/libz.a
-	QMAKE_CXXFLAGS+= -march=core2  -std=c++11 -Wall -Wno-reorder -Wno-unneeded-internal-declaration
 
-	QMAKE_CXXFLAGS_RELEASE += -O3 -ffast-math
+	########################################################################################
+
+	QMAKE_CXXFLAGS+= -march=core2  -std=c++11 -Wall -Wno-reorder -Wno-unneeded-internal-declaration
+	QMAKE_CXXFLAGS_RELEASE += -g -O3 -ffast-math
+	########################################################################################
 
 }
 
 unix:!macx {
 
-	EXTRA_LIBS= -lpng -lz
-	QMAKE_CXXFLAGS+= -march=core2 -std=c++11 -Wall -Wno-reorder
 
-	QMAKE_CXXFLAGS_RELEASE += -O3 -ffast-math -mfpmath=sse -mssse3 -msse3 -msse2 \
+	EXTRA_LIBS= -lpng -lz
+
+	########################################################################################
+
+	QMAKE_CXXFLAGS+= -march=native -std=c++11 -Wall -Wno-reorder
+
+	OPTIMIZATIONS = -O3 -ffast-math -mfpmath=sse -mavx  \
 		-malign-double -ftree-loop-distribution -fstrict-aliasing -floop-interchange \
-		-ftree-vectorize -ftree-slp-vectorize -flto		
+		-ftree-vectorize -ftree-slp-vectorize
+
+
+	QMAKE_CXXFLAGS_RELEASE += -g -flto
+	QMAKE_LFLAGS_RELEASE += -g -flto=4 $$OPTIMIZATIONS
+
+	########################################################################################
+
+	QMAKE_CXXFLAGS_DEBUG += -Og
 }
 
-
-QMAKE_CXXFLAGS_RELEASE += -g
-QMAKE_LFLAGS_RELEASE =
-
 INCLUDEPATH += $$EXTRA_INCLUDE
-DEPENDSPATH += $$EXTRA_INCLUDE
+DEPENDPATH += $$EXTRA_INCLUDE

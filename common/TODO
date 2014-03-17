@@ -1,6 +1,6 @@
 
 * loader:
-	* implement material loading - MEDIUM
+	* implement material loading
 	* implement appearence of same group more that once in obj file - MEDIUM
 
 * materials:
@@ -25,6 +25,7 @@
 
 * transformations:
 	* implement camera with fov and skew angles
+	* add camera rotation setting to gui, and reset of the rotation
 	
 * renderer:
 	* refactor clipping
@@ -37,6 +38,4 @@
 	which point to take for reference movement (current box/10 is hardcoded)
 	
 * build system:
-	* make build to separate directory
 	* switch to CMAKE
-	* make debug/release builds

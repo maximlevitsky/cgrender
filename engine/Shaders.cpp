@@ -40,7 +40,7 @@ Color phongPixelShader( void* priv, const PS_INPUTS &in)
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 
-	const Vector4 &position = Vector4(in.attributes[0].x(), in.attributes[0].y(), in.attributes[0].z(), 1);
+	const Vector3 &position = in.attributes[0];
 	Vector3 normal = in.attributes[1].returnNormal();
 	Color c;
 
@@ -62,7 +62,7 @@ Color phongPixelShader( void* priv, const PS_INPUTS &in)
 }
 
 /********************************************************************************************************/
-Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector4& pos, Vector3 &normal, bool backface )
+Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector3& pos, Vector3 &normal, bool backface )
 {
 	Color c = u->kA * objcolor;
 
@@ -78,7 +78,7 @@ Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector4& pos, V
 		const ShaderLightData &light = u->lights[i];
 
 		// Calculate the direction the light is coming from (from point toward the light source)
-		const Vector3 &lightDirection = light.is_point ? (light.location - pos.xyz()).returnNormal() : light.direction;
+		const Vector3 &lightDirection = light.is_point ? (light.location - pos).returnNormal() : light.direction;
 
 		// calculate the angle of incoming light vs surface normal
 		double surfaceLightAngleCosine = lightDirection.dot(normal);
@@ -115,7 +115,7 @@ Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector4& pos, V
 		Vector3 relfectedLightDirection = (normal * (surfaceLightAngleCosine * 2) - lightDirection);
 
 		// calculate the cosine of the angle of reflected light direction and viewer
-		double reflectedangleToCameraCosine = -(relfectedLightDirection.dot(pos.returnNormal().xyz()));
+		double reflectedangleToCameraCosine = -(relfectedLightDirection.dot(pos.returnNormal()));
 		if (reflectedangleToCameraCosine <= 0)
 			continue;
 
@@ -128,7 +128,7 @@ Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector4& pos, V
 }
 
 /********************************************************************************************************/
-double sampleShadowMap( const ShaderLightData &light, const UniformBuffer *u, const Vector4 &pos,
+double sampleShadowMap( const ShaderLightData &light, const UniformBuffer *u, const Vector3 &pos,
 	const Vector3 &dir, double surfaceAngeleCosine )
 {
 
@@ -137,7 +137,7 @@ double sampleShadowMap( const ShaderLightData &light, const UniformBuffer *u, co
 
 	if (light._shadowMapSampler.isBound())
 	{
-		Vector4 trans_pos = pos * (light.shadowMapTransfrom[0]);
+		Vector4 trans_pos = vmul4point(pos,(light.shadowMapTransfrom[0]));
 		trans_pos.canonicalize();
 
 		const ShadowSampler &sampler = light._shadowMapSampler;
@@ -154,7 +154,7 @@ double sampleShadowMap( const ShaderLightData &light, const UniformBuffer *u, co
 	} else if (light._shadowCubemapSampler.isBound())
 	{
 		int face = light._shadowCubemapSampler.selectFace(vmul3dir(dir,u->mat_cameraToWorldSpace));
-		Vector4 trans_pos = pos * (light.shadowMapTransfrom[face]);
+		Vector4 trans_pos = vmul4point(pos,(light.shadowMapTransfrom[face]));
 		trans_pos.canonicalize();
 
 		const ShadowCubemapSampler &sampler = light._shadowCubemapSampler;

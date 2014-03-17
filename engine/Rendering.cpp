@@ -27,7 +27,7 @@ static void flatVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 at
 
 	if (v.polygon) {
 
-		const Vector4& position = vmul4point(v.polygon->polygonCenter, u->mat_objectToCameraSpace);
+		const Vector3& position = vmul3point(v.polygon->polygonCenter, u->mat_objectToCameraSpace);
 		Vector3 normal = vmul3dir(v.polygon->polygonNormal, u->mat_objectToCameraSpaceNormalTransform).returnNormal();
 
 		Color c;
@@ -71,7 +71,7 @@ static void gouraldVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const Model::Vertex& v = *(const Model::Vertex*)in;
 
-	const Vector4 &position = vmul4point(v.position,u->mat_objectToCameraSpace);
+	const Vector3 &position = vmul3point(v.position,u->mat_objectToCameraSpace);
 	Vector3 normal = vmul3dir(v.normal,u->mat_objectToCameraSpaceNormalTransform).returnNormal();
 
 	Color c;

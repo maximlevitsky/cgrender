@@ -98,10 +98,10 @@ public:
 
 
 
-Color doLighting(const UniformBuffer* u, Color &c, const Vector4 & pos, Vector3 &normal, bool backface);
+Color doLighting(const UniformBuffer* u, Color &c, const Vector3 & pos, Vector3 &normal, bool backface);
 Color applyFog(const UniformBuffer* u, double depth, const Color &color);
 
-double sampleShadowMap(const ShaderLightData &light, const UniformBuffer *u, const Vector4 &pos, const Vector3 &dir, double surfaceAngeleCosine) ;
+double sampleShadowMap(const ShaderLightData &light, const UniformBuffer *u, const Vector3 &pos, const Vector3 &dir, double surfaceAngeleCosine) ;
 
 void useGouraldShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrect);
 void usePhongShader(Renderer *render, UniformBuffer *u, bool perspectiveCorrect);

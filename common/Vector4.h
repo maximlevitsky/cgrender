@@ -244,5 +244,4 @@ inline Vector3 vmul3point (const Vector3 &v, const Mat4 &other)
 	);
 }
 
-
 #endif
