@@ -34,5 +34,5 @@ POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmo
 QMAKE_CLEAN =  -r *.a $$TARGET
 
 macx {
-	#QMAKE_POST_LINK = rm -rf $${TARGET}.dmg && macdeployqt $${TARGET}.app -dmg
+	QMAKE_POST_LINK = rm -rf $${TARGET}.dmg && macdeployqt $${TARGET}.app -dmg
 }
