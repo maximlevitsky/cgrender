@@ -717,7 +717,7 @@
        <item>
         <widget class="QTabWidget" name="formTabWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="formTabWidgetPage1" native="true">
           <attribute name="title">
@@ -737,7 +737,7 @@
             <number>0</number>
            </property>
            <property name="horizontalSpacing">
-            <number>0</number>
+            <number>6</number>
            </property>
            <item row="3" column="1" colspan="3">
             <widget class="ColorChooser" name="widget_7" native="true">
