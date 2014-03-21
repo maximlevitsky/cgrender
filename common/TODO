@@ -1,41 +1,36 @@
-
-* loader:
+material system:
+	* refactor material params 
 	* implement material loading
-	* implement appearence of same group more that once in obj file - MEDIUM
-
-* materials:
+	* implement material GUI
 	* use Qt for texture loading instead of pngwrapper
 	* decouple texture from renderer
-	* implement all the obj material properties
 	
-* gui: 
-	implemement side panel
-		* ambient light panel
-		* lights panel
-		* shadows panel
-		....
-		* transformation panel/right menu
+loader:
+	* implement appearence of same group more that once in obj file - MEDIUM
+	* fix remaining OBJ bugs
 	
+
+transformations:
+	* implement camera with fov and skew angles
+	* add camera rotation setting to gui, and reset of the rotation
+	* transformation panel/right menu
+	* think and fix adaptive wheel speed
+	* think about what to do when object is too close to screen or partially clipped
+	which point to take for reference movement (current box/10 is hardcoded)
+
+renderer:
+	* refactor clipping
+	* fix backface/frontface decisions when polygon is partially clipped
+	* add threads
+
+
+* gui/misc: 
+	* ambient light panel
+	* lights panel
+	* shadows panel	
 	* implement shading mode == none - EASY
 	* implement app title consistently - EASY
 	* implement render to file
 	* add wheel event handler to color chooser to change brighness of whole color
 	* add drag-drop of colors for colorchooser	
-
-
-* transformations:
-	* implement camera with fov and skew angles
-	* add camera rotation setting to gui, and reset of the rotation
-	
-* renderer:
-	* refactor clipping
-	* fix backface/frontface decisions when polygon is partially clipped
-	* add threads
-	
-* transformations:
-	* think and fix adaptive wheel speed
-	* think about what to do when object is too close to screen or partially clipped
-	which point to take for reference movement (current box/10 is hardcoded)
-	
-* build system:
 	* switch to CMAKE
