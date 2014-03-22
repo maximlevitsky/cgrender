@@ -11,3 +11,6 @@ done
 
 valgrind --leak-check=full --show-reachable=no --error-limit=no \
 	$VALGRIND_SUPPRESSION_FILES_LIST  $@
+
+# valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes --instr-atstart=no --cache-sim=yes $@
+# callgrind_control  ./bin/cgrender   -i on

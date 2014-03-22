@@ -13,6 +13,7 @@ loader:
 transformations:
 	* implement camera with fov and skew angles
 	* add camera rotation setting to gui, and reset of the rotation
+	* implement dynamic depth based on BBOX
 	* transformation panel/right menu
 	* think and fix adaptive wheel speed
 	* think about what to do when object is too close to screen or partially clipped
@@ -32,5 +33,9 @@ renderer:
 	* implement app title consistently - EASY
 	* implement render to file
 	* add wheel event handler to color chooser to change brighness of whole color
-	* add drag-drop of colors for colorchooser	
+	* add drag-drop of colors for colorchooser
+	
+* build system:
 	* switch to CMAKE
+	* build on windows
+	* add script to copy files between mac<->linux
