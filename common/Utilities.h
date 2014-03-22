@@ -56,6 +56,24 @@ static inline double frac(const double& x)
 }
 
 
+static inline double powi (double val, unsigned int power)
+{
+   double result = 1;
+
+   while (power)
+   {
+		if (power & 1)
+			result *= val;
+
+		power >>= 1;
+		val *= val;
+   }
+
+   return result;
+}
+
+
+
 #ifdef MSC_VER
 static double log2( double n )  
 {  

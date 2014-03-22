@@ -18,17 +18,10 @@
 */
 #include "Shaders.h"
 #include "model/Model.h"
+#include "common/Utilities.h"
+
 #include <cmath>
 
-double pow32 (double val)
-{
-	val *= val;
-	val *= val;
-	val *= val;
-	val *= val;
-	val *= val;
-	return val;
-}
 
 /*************************************************************************************************************/
 void phongVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_out[] )
@@ -132,7 +125,7 @@ Color doLighting( const UniformBuffer* u, Color &objcolor, const Vector3& pos, V
 		// Specular lights
 
 		/* for now don't use u->shineness*/
-		double tmp = pow32(reflectedangleToCameraCosine) * factor;
+		double tmp = powi(reflectedangleToCameraCosine, u->shineness) * factor;
 		c += u->lights[i].kS  * tmp;
 	}
 

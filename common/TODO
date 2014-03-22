@@ -20,10 +20,12 @@ transformations:
 	which point to take for reference movement (current box/10 is hardcoded)
 
 renderer:
+	* get rid of huge vertex cache: 
+		run vertex shader when rendering polygon and not ahead. (with small cache)
 	* refactor clipping
-	* fix backface/frontface decisions when polygon is partially clipped
+		fix backface/frontface decisions when polygon is partially clipped
+		find a way to do backface test without canonical representations (related to proper clipping)
 	* add threads
-
 
 * gui/misc: 
 	* ambient light panel

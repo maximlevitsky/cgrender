@@ -9,3 +9,5 @@ cgrender
 *.dmg
 *generated/
 Makefile
+build/debug
+build/release
