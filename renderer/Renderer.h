@@ -179,7 +179,7 @@ public:
 
 	TVertex* get(int id, bool &valid)
 	{
-#if 0
+
 		unsigned int set = id & 511;
 
 		// cache hit
@@ -199,9 +199,8 @@ public:
 			_cache[set]._ID = id;
 			return &_cache[set];
 		}
-#endif
+
 		// miss - can't not overwrite
-		valid = false;
 		return allocateTemp();
 	}
 

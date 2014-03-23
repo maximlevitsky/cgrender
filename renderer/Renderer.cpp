@@ -241,7 +241,7 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 {
 	int out_count = 0;
 
-	int attrCount = _vertexSmoothAttributeCount+_vertexNoPerspectiveCount;
+	int attrCount = _vertexFlatAttributeCount+ _vertexSmoothAttributeCount+_vertexNoPerspectiveCount;
 	input[point_count] = input[0];
 
 	for (int i = 0 ; i < point_count ; i++)
@@ -271,12 +271,16 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 			nv->_posClipspace = p1->_posClipspace + (p2->_posClipspace - p1->_posClipspace) * t;
 			nv->_positionScreenspace = NDC_to_DeviceSpace(&nv->_posClipspace);
 
-			for (int j = 0 ; j < attrCount ;j++)
+			for (int j = _vertexFlatAttributeCount ; j < attrCount ;j++)
 				nv->_attributes[j] = p1->_attributes[j] + (p2->_attributes[j] - p1->_attributes[j]) * t;
 
 			output[out_count++] = nv;
 		}
 	}
+
+	if (out_count)
+		for (int j =  0; j < _vertexFlatAttributeCount ;j++)
+			output[0]->_attributes[j] = input[0]->_attributes[j];
 
 	return out_count;
 }
