@@ -28,7 +28,7 @@ macx {
 	ICON = $$PWD/../gui/resources/appicon/icon.icns
 }
 
-LIBS += -L.  -lgui -lrenderer -lengine -lmodel -lobjparser -lmtlparser $$EXTRA_LIBS
+LIBS += -L.  -lgui  -lengine -lrenderer -lmodel -lobjparser -lmtlparser $$EXTRA_LIBS
 
 POST_TARGETDEPS += librenderer.a libengine.a libmtlparser.a libobjparser.a libmodel.a libgui.a 
 QMAKE_CLEAN =  -r *.a $$TARGET

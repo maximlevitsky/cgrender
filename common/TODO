@@ -20,12 +20,11 @@ transformations:
 	which point to take for reference movement (current box/10 is hardcoded)
 
 renderer:
-	* get rid of huge vertex cache: 
-		run vertex shader when rendering polygon and not ahead. (with small cache)
-	* refactor clipping
-		fix backface/frontface decisions when polygon is partially clipped
-		find a way to do backface test without canonical representations (related to proper clipping)
+	* think and add back wireframe rendering + fix mess with rendertriangle params
 	* add threads
+	* optimizations in rasterizer, there are a lot of stuff that can be improved there
+	* add proper LOD calculations
+	* add tri-linear sampling
 
 * gui/misc: 
 	* ambient light panel
@@ -41,3 +40,4 @@ renderer:
 	* switch to CMAKE
 	* build on windows
 	* add script to copy files between mac<->linux
+	

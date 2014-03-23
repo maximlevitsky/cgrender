@@ -97,9 +97,14 @@ void Renderer::setVertexAttributes(
 	_line1.setAttributesCount(_vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
 	_line2.setAttributesCount(_vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
 	_line.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
-	_vertexBuffer.setAttribCount(_vertexFlatAttributeCount+_vertexSmoothAttributeCount+noPerspectiveCount);
 }
 
+
+void Renderer::uploadVertices(void* vertices, int vertexSize, int count)
+{
+	_vertexBuffer = vertices;
+	_vertexBufferStride = vertexSize;
+}
 
 void Renderer::fillBackground(Color background) 
 {
@@ -131,237 +136,153 @@ void Renderer::fillBackgroundTexture( const Texture &texture, double scaleX, dou
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Renderer::uploadVertices(void* vertices, int vertexSize, int count)
-{
-	assert(_vertexShader);
-
-	try {
-		_vertexBuffer.setVertexCount(count);
-	} catch (...) {
-		return;
-	}
-
-	unsigned char* vertices_data = (unsigned char*)vertices;
-
-	for (int i = 0; i < count ; i++, vertices_data += vertexSize) 
-	{
-		// run vertex shader to get us to clip space
-		Vector4 & pos = _vertexBuffer.position(i);
-		_vertexShader(_vsPriv, vertices_data, pos, _vertexBuffer[i]);
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// wireframe rendering
-
-void Renderer::renderWireFrame( unsigned int* geometry, int count, Color c, bool colorValid )
-{
-	if (!_vertexBuffer.bufferSize)
-		return;
-	
-	for (polygonIterator iter(geometry, count); iter.hasmore() ; iter.next())
-	{
-		if ((_backFaceCulling || _frontFaceCulling) && iter.vertexCount() >= 3) 
-		{
-			bool backface = determineBackface(iter);
-			if ((backface && _backFaceCulling) || (!backface && _frontFaceCulling))
-				continue;
-		}
-
-		for (int j=0, k=1; j<iter.vertexCount(); ++j, ++k)  
-		{
-			int indexOfVertex1 = iter[j];
-			int indexOfVertex2 = k == iter.vertexCount() ? iter[0] : iter[k];
-
-			const Vector4 &v1 = _vertexBuffer.position(indexOfVertex1);
-			const Vector4 &v2 = _vertexBuffer.position(indexOfVertex2);
-
-			if (v1.w() > 0 && v2.w() > 0 && !fastClipLine(v1, v2))
-				drawLine(NDC_to_DeviceSpace(&v1), NDC_to_DeviceSpace(&v2),
-						colorValid ? c : _vertexBuffer[indexOfVertex1][0]);
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 {
-	if (!_vertexBuffer.bufferSize)
-		return;
+
+	VertexCache cache;
+	TVertex* vt[128];
+
 
 	if (objectID != -1 && _selBuffer) _objectID = objectID;
 
-	for (polygonIterator iter(geometry, count); iter.hasmore() ; iter.next()) 
+	for (polygonIterator iter(geometry, count); iter.hasmore() ; iter.next())
 	{
-		/* TODO: this is wrong when triangle is partially clipped, then calculation will use values with negaitive
-		 * w....
-		 */
-		_psInputs.frontface = !determineBackface(iter);
+		cache.newPolygon();
+		int vtCount = iter.vertexCount();
+
+		int leftside = 0,rightside = 0,topside = 0,bottomside = 0;
+		bool needclip = false;
+
+		/* first pass over vertices - run vertex shader, do perspective divide and test trivial clipping*/
+		for (int i = 0 ; i < iter.vertexCount() ; i++)
+		{
+			bool valid;
+			vt[i] = cache.get(iter[i], valid);
+			const Vector4 &pos = vt[i]->_posClipspace;
+
+			/* run vertex shader on all vertexes of current polygon, which are not in the cache */
+			if (!valid)
+				_vertexShader(_vsPriv,(char*)_vertexBuffer + _vertexBufferStride * iter[i],
+						vt[i]->_posClipspace,vt[i]->_attributes );
+
+			/* do perspective divide - might be redundant if clipped later*/
+			if (pos.w() > 0)
+				vt[i]->_positionScreenspace = NDC_to_DeviceSpace(&pos);
+
+			/* check clipping conditions */
+			if (pos.x() < -pos.w() * clip_x) {
+				leftside++; needclip = true;
+			} else if (pos.x() > pos.w() * clip_x) {
+				rightside++; needclip = true;
+			}
+
+			if (pos.y() < -pos.w() * clip_y) {
+				bottomside++; needclip = true;
+			} else if (pos.y() > pos.w() * clip_y) {
+				topside++; needclip = true;
+			}
+		}
+
+		/* trivial reject - all vertices are out*/
+		if (rightside == vtCount || bottomside == vtCount || leftside == vtCount || topside == vtCount)
+			continue;
+
+		/* some vertexes are in - need to do clipping*/
+		if (needclip)
+		{
+			TVertex* vt2[128];
+			vtCount = clipAgainstPlane(cache, vt,  vtCount, vt2, Vector4(-1, 0, 0,clip_x));
+			vtCount = clipAgainstPlane(cache, vt2, vtCount, vt,  Vector4( 0, 1, 0,clip_y));
+			vtCount = clipAgainstPlane(cache, vt,  vtCount, vt2, Vector4( 1, 0, 0,clip_x));
+			vtCount = clipAgainstPlane(cache, vt2, vtCount, vt,  Vector4( 0,-1, 0,clip_y));
+			if (!vtCount) continue;
+		}
+
+
+		/* determine back-face */
+		vt[vtCount] = vt[0];
+		double z = 0;
+
+		for (int i = 0 ; i < vtCount ; i++)
+		{
+			Vector4 & p1 = vt[i]->_positionScreenspace;
+			Vector4 & p2 = vt[i+1]->_positionScreenspace;
+			z += (p1.x() - p2.x()) * (p1.y()+p2.y());
+		}
+
+		_psInputs.frontface = z < 0;
+		if ((!_psInputs.frontface && _backFaceCulling) || (_psInputs.frontface && _frontFaceCulling))
+			continue;
 
 		/* setup flat attributes*/
 		for (int i = 0 ; i < _vertexFlatAttributeCount ; i++)
-			_psInputs.attributes[i] = _vertexBuffer[iter[0]][i];
+			_psInputs.attributes[i] = vt[0]->_attributes[i];
 
-		const Vector4 &v1 = _vertexBuffer.position(iter[0]);
-		const Vector3 *a1 = _vertexBuffer[iter[0]]+_vertexFlatAttributeCount;
+		const Vector4 &v1 = vt[0]->_positionScreenspace;
+		const Vector3 *a1 = vt[0]->_attributes + _vertexFlatAttributeCount;
 
 		/* and now render the polygon by turning it to triangles*/
-		for (int i = 1 ; i < iter.vertexCount() - 1 ; i++) 
+		for (int i = 1 ; i < vtCount - 1 ; i++)
 		{
-			const Vector4 &v2 = _vertexBuffer.position(iter[i]);
-			const Vector4 &v3 = _vertexBuffer.position(iter[i+1]);
+			const Vector4 &v2 = vt[i]->_positionScreenspace;
+			const Vector4 &v3 =vt[i+1]->_positionScreenspace;
 
-			Vector3 *a2 = _vertexBuffer[iter[i]]+_vertexFlatAttributeCount;
-			Vector3 *a3 = _vertexBuffer[iter[i+1]]+_vertexFlatAttributeCount;
+			Vector3 *a2 = vt[i]->_attributes + _vertexFlatAttributeCount;
+			Vector3 *a3 = vt[i+1]->_attributes + _vertexFlatAttributeCount;
 
-			if (v1.w() > 0 && v2.w() > 0 && v3.w() > 0)
-			{
-
-				if ((!_psInputs.frontface && _backFaceCulling) || (_psInputs.frontface && _frontFaceCulling))
-					continue;
-
-				if (!fastClipTriangle(v1,v2, v3)) {
-					Vector4 p1 = NDC_to_DeviceSpace(&v1);
-					Vector4 p2 = NDC_to_DeviceSpace(&v2);
-					Vector4 p3 = NDC_to_DeviceSpace(&v3);
-
-					drawTriangle(&p1,&p2,&p3, a1,a2,a3);
-				}
-			}
-			else
-				/* otherwise we need clipping */
-				drawClippedTriangle(&v1, &v2,&v3,a1,a2,a3);
+			drawTriangle(&v1,&v2,&v3, a1,a2,a3);
 		}
 	}
 }
 
-// drawing primitives
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
- * draw triangle between points
- * all points are arrays of vertex shader outputs, where first item is the position
- */
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Renderer::drawTriangle(const Vector4* p1, const Vector4* p2,
-		const Vector4* p3, const Vector3* a1, const Vector3* a2,
-		const Vector3* a3) {
-	int two_edges_side = 1; // determines which side consists of two edges
-	// sort the points from left to right by Y (do the simple bubble sort)
-	if (p2->y() > p3->y()) {
-		swap(p3, p2);
-		swap(a3, a2);
-	}
-	if (p1->y() > p2->y()) {
-		swap(p2, p1);
-		swap(a2, a1);
-	}
-	if (p2->y() > p3->y()) {
-		swap(p3, p2);
-		swap(a3, a2);
-	}
-
-	// find the order of two lines
-	double p1p3_dx = p1->x() - p3->x();
-	double p1p3_dy = p1->y() - p3->y();
-	if (p1p3_dy
-			&& p2->x() > p1->x() + ((p2->y() - p1->y()) * p1p3_dx) / p1p3_dy) {
-		swap(p3, p2);
-		swap(a3, a2);
-		two_edges_side = 2;
-	}
-
-	// setup side line rasterizers
-	_line1.setup(a1, a2, *p1, *p2);
-	_line2.setup(a1, a3, *p1, *p3);
-
-	// now do the rasterization....
-	for (int stage = 0; stage < 2; stage++)
-	{
-		/* loop that runs from bottom up on both lines */
-		while ((!_line1.ended())
-				&& (!_line2.ended() && _line1.y1_int < _viewportSizeY)) {
-			_psInputs.y = _line1.y1_int;
-			/* rasterize the horizontal line now */
-			for (_line.setup(_line1, _line2);
-					!_line.ended() && _line.x1_int < _viewportSizeX;
-					_line.stepX()) {
-				_psInputs.x = _line.x1_int;
-				_psInputs.d = _line.z1;
-				shadePixel();
-			}
-			/* step two lines */
-			_line1.stepY();
-			_line2.stepY();
-		}
-
-		/* switch bottom to top trapezoid */
-		if (stage == 0) {
-			two_edges_side == 1 ?
-					_line1.setup(a2, a3, *p2, *p3) :
-					_line2.setup(a3, a2, *p3, *p2);
-			if (_line1.y1_int > _line2.y1_int)
-				_line2.stepY();
-
-			if (_line1.y1_int < _line2.y1_int)
-				_line1.stepY();
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// draw a line. Used only to render wireframes
-
-void Renderer::drawLine( Vector4 p1, Vector4 p2, const Color &c )
+int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane)
 {
-	if (p1.isBadFP() || p2.isBadFP())
-		return;
+	int out_count = 0;
 
-	int x1 = (int)p1.x(), x2 = (int)p2.x();
-	int y1 = (int)p1.y(), y2 = (int)p2.y();
+	int attrCount = _vertexSmoothAttributeCount+_vertexNoPerspectiveCount;
+	input[point_count] = input[0];
 
-	// add small bias to Z so that wireframe is rendered above the model
-	double z1 = p1.z() - 0.05, z2 = p2.z() - 0.05;
-
-    int dx = (int)abs(x2 - x1);
-	int dy = (int)abs(y2 - y1);
-	double dz = (z2 - z1) / max(dx,dy);
-
-	int sx = x1 < x2 ? 1 : -1;
-	int sy = y1 < y2 ? 1 : -1;
-	int d = dx - dy;
-
-	while (1) 
+	for (int i = 0 ; i < point_count ; i++)
 	{
-		if (x1 >= 0 && x1 < _viewportSizeX && y1 >= 0 && y1 < _viewportSizeY
-			&& (!_zBuffer || _zBuffer->zTest(x1,y1, z1))) 
+		// find the edge to clip
+		TVertex* p1 = input[i], *p2 = input[i+1];
+
+		double dot1 =  p1->_posClipspace.dot(plane);
+		double dot2 =  p2->_posClipspace.dot(plane);
+
+		bool in1 = dot1 > 0.0;
+		bool in2 = dot2 > 0.0;
+
+		if (in1) output[out_count++] = p1;
+
+		if (in1 != in2)
 		{
-			if (_zBuffer) _zBuffer->setPixelValue(x1,y1,z1);
-			drawPixel(x1, y1, c);
-		}
+			TVertex* nv = cache.allocateTemp();
 
-		if (x1 == x2 && y1 == y2)
-			break;
+			if (in1 == false) {
+				swap(p1,p2);
+				swap(dot1,dot2);
+			}
 
-		z1 += dz;
-		int e2 = 2 * d;
+			double t = dot1 / (dot1 - dot2);
 
-		if (e2 > -dy) {
-			d -= dy;
-			x1 += sx;
-		}
+			nv->_posClipspace = p1->_posClipspace + (p2->_posClipspace - p1->_posClipspace) * t;
+			nv->_positionScreenspace = NDC_to_DeviceSpace(&nv->_posClipspace);
 
-		if (x1 == x2 && y1 == y2)
-			continue;
+			for (int j = 0 ; j < attrCount ;j++)
+				nv->_attributes[j] = p1->_attributes[j] + (p2->_attributes[j] - p1->_attributes[j]) * t;
 
-		if (e2 < dx) {
-			d += dx;
-			y1 += sy;
+			output[out_count++] = nv;
 		}
 	}
+
+	return out_count;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::shadePixel()
 {
@@ -379,8 +300,8 @@ void Renderer::shadePixel()
 	if (!_outputTexture)
 		return;
 
-	// debug depth print 
-	if (_debugDepthRendering && _zBuffer) 
+	// debug depth print
+	if (_debugDepthRendering && _zBuffer)
 	{
 		drawPixel(_psInputs.x, _psInputs.y, _zBuffer->debugGetPixel(_psInputs.x,_psInputs.y));
 		return;
@@ -391,35 +312,18 @@ void Renderer::shadePixel()
 	drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::drawPixel( int x, int y, const Color &value )
 {
 	if (x < 0 || y < 0 || x >= _viewportSizeX || y >= _viewportSizeY)
 		return;
 
-	_outputTexture->setPixelValue(x,y, 
+	_outputTexture->setPixelValue(x,y,
 		DEVICE_PIXEL((uint8_t)(value[0]*255), (uint8_t)(value[1]*255), (uint8_t)(value[2]*255)));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool Renderer::determineBackface( polygonIterator iter )
-{
-	double z = 0;
-
-
-	for (int i = 0 ; i < iter.vertexCount() ; i++) 
-	{
-		const Vector4 &v1 = NDC_to_DeviceSpace(&_vertexBuffer.position(iter[i]));
-		const Vector4 &v2 = (i == iter.vertexCount() - 1) ?  
-			NDC_to_DeviceSpace(&_vertexBuffer.position(iter[0])) : NDC_to_DeviceSpace(&_vertexBuffer.position(iter[i+1]));
-
-		z += (v1.x() - v2.x()) * (v1.y()+v2.y());
-	}
-
-	return z >= 0;
-}
 
 Vector4 Renderer::NDC_to_DeviceSpace( const Vector4* input )
 {
@@ -481,180 +385,6 @@ void Renderer::queryLOD( int attributeIndex, double &x_step, double &y_step ) co
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void VerticalLineRasterizer::setAttributesCount(unsigned char smoothcount, unsigned char noPerspectiveCount )
-{
-	assert (smoothcount + noPerspectiveCount <= 8);
-	smoothAttribCount = smoothcount;
-	noPerspectiveAttribCount = noPerspectiveCount;
-	smoothAndNoPerspectiveCount = (unsigned char)(smoothcount + noPerspectiveCount);
-}
 
-void VerticalLineRasterizer::setup( const Vector3 *attr1, const Vector3 *attr2, const Vector4& p1, const Vector4 &p2 )
-{
-	// calculate initial values
-	double y1 = p1.y(); double y2 = p2.y();
-	double dy = y2 - y1;
-
-	x1 = p1.x(); double x2 = p2.x();
-	z1 = p1.z(); double z2 = p2.z();
-	w1 = 1.0 / p1.w(); double w2 = 1.0 / p2.w();
-
-	if (dy) 
-	{
-		x_step = (x2 - x1)/dy; 
-		z_step = (z2 - z1)/dy;
-		w_step = (w2 - w1)/dy;
-	}
-
-	//setup attributes
-	int i = 0;
-	for (; i < smoothAttribCount ; i++)
-	{
-		attribs[i] = attr1[i] * w1;
-		if (dy) attrib_steps[i] = ( attr2[i] * w2 - attr1[i] *w1 ) / dy;
-	}
-
-	for (; i < smoothAndNoPerspectiveCount ; i++) 
-	{
-		attribs[i] = attr1[i];
-		if (dy) attrib_steps[i] = (attr2[i] - attr1[i]) / dy;
-	}
-
-	// calculate steps, advance by Y, etc
-	if (dy) 
-	{
-		double y1_fraction = ceil(y1) - y1;
-		if (y1_fraction) 
-		{
-			x1 += (y1_fraction * (x2 - x1))/dy;
-			z1 += (y1_fraction * (z2 - z1))/dy;
-			w1 += (y1_fraction * (w2 - w1))/dy;
-
-			for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++)
-				attribs[i] += (attrib_steps[i] * y1_fraction);
-		}
-	}
-
-	// calculates integer X,Y values we will go from to
-	y1_int = (int)ceil(y1); y2_int = (int)floor(y2);
-
-	// skip all way up if in negative
-	if (y1_int < 0) 
-	{
-		int steps = min(0, y2_int+1) - y1_int;
-
-		x1 += x_step * steps; 
-		w1 += w_step * steps; 
-		z1 += z_step * steps;
-
-		for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++) 
-			attribs[i] += attrib_steps[i] * steps;
-
-		y1_int += steps;
-	}
-}
-
-void VerticalLineRasterizer::stepY()
-{
-	// step X,Z exactly 
-	x1 += x_step; 
-	w1 += w_step; 
-	z1 += z_step;
-
-	y1_int++;
-
-	for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++) 
-		attribs[i] += attrib_steps[i];
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void HorizintalLineRasterizer::setAttributesCount( 
-	unsigned char flatCount, unsigned char smoothcount, unsigned char noPerspectiveCount )
-{
-	assert (flatCount + smoothcount + noPerspectiveCount <= 8);
-	flatAttribCount = flatCount; 
-	smoothAttribCount = smoothcount;
-	noPerspectiveAttribCount = noPerspectiveCount;
-}
-
-void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const VerticalLineRasterizer &line2 )
-{
-	double dx = line2.x1 - line1.x1;
-	z1 = line1.z1;
-	w1 = line1.w1;
-
-	if (dx) 
-	{
-		z_step = (line2.z1 - line1.z1)/dx; 
-		w_step = (line2.w1 - line1.w1)/dx;
-	}
-
-	for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++) 
-	{
-		attributes[i] = line1.attribs[i];
-		if (dx) attribute_steps[i] = (line2.attribs[i] - line1.attribs[i])/dx;
-	}
-
-	// account for fractional X
-	if (dx) 
-	{
-		double x1_frac = ceil(line1.x1)  - line1.x1;
-		if (x1_frac) {
-
-			z1 += (x1_frac * (line2.z1 - line1.z1))/dx;
-			w1 += (x1_frac* (line2.w1 - line1.w1))/dx;
-
-			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++)
-				attributes[i] += (attribute_steps[i] * x1_frac);
-		}
-	}
-
-	x1_int = (int)ceil(line1.x1);
-	x2_int = (int)floor(line2.x1);
-
-	if (x1_int < 0 ) 
-	{
-		if (x2_int < 0) {
-			x1_int = 0;
-		} else 
-		{
-			int steps = min(0, x2_int+1) - x1_int;
-
-			z1 += z_step * steps;
-			w1 += w_step  * steps;
-			x1_int += steps;
-
-			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount; i++)
-				attributes[i] += (attribute_steps[i] * steps);
-		}
-	}
-}
-
-void HorizintalLineRasterizer::stepX()
-{
-	// step the attributes
-	z1 += z_step;
-	w1 += w_step;
-	x1_int++;
-
-	for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount; i++)
-		attributes[i] += attribute_steps[i];
-}
-
-void HorizintalLineRasterizer::setupPSInputs(PS_INPUTS &inputs)
-{
-	int i = 0;
-
-	Vector3 *attribs = inputs.attributes + flatAttribCount;
-
-	for (; i < smoothAttribCount ; i++)
-		attribs[i] = attributes[i] / w1;
-
-	for (; i < smoothAttribCount+noPerspectiveAttribCount ; i++)
-		attribs[i] = attributes[i];
-}

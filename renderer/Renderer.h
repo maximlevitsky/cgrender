@@ -145,92 +145,79 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class InternalVertexBuffer
+
+struct TVertex
 {
-public:
-	InternalVertexBuffer() :
-	  attribCount(0), vertexCount(0), bufferSize(0), vertexBufferSize(0), vertices_attributes(NULL), positions(NULL) {}
+	int _ID;
+	int _seq;
 
-	void setVertexCount(int newCount) 
-	{
-		vertexCount = newCount;
-		reallocate();
-	}
+	/* location of the vertex in clip and screen spaces */
+	Vector4 _posClipspace;
+	Vector4 _positionScreenspace;
 
-	void setAttribCount(int newCount) 
-	{
-		attribCount = newCount;
-		reallocate();
-	}
+	/* attributes */
+	Vector3 _attributes[8];
 
-	const Vector3* operator[] (unsigned int index) const
-	{
-		return vertices_attributes + attribCount * index;
-	}
-
-	Vector3* operator[] (unsigned int index)
-	{
-		return vertices_attributes + attribCount * index;
-	}
-
-	~InternalVertexBuffer() {
-		delete [] vertices_attributes;
-		delete [] positions;
-	}
-
-	Vector4 &position(unsigned int index) { return positions[index];}
-
-	int vertexCount;
-	int attribCount;
-
-	// buffer sizes
-	int bufferSize;
-	int vertexBufferSize;
-
-private:
-
-	Vector4 * positions;
-	Vector3 *vertices_attributes;
-
-	void reallocate() 
-	{
-		if (attribCount * vertexCount > bufferSize) 
-		{
-			bufferSize = attribCount * vertexCount;
-			delete vertices_attributes;
-
-			if (bufferSize)
-			{
-				try {
-					vertices_attributes = new Vector3[bufferSize];
-				} catch(...) {
-					vertices_attributes = NULL;
-					bufferSize = 0;
-					throw;
-				}
-
-			}
-		}
-
-		if (vertexCount > vertexBufferSize) 
-		{
-			delete [] positions;
-
-			try {
-				positions = new Vector4[vertexCount];
-			} catch(...) {
-				delete vertices_attributes;
-				positions = NULL;
-				vertices_attributes = NULL;
-				bufferSize = 0;
-				vertexBufferSize = 0;
-				throw;
-			}
-			vertexBufferSize = vertexCount;
-		}
-	}
+	TVertex() : _seq(0), _ID(-1) {};
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class VertexCache
+{
+public:
+
+	VertexCache() : _seq(0), _nextFreeTVertex(_storage)
+	{}
+
+	void newPolygon()
+	{
+		_seq++;
+		_nextFreeTVertex = _storage;
+	}
+
+	TVertex* get(int id, bool &valid)
+	{
+#if 0
+		unsigned int set = id & 511;
+
+		// cache hit
+		if (_cache[set]._ID == id)
+		{
+			_cache[set]._seq = _seq;
+			valid = true;
+			return &_cache[set];
+		}
+
+		valid = false;
+
+		// miss - can overwrite the entry
+		if (_cache[set]._seq != _seq)
+		{
+			_cache[set]._seq = _seq;
+			_cache[set]._ID = id;
+			return &_cache[set];
+		}
+#endif
+		// miss - can't not overwrite
+		valid = false;
+		return allocateTemp();
+	}
+
+
+	TVertex* allocateTemp()
+	{
+		return _nextFreeTVertex++;
+	}
+
+
+private:
+	int _seq;
+	TVertex* _nextFreeTVertex;
+	TVertex _cache[512];
+	TVertex _storage[128];
+};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -303,7 +290,8 @@ private:
 	void* _psPriv;
 
 	// temp buffer for vertices transform
-	InternalVertexBuffer _vertexBuffer;
+	void* _vertexBuffer;
+	int _vertexBufferStride;
 
 	// matrices for output transform
 	Mat4 mat_NDCtoDeviceTransform;
@@ -329,12 +317,13 @@ private:
 	void shadePixel();
 	void drawLine(Vector4 p1, Vector4 p2, const Color &c);
 	void drawPixel(int x, int y, const Color &value);
-	bool determineBackface( polygonIterator iter);
 
 	Vector4 NDC_to_DeviceSpace(const Vector4* input);
 
 	bool fastClipTriangle(const Vector4& v1, const Vector4 &v2, const Vector4 &v3);
 	bool fastClipLine(const Vector4& v1, const Vector4 &v2);
+
+	int clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane);
 };
 
 

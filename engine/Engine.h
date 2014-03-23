@@ -22,14 +22,14 @@
 #include "common/Mat4.h"
 #include "common/Vector4.h"
 #include "common/BBox.h"
-
-#include "renderer/Renderer.h"
 #include "renderer/Texture.h"
 #include "model/Model.h"
-
 #include "Shaders.h"
 #include "Transformations.h"
 #include "EngineAPI.h"
+
+class Renderer;
+
 
 struct SceneItem 
 {
