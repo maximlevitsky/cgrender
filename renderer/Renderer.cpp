@@ -161,13 +161,15 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 			const Vector4 &pos = vt[i]->_posClipspace;
 
 			/* run vertex shader on all vertexes of current polygon, which are not in the cache */
-			if (!valid)
+			if (!valid) {
 				_vertexShader(_vsPriv,(char*)_vertexBuffer + _vertexBufferStride * iter[i],
 						vt[i]->_posClipspace,vt[i]->_attributes );
 
-			/* do perspective divide - might be redundant if clipped later*/
-			if (pos.w() > 0)
-				vt[i]->_positionScreenspace = NDC_to_DeviceSpace(&pos);
+				/* do perspective divide - might be redundant if clipped later*/
+				if (pos.w() > 0)
+					vt[i]->_positionScreenspace = NDC_to_DeviceSpace(&pos);
+			}
+
 
 			/* check clipping conditions */
 			if (pos.x() < -pos.w() * clip_x) {
