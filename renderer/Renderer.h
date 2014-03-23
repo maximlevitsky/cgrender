@@ -310,18 +310,15 @@ private:
 	bool _frontFaceCulling;
 	bool _debugDepthRendering;
 private:
+
 	void drawTriangle(const Vector4* p1, const Vector4* p2, const Vector4* p3,
 			const Vector3* a1, const Vector3* a2, const Vector3* a3);
-	void drawClippedTriangle(const Vector4 *p1, const Vector4 *p2, const Vector4 *p3, const Vector3 *a1, const Vector3 *a2, const Vector3 *a3);
 	void shadePixel();
 	void drawLine(Vector4 p1, Vector4 p2, const Color &c);
 	void drawPixel(int x, int y, const Color &value);
 
 	Vector4 NDC_to_DeviceSpace(const Vector4* input);
-
-	bool fastClipTriangle(const Vector4& v1, const Vector4 &v2, const Vector4 &v3);
 	bool fastClipLine(const Vector4& v1, const Vector4 &v2);
-
 	int clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane);
 };
 

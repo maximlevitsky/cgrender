@@ -292,6 +292,11 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 
 void Renderer::shadePixel()
 {
+	/* do clipping to fix slight (and normal) numeric errors in original clipping */
+	if (_psInputs.x < 0 || _psInputs.y < 0 ||
+		_psInputs.x >= _viewportSizeX || _psInputs.y >= _viewportSizeY)
+		return;
+
 	/* do the (early Z test)*/
 	if (_zBuffer) {
 		if (!_zBuffer->zTest(_psInputs.x,_psInputs.y, _psInputs.d))
@@ -322,9 +327,6 @@ void Renderer::shadePixel()
 
 void Renderer::drawPixel( int x, int y, const Color &value )
 {
-	if (x < 0 || y < 0 || x >= _viewportSizeX || y >= _viewportSizeY)
-		return;
-
 	_outputTexture->setPixelValue(x,y,
 		DEVICE_PIXEL((uint8_t)(value[0]*255), (uint8_t)(value[1]*255), (uint8_t)(value[2]*255)));
 }

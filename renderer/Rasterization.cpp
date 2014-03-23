@@ -65,13 +65,12 @@ void Renderer::drawTriangle(const Vector4* p1, const Vector4* p2,
 	for (int stage = 0; stage < 2; stage++)
 	{
 		/* loop that runs from bottom up on both lines */
-		while ((!_line1.ended())
-				&& (!_line2.ended() && _line1.y1_int < _viewportSizeY)) {
+		while (!_line1.ended() && !_line2.ended())
+		{
 			_psInputs.y = _line1.y1_int;
 			/* rasterize the horizontal line now */
-			for (_line.setup(_line1, _line2);
-					!_line.ended() && _line.x1_int < _viewportSizeX;
-					_line.stepX()) {
+			for (_line.setup(_line1, _line2); !_line.ended(); _line.stepX())
+			{
 				_psInputs.x = _line.x1_int;
 				_psInputs.d = _line.z1;
 				shadePixel();
@@ -142,9 +141,9 @@ void VerticalLineRasterizer::setup( const Vector3 *attr1, const Vector3 *attr2, 
 		double y1_fraction = ceil(y1) - y1;
 		if (y1_fraction)
 		{
-			x1 += (y1_fraction * (x2 - x1))/dy;
-			z1 += (y1_fraction * (z2 - z1))/dy;
-			w1 += (y1_fraction * (w2 - w1))/dy;
+			x1 += y1_fraction * x_step;
+			z1 += y1_fraction * z_step;
+			w1 += y1_fraction * w_step;
 
 			for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++)
 				attribs[i] += (attrib_steps[i] * y1_fraction);
@@ -153,21 +152,6 @@ void VerticalLineRasterizer::setup( const Vector3 *attr1, const Vector3 *attr2, 
 
 	// calculates integer X,Y values we will go from to
 	y1_int = (int)ceil(y1); y2_int = (int)floor(y2);
-
-	// skip all way up if in negative
-	if (y1_int < 0)
-	{
-		int steps = min(0, y2_int+1) - y1_int;
-
-		x1 += x_step * steps;
-		w1 += w_step * steps;
-		z1 += z_step * steps;
-
-		for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++)
-			attribs[i] += attrib_steps[i] * steps;
-
-		y1_int += steps;
-	}
 }
 
 void VerticalLineRasterizer::stepY()
@@ -217,10 +201,11 @@ void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const
 	if (dx)
 	{
 		double x1_frac = ceil(line1.x1)  - line1.x1;
-		if (x1_frac) {
 
-			z1 += (x1_frac * (line2.z1 - line1.z1))/dx;
-			w1 += (x1_frac* (line2.w1 - line1.w1))/dx;
+		if (x1_frac)
+		{
+			z1 += x1_frac * z_step;
+			w1 += x1_frac* w_step;
 
 			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++)
 				attributes[i] += (attribute_steps[i] * x1_frac);
@@ -229,23 +214,6 @@ void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const
 
 	x1_int = (int)ceil(line1.x1);
 	x2_int = (int)floor(line2.x1);
-
-	if (x1_int < 0 )
-	{
-		if (x2_int < 0) {
-			x1_int = 0;
-		} else
-		{
-			int steps = min(0, x2_int+1) - x1_int;
-
-			z1 += z_step * steps;
-			w1 += w_step  * steps;
-			x1_int += steps;
-
-			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount; i++)
-				attributes[i] += (attribute_steps[i] * steps);
-		}
-	}
 }
 
 void HorizintalLineRasterizer::stepX()
