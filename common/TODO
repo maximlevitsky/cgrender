@@ -8,32 +8,41 @@ material system:
 loader:
 	* implement appearence of same group more that once in obj file - MEDIUM
 	* fix remaining OBJ bugs
+	* load/save scene settings to file:
+		- need to think about current object system
+		- also can save modified OBJ file
 	
-
 transformations:
 	* implement camera with fov and skew angles
 	* add camera rotation setting to gui, and reset of the rotation
 	* implement dynamic depth based on BBOX
 	* transformation panel/right menu
-	* think and fix adaptive wheel speed
+	
+	* think and fix adaptive wheel speed + add wheel acceleration support
+	
 	* think about what to do when object is too close to screen or partially clipped
 		which point to take for reference movement (current box/10 is hardcoded)
 
 renderer:
 	* add threads
 	* optimizations in rasterizer, there are a lot of stuff that can be improved there
-	* add proper LOD calculations
+	* add proper LOD calculations - having line below seems feasable
 	* add tri-linear sampling
 	* collect statistics
 	* add rendering statistics to GUI
 
-* gui/misc: 
+* gui/misc:
+	* rethink and fix the rendering of bounding boxes and axes of objects when in seperate object mode
+		- need at least to scale axes of objects.
+		- also currently axes are not displayed on selected object
+		
 	* ambient light panel
 	* lights panel
 	* shadows panel	
 	* implement render to file
 	* add wheel event handler to color chooser to change brighness of whole color
 	* add drag-drop of colors for colorchooser
+	* think of undo/redo modes
 	
 * build system:
 	* fix deployment on mac and update README

@@ -229,14 +229,11 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			for (int i = 1 ; i < vtCount - 1 ; i++)
 				drawTriangle(vt[0], vt[i], vt[i+1]);
 
+		Color c =  (mode & WIREFRAME_COLOR) ? _wireframeColor : vt[0]->attr[0];
+
 		if (mode & Renderer::WIREFRAME)
-		{
 			for (int i = 0 ; i < vtCount ; i++)
-			{
-				Color c =  (mode & WIREFRAME_COLOR) ? _wireframeColor : vt[i]->attr[0];
 				drawLine(vt[i], vt[i+1], c);
-			}
-		}
 	}
 }
 

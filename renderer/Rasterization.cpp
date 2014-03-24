@@ -118,9 +118,6 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 
 			_line.setup(_line1, _line2);
 
-			_line1.stepY();
-			_line2.stepY();
-
 			/* rasterize the horizontal line now */
 			for (; !_line.ended(); _line.stepX())
 			{
@@ -129,6 +126,8 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 				shadePixel();
 			}
 			/* step two lines */
+			_line1.stepY();
+			_line2.stepY();
 		}
 
 		/* switch bottom to top trapezoid */
