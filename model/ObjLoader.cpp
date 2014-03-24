@@ -52,7 +52,7 @@ bool MtlLoader::loadMaterials(std::string file)
 	mtl_set_in(f, scanner);
 	int retval = mtl_parse(this, scanner);
 	mtl_lex_destroy(scanner);
-	return retval;
+	return retval == 0;
 }
 
 MaterialParams* MtlLoader::getMaterial(std::string name)
@@ -96,7 +96,7 @@ bool ObjLoader::load(std::string file)
 	obj_lex_destroy(scanner);
 
 	finishCurrentModel();
-	return retval;
+	return retval == 0;
 }
 /*********************************************************************************/
 

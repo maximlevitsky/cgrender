@@ -79,6 +79,7 @@ public slots:
 	void onDrawDepthbuffer(bool);
 
 	/* shading menu */
+	void onShadingNone(bool);
 	void onShadingFlat(bool);
 	void onShadingGorald(bool);
 	void onShadingPhong(bool);

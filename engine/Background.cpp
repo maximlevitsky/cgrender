@@ -66,7 +66,7 @@ void Engine::renderBackground()
 
 	if (_backgroundSettings.mode ==  BackgroundParams::COLOR || !_backgroundTexture)
 	{
-		_renderer->fillBackground(_backgroundSettings.color);
+		_renderer->renderBackgroundColor(_backgroundSettings.color);
 		return;
 	}
 
@@ -74,11 +74,11 @@ void Engine::renderBackground()
 	{
 	case BackgroundParams::TILE:
 		scaleX = _outputSizeX, scaleY = _outputSizeY;
-		_renderer->fillBackgroundTexture(*_backgroundTexture, scaleX, scaleY);
+		_renderer->renderBackground(*_backgroundTexture, scaleX, scaleY);
 		break;
 	case BackgroundParams::STRETCH:
 		scaleX = _backgroundTexture->getWidth(), scaleY = _backgroundTexture->getHeight();
-		_renderer->fillBackgroundTexture(*_backgroundTexture, scaleX, scaleY);
+		_renderer->renderBackground(*_backgroundTexture, scaleX, scaleY);
 		break;
 	default:
 		assert(0);

@@ -81,6 +81,8 @@ Engine::Engine( void ) :
 
 	for (int i = 0 ; i < MAX_LIGHT*6 ; i++)
 		_shadowMaps[i] = NULL;
+
+	resetScene();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +183,8 @@ bool Engine::loadSceneFromOBJ( const char* file)
 	resetScene();
 
 	ObjLoader loader;
-	loader.load(file);
+	if (!loader.load(file))
+		return false;
 
 	// initialize our model array
 	_itemCount = loader.models.size();
@@ -195,6 +198,8 @@ bool Engine::loadSceneFromOBJ( const char* file)
 
 	processScene();
 	resetTransformations();
+
+	_currentModelFile = file;
 	return true;
 }
 
@@ -265,6 +270,8 @@ void Engine::resetScene()
 
 	invalidateShadowMaps();
 	freeShadowMaps();
+
+	_currentModelFile = "<no model loaded>";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

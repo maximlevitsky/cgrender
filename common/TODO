@@ -17,10 +17,9 @@ transformations:
 	* transformation panel/right menu
 	* think and fix adaptive wheel speed
 	* think about what to do when object is too close to screen or partially clipped
-	which point to take for reference movement (current box/10 is hardcoded)
+		which point to take for reference movement (current box/10 is hardcoded)
 
 renderer:
-	* think and add back wireframe rendering + fix mess with rendertriangle params
 	* add threads
 	* optimizations in rasterizer, there are a lot of stuff that can be improved there
 	* add proper LOD calculations
@@ -30,8 +29,6 @@ renderer:
 	* ambient light panel
 	* lights panel
 	* shadows panel	
-	* implement shading mode == none - EASY
-	* implement app title consistently - EASY
 	* implement render to file
 	* add wheel event handler to color chooser to change brighness of whole color
 	* add drag-drop of colors for colorchooser

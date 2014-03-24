@@ -86,6 +86,7 @@ public:
 	bool loadSceneFromOBJ(const char* file);
 	void loadDebugScene();
 	void resetScene();
+	std::string getLoadedModelFilename() const { return _currentModelFile; }
 
 
 	// transformations
@@ -165,6 +166,7 @@ public:
 
 private:
 	// all the objects to render and their properties
+	std::string _currentModelFile;
 	SceneItem *_sceneItems;
 	unsigned int _itemCount;
 	int _selObj;

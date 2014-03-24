@@ -37,11 +37,12 @@ int main(int argc, char** argv)
 	QApplication *app = new QApplication(argc, argv);
 	MainWindow *mainwindow = new MainWindow();
 
-	mainwindow->show();
-
-	 if (argc > 1)
+	 if (argc > 1) {
 		 mainwindow->getEngine()->loadSceneFromOBJ(argv[1]);
+		 mainwindow->updateStatus();
+	 }
 
+	mainwindow->show();
 	app->exec();
 
 	delete mainwindow;

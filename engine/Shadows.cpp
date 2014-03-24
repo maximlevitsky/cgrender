@@ -211,7 +211,7 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 		SceneItem &item = _sceneItems[i];
 		uniforms.mat_objectToLightSpace = item._itemTR.getMat() * _mainTR.getMat() * cameraMatrix * proj;
 		_renderer->uploadVertices(item._mainModel->vertices, sizeof(Model::Vertex), item._mainModel->getNumberOfVertices());
-		_renderer->renderPolygons(item._mainModel->polygons, item._mainModel->getNumberOfPolygons(),-1);
+		_renderer->renderPolygons(item._mainModel->polygons, item._mainModel->getNumberOfPolygons(),-1, Renderer::SOLID);
 	}
 }
 

@@ -26,40 +26,87 @@
 
 #include <assert.h>
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// draw line between points
+
+void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
+{
+	if (p1->posScr.isBadFP() || p2->posScr.isBadFP())
+		return;
+
+	int x1 = (int)p1->posScr.x(), x2 = (int)p2->posScr.x();
+	int y1 = (int)p1->posScr.y(), y2 = (int)p2->posScr.y();
+
+	// add small bias to Z so that wireframe is rendered above the model
+	double z1 = p1->posScr.z() - 0.05, z2 = p2->posScr.z() - 0.05;
+
+    int dx = (int)abs(x2 - x1);
+	int dy = (int)abs(y2 - y1);
+	double dz = (z2 - z1) / max(dx,dy);
+
+	int sx = x1 < x2 ? 1 : -1;
+	int sy = y1 < y2 ? 1 : -1;
+	int d = dx - dy;
+
+	while (1)
+	{
+		if (x1 >= 0 && x1 < _viewportSizeX && y1 >= 0 && y1 < _viewportSizeY
+			&& (!_zBuffer || _zBuffer->zTest(x1,y1, z1)))
+		{
+			if (_zBuffer) _zBuffer->setPixelValue(x1,y1,z1);
+			drawPixel(x1, y1, c);
+		}
+
+		if (x1 == x2 && y1 == y2)
+			break;
+
+		z1 += dz;
+		int e2 = 2 * d;
+
+		if (e2 > -dy) {
+			d -= dy;
+			x1 += sx;
+		}
+
+		if (x1 == x2 && y1 == y2)
+			continue;
+
+		if (e2 < dx) {
+			d += dx;
+			y1 += sy;
+		}
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw triangle between points
 
-void Renderer::drawTriangle(const Vector4* p1, const Vector4* p2,
-		const Vector4* p3, const Vector3* a1, const Vector3* a2,
-		const Vector3* a3) {
+void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3)
+{
 	int two_edges_side = 1; // determines which side consists of two edges
+
 	// sort the points from left to right by Y (do the simple bubble sort)
-	if (p2->y() > p3->y()) {
-		swap(p3, p2);
-		swap(a3, a2);
-	}
-	if (p1->y() > p2->y()) {
-		swap(p2, p1);
-		swap(a2, a1);
-	}
-	if (p2->y() > p3->y()) {
-		swap(p3, p2);
-		swap(a3, a2);
-	}
+	if (p2->posScr.y() > p3->posScr.y())
+		std::swap(p3, p2);
+	if (p1->posScr.y() > p2->posScr.y())
+		std::swap(p2, p1);
+	if (p2->posScr.y() > p3->posScr.y())
+		std::swap(p3, p2);
 
 	// find the order of two lines
-	double p1p3_dx = p1->x() - p3->x();
-	double p1p3_dy = p1->y() - p3->y();
-	if (p1p3_dy
-			&& p2->x() > p1->x() + ((p2->y() - p1->y()) * p1p3_dx) / p1p3_dy) {
-		swap(p3, p2);
-		swap(a3, a2);
+	double p1p3_dx = p1->posScr.x() - p3->posScr.x();
+	double p1p3_dy = p1->posScr.y() - p3->posScr.y();
+
+	if (p1p3_dy && p2->posScr.x() > p1->posScr.x() + ((p2->posScr.y() - p1->posScr.y()) * p1p3_dx) / p1p3_dy)
+	{
+		std::swap(p3, p2);
 		two_edges_side = 2;
 	}
 
 	// setup side line rasterizers
-	_line1.setup(a1, a2, *p1, *p2);
-	_line2.setup(a1, a3, *p1, *p3);
+	_line1.setup(*p1, *p2);
+	_line2.setup(*p1, *p3);
 
 	// now do the rasterization....
 	for (int stage = 0; stage < 2; stage++)
@@ -82,12 +129,11 @@ void Renderer::drawTriangle(const Vector4* p1, const Vector4* p2,
 
 		/* switch bottom to top trapezoid */
 		if (stage == 0) {
-			two_edges_side == 1 ?
-					_line1.setup(a2, a3, *p2, *p3) :
-					_line2.setup(a3, a2, *p3, *p2);
+
+			two_edges_side == 1 ? _line1.setup(*p2, *p3) : _line2.setup(*p3, *p2);
+
 			if (_line1.y1_int > _line2.y1_int)
 				_line2.stepY();
-
 			if (_line1.y1_int < _line2.y1_int)
 				_line1.stepY();
 		}
@@ -96,23 +142,27 @@ void Renderer::drawTriangle(const Vector4* p1, const Vector4* p2,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void VerticalLineRasterizer::setAttributesCount(unsigned char smoothcount, unsigned char noPerspectiveCount )
+void VerticalLineRasterizer::setAttributesCount(unsigned char flatcount, unsigned char smoothcount, unsigned char noPerspectiveCount )
 {
-	assert (smoothcount + noPerspectiveCount <= 8);
+	assert (flatcount + smoothcount + noPerspectiveCount <= 8);
+	flatAttribCount = flatcount;
 	smoothAttribCount = smoothcount;
 	noPerspectiveAttribCount = noPerspectiveCount;
 	smoothAndNoPerspectiveCount = (unsigned char)(smoothcount + noPerspectiveCount);
 }
 
-void VerticalLineRasterizer::setup( const Vector3 *attr1, const Vector3 *attr2, const Vector4& p1, const Vector4 &p2 )
+void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
 {
 	// calculate initial values
-	double y1 = p1.y(); double y2 = p2.y();
+	double y1 = p1.posScr.y(); double y2 = p2.posScr.y();
 	double dy = y2 - y1;
 
-	x1 = p1.x(); double x2 = p2.x();
-	z1 = p1.z(); double z2 = p2.z();
-	w1 = 1.0 / p1.w(); double w2 = 1.0 / p2.w();
+	const Vector3* attr1 = p1.attr + flatAttribCount;
+	const Vector3* attr2 = p2.attr + flatAttribCount;
+
+	x1 = p1.posScr.x(); double x2 = p2.posScr.x();
+	z1 = p1.posScr.z(); double z2 = p2.posScr.z();
+	w1 = 1.0 / p1.posScr.w(); double w2 = 1.0 / p2.posScr.w();
 
 	if (dy)
 	{

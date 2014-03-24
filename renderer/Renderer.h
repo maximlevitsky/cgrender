@@ -68,15 +68,32 @@ struct DEVICE_PIXEL
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct TVertex
+{
+	int _ID;
+	int _seq;
+
+	/* location of the vertex in clip and screen spaces */
+	Vector4 pos;
+	Vector4 posScr;
+
+	/* attributes */
+	Vector3 attr[8];
+
+	TVertex() : _seq(0), _ID(-1) {};
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 class VerticalLineRasterizer
 {
 public:
 
 	/* Initial setup to do when attribute counts change*/
-	void setAttributesCount(unsigned char smoothcount, unsigned char noPerspectiveCount);
+	void setAttributesCount(unsigned char flatAttribCount, unsigned char smoothcount, unsigned char noPerspectiveCount);
 
 	/* Setup the class for for interpolation of one line of which p1 is the low end and p2 the high one*/
-	void setup(const Vector3 *attr1, const Vector3 *attr2, const Vector4& p1, const Vector4 &p2);
+	void setup(const TVertex& p1, const TVertex &p2);
 
 	/* step one pixel up */
 	void stepY();
@@ -97,6 +114,7 @@ public:
 	Vector3 attrib_steps[8];
 private:
 	/* attributes count*/
+	unsigned char flatAttribCount;
 	unsigned char smoothAttribCount;
 	unsigned char noPerspectiveAttribCount;
 	unsigned char smoothAndNoPerspectiveCount;
@@ -144,25 +162,6 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-struct TVertex
-{
-	int _ID;
-	int _seq;
-
-	/* location of the vertex in clip and screen spaces */
-	Vector4 _posClipspace;
-	Vector4 _positionScreenspace;
-
-	/* attributes */
-	Vector3 _attributes[8];
-
-	TVertex() : _seq(0), _ID(-1) {};
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 class VertexCache
 {
@@ -224,6 +223,13 @@ class Renderer
 {
 public:
 
+	enum RENDER_MODE
+	{
+		WIREFRAME = 1,
+		WIREFRAME_COLOR = 2,
+		SOLID = 4,
+	};
+
 	typedef void (*vertexShader) (void* priv, void *in, Vector4 &out_position, Vector3 out_attributes[]);
 	typedef Color (*pixelShader) (void* priv, const PS_INPUTS &in);
 
@@ -250,14 +256,14 @@ public:
 	void setDebugDepthRendering(bool enable)  { _debugDepthRendering = enable; }
 	void setBackFaceCulling(bool enable) { _backFaceCulling = enable; }
 	void setFrontFaceCulling(bool enable) { _frontFaceCulling = enable; }
+	void setWireframeColor(Color c) { _wireframeColor = c; }
 
 	// rendering
-	void fillBackground(Color background);
-	void fillBackgroundTexture(const Texture &texture, double scaleX, double scaleY);
+	void renderBackgroundColor(Color background);
+	void renderBackground(const Texture &texture, double scaleX, double scaleY);
 
 	void uploadVertices(void* vertices, int vertexSize, int count);
-	void renderWireFrame(unsigned int* geometry, int count, Color c, bool colorValid);
-	void renderPolygons(unsigned int* geometry, int count, int objectID);
+	void renderPolygons(unsigned int* geometry, int count, int objectID, enum RENDER_MODE mode);
 
 	// used for pixel shaders
 	void queryLOD(int attributeIndex, double &x_step, double &y_step) const;
@@ -309,16 +315,15 @@ private:
 	bool _backFaceCulling;
 	bool _frontFaceCulling;
 	bool _debugDepthRendering;
+	Color _wireframeColor;
 private:
 
-	void drawTriangle(const Vector4* p1, const Vector4* p2, const Vector4* p3,
-			const Vector3* a1, const Vector3* a2, const Vector3* a3);
+	void drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3);
 	void shadePixel();
-	void drawLine(Vector4 p1, Vector4 p2, const Color &c);
+	void drawLine(TVertex *p1, TVertex *p2, const Color &c);
 	void drawPixel(int x, int y, const Color &value);
 
 	Vector4 NDC_to_DeviceSpace(const Vector4* input);
-	bool fastClipLine(const Vector4& v1, const Vector4 &v2);
 	int clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane);
 };
 

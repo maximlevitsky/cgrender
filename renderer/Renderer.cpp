@@ -36,7 +36,8 @@ Renderer::Renderer(void) :
 	// shaders
 	_vertexShader(NULL), _pixelShader(NULL),
 	// settings
-	_debugDepthRendering(false),_backFaceCulling(false), _frontFaceCulling(false)
+	_debugDepthRendering(false),_backFaceCulling(false), _frontFaceCulling(false),
+	_wireframeColor(0,0,0)
 {
 	_psInputs._renderer = this;
 	setVertexAttributes(0,0,0);
@@ -94,8 +95,8 @@ void Renderer::setVertexAttributes(
 	_vertexSmoothAttributeCount = smoothCount;
 	_vertexNoPerspectiveCount = noPerspectiveCount;
 
-	_line1.setAttributesCount(_vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
-	_line2.setAttributesCount(_vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
+	_line1.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
+	_line2.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
 	_line.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
 }
 
@@ -106,7 +107,10 @@ void Renderer::uploadVertices(void* vertices, int vertexSize, int count)
 	_vertexBufferStride = vertexSize;
 }
 
-void Renderer::fillBackground(Color background) 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void Renderer::renderBackgroundColor(Color background) 
 {
 	for (int row = 0 ; row < _viewportSizeY ; row++) {
 		for(int column = 0 ; column < _viewportSizeX ; column++) {
@@ -117,7 +121,10 @@ void Renderer::fillBackground(Color background)
 	}
 }
 
-void Renderer::fillBackgroundTexture( const Texture &texture, double scaleX, double scaleY )
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void Renderer::renderBackground( const Texture &texture, double scaleX, double scaleY )
 {
 
 	TextureSampler s;
@@ -136,9 +143,8 @@ void Renderer::fillBackgroundTexture( const Texture &texture, double scaleX, dou
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
+void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,enum Renderer::RENDER_MODE mode)
 {
-
 	VertexCache cache;
 	TVertex* vt[128];
 
@@ -158,16 +164,16 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 		{
 			bool valid;
 			vt[i] = cache.get(iter[i], valid);
-			const Vector4 &pos = vt[i]->_posClipspace;
+			const Vector4 &pos = vt[i]->pos;
 
 			/* run vertex shader on all vertexes of current polygon, which are not in the cache */
 			if (!valid) {
 				_vertexShader(_vsPriv,(char*)_vertexBuffer + _vertexBufferStride * iter[i],
-						vt[i]->_posClipspace,vt[i]->_attributes );
+						vt[i]->pos,vt[i]->attr );
 
 				/* do perspective divide - might be redundant if clipped later*/
 				if (pos.w() > 0)
-					vt[i]->_positionScreenspace = NDC_to_DeviceSpace(&pos);
+					vt[i]->posScr = NDC_to_DeviceSpace(&pos);
 			}
 
 
@@ -206,33 +212,30 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID )
 		double z = 0;
 
 		for (int i = 0 ; i < vtCount ; i++)
-		{
-			Vector4 & p1 = vt[i]->_positionScreenspace;
-			Vector4 & p2 = vt[i+1]->_positionScreenspace;
-			z += (p1.x() - p2.x()) * (p1.y()+p2.y());
-		}
+			z += (vt[i]->posScr.x() - vt[i+1]->posScr.x()) * (vt[i]->posScr.y()+vt[i+1]->posScr.y());
 
 		_psInputs.frontface = z < 0;
+
 		if ((!_psInputs.frontface && _backFaceCulling) || (_psInputs.frontface && _frontFaceCulling))
 			continue;
 
 		/* setup flat attributes*/
 		for (int i = 0 ; i < _vertexFlatAttributeCount ; i++)
-			_psInputs.attributes[i] = vt[0]->_attributes[i];
-
-		const Vector4 &v1 = vt[0]->_positionScreenspace;
-		const Vector3 *a1 = vt[0]->_attributes + _vertexFlatAttributeCount;
+			_psInputs.attributes[i] = vt[0]->attr[i];
 
 		/* and now render the polygon by turning it to triangles*/
-		for (int i = 1 ; i < vtCount - 1 ; i++)
+
+		if (mode & Renderer::SOLID)
+			for (int i = 1 ; i < vtCount - 1 ; i++)
+				drawTriangle(vt[0], vt[i], vt[i+1]);
+
+		if (mode & Renderer::WIREFRAME)
 		{
-			const Vector4 &v2 = vt[i]->_positionScreenspace;
-			const Vector4 &v3 =vt[i+1]->_positionScreenspace;
-
-			Vector3 *a2 = vt[i]->_attributes + _vertexFlatAttributeCount;
-			Vector3 *a3 = vt[i+1]->_attributes + _vertexFlatAttributeCount;
-
-			drawTriangle(&v1,&v2,&v3, a1,a2,a3);
+			for (int i = 0 ; i < vtCount ; i++)
+			{
+				Color c =  (mode & WIREFRAME_COLOR) ? _wireframeColor : vt[i]->attr[0];
+				drawLine(vt[i], vt[i+1], c);
+			}
 		}
 	}
 }
@@ -251,8 +254,8 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 		// find the edge to clip
 		TVertex* p1 = input[i], *p2 = input[i+1];
 
-		double dot1 =  p1->_posClipspace.dot(plane);
-		double dot2 =  p2->_posClipspace.dot(plane);
+		double dot1 =  p1->pos.dot(plane);
+		double dot2 =  p2->pos.dot(plane);
 
 		bool in1 = dot1 > 0.0;
 		bool in2 = dot2 > 0.0;
@@ -270,11 +273,11 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 
 			double t = dot1 / (dot1 - dot2);
 
-			nv->_posClipspace = p1->_posClipspace + (p2->_posClipspace - p1->_posClipspace) * t;
-			nv->_positionScreenspace = NDC_to_DeviceSpace(&nv->_posClipspace);
+			nv->pos = p1->pos + (p2->pos - p1->pos) * t;
+			nv->posScr = NDC_to_DeviceSpace(&nv->pos);
 
 			for (int j = _vertexFlatAttributeCount ; j < attrCount ;j++)
-				nv->_attributes[j] = p1->_attributes[j] + (p2->_attributes[j] - p1->_attributes[j]) * t;
+				nv->attr[j] = p1->attr[j] + (p2->attr[j] - p1->attr[j]) * t;
 
 			output[out_count++] = nv;
 		}
@@ -282,7 +285,7 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 
 	if (out_count)
 		for (int j =  0; j < _vertexFlatAttributeCount ;j++)
-			output[0]->_attributes[j] = input[0]->_attributes[j];
+			output[0]->attr[j] = input[0]->attr[j];
 
 	return out_count;
 }

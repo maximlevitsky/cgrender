@@ -98,6 +98,7 @@
     <property name="title">
      <string>Shading &amp;&amp; lighting</string>
     </property>
+    <addaction name="actionNone"/>
     <addaction name="actionFlat"/>
     <addaction name="actionGourald"/>
     <addaction name="actionPhong"/>
@@ -345,6 +346,14 @@
    </property>
    <property name="text">
     <string>Combined</string>
+   </property>
+  </action>
+  <action name="actionNone">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>None</string>
    </property>
   </action>
  </widget>

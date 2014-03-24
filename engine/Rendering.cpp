@@ -231,24 +231,18 @@ void Engine::render()
 
 		// upload the model vertices
 		_renderer->uploadVertices(m.vertices, sizeof(Model::Vertex), m.getNumberOfVertices());
+		_renderer->setWireframeColor(Color(0,0,0));
 
-		// render the model (or just Z + selection buffer for separate object wireframe mode
-		if (_shadingMode != SHADING_NONE || _drawSeparateObjects) 
-		{
-			_renderer->setOutputTexture(_shadingMode != SHADING_NONE ? _outputTexture : NULL);
-			_renderer->renderPolygons(m.polygons, m.getNumberOfPolygons(), i+1);
-		}
+		int mode = 0;
+
+		if (_shadingMode != SHADING_NONE)
+			mode |= Renderer::SOLID;
+
+		if (_flags.drawWireFrame || _shadingMode == SHADING_NONE)
+			mode |= Renderer::WIREFRAME | Renderer::WIREFRAME_COLOR;
 
 		_renderer->setOutputTexture(_outputTexture );
-
-		// draw black wireframe over model when we asked to draw a wireframe in addition to shading
-		if (_flags.drawWireFrame && _shadingMode != SHADING_NONE)
-			_renderer->renderWireFrame(m.polygons, m.getNumberOfPolygons(), Color(0,0,0), true);
-
-		// draw wireframe in object color when we don't draw anything else
-		if (_shadingMode == SHADING_NONE) {
-			_renderer->renderWireFrame(m.polygons, m.getNumberOfPolygons(), Color(0,0,0), false);
-		}
+		_renderer->renderPolygons(m.polygons, m.getNumberOfPolygons(), i+1, (Renderer::RENDER_MODE)mode);
 
 		// Now render the misc stuff
 		_renderer->setBackFaceCulling(false);
@@ -302,19 +296,32 @@ void Engine::renderMiscModelWireframe( const WireFrameModel *m, Color c /*= Colo
 		return;
 
 	useSimpleWireframeShader(_renderer, &_shaderData);
+
 	_renderer->uploadVertices(m->vertices, sizeof(WireFrameModel::Vertex), m->getNumberOfVertices());
-	_renderer->renderWireFrame(m->polygons, m->getNumberOfPolygons(), c, colorValid);
+	_renderer->setWireframeColor(c);
+
+	int mode = Renderer::WIREFRAME;
+	if (colorValid)
+		mode |= Renderer::WIREFRAME_COLOR;
+
+	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(), -1, (Renderer::RENDER_MODE)(mode));
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Engine::renderMiscModelPolygonWireframe(const WireFrameModel *m, Color c, bool colorValid) 
+void Engine::renderMiscModelPolygonWireframe(const WireFrameModel *m, Color c, bool colorValid)
 {
 	if (!m)
 		return;
 
 	useSimpleWireframeShader(_renderer, &_shaderData);
+
 	_renderer->uploadVertices(m->vertices, sizeof(WireFrameModel::Vertex), m->getNumberOfVertices());
-	_renderer->renderWireFrame(m->polygons, m->getNumberOfPolygons(), c, colorValid);
-	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(),0);
+	_renderer->setWireframeColor(c);
+
+	int mode = Renderer::WIREFRAME | Renderer::SOLID;
+	if (colorValid)
+		mode |= Renderer::WIREFRAME_COLOR;
+
+	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(), -1, (Renderer::RENDER_MODE)(mode));
 
 }

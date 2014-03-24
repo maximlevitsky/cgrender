@@ -97,10 +97,12 @@ MainWindow::MainWindow()
 	actionFlat->setActionGroup(shadingGroup);
 	actionGourald->setActionGroup(shadingGroup);
 	actionPhong->setActionGroup(shadingGroup);
+	actionNone->setActionGroup(shadingGroup);
 
 	connect(actionFlat, SIGNAL(toggled(bool)), this, SLOT(onShadingFlat(bool)));
 	connect(actionGourald, SIGNAL(toggled(bool)), this, SLOT(onShadingGorald(bool)));
 	connect(actionPhong, SIGNAL(toggled(bool)), this, SLOT(onShadingPhong(bool)));
+	connect(actionNone, SIGNAL(toggled(bool)), this, SLOT(onShadingNone(bool)));
 
 	connect(actionInvert_vertex_normals, SIGNAL(toggled(bool)), this, SLOT(onInvertNormals(bool)));
 	connect(actionInvert_faces, SIGNAL(toggled(bool)), this, SLOT(onInvertFaces(bool)));
@@ -139,6 +141,10 @@ void MainWindow::updateStatus()
 	actionInvert_faces->setChecked(engine->getInvertFaces());
 	actionDual_face_lighting->setChecked(flags.twofaceLighting);
 	actionAll_face_lighting->setChecked(flags.forceFrontFaces);
+
+	QString str;
+	str.sprintf("OBJ renderer: %s", engine->getLoadedModelFilename().c_str());
+	setWindowTitle(str);
 }
 
 MainWindow::~MainWindow()
@@ -168,7 +174,6 @@ void MainWindow::onModelLoad()
 
 	QString file = dlg->selectedFiles().first();
 	engine->loadSceneFromOBJ(file.toStdString().c_str());
-	this->setWindowTitle(file);
 
 	drawArea->invalidateScene();
 	updateStatus();
@@ -265,6 +270,16 @@ void MainWindow::onDrawDepthbuffer(bool checked)
 /***************************************************************************************/
 /* SHADING MENU */
 /***************************************************************************************/
+
+void MainWindow::onShadingNone(bool checked)
+{
+	if (!checked)
+		return;
+
+	engine->setShadingMode(SHADING_NONE);
+	drawArea->invalidateScene();
+
+}
 void MainWindow::onShadingFlat(bool checked)
 {
 	if (!checked)
