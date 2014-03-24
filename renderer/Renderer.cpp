@@ -167,7 +167,8 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			const Vector4 &pos = vt[i]->pos;
 
 			/* run vertex shader on all vertexes of current polygon, which are not in the cache */
-			if (!valid) {
+			if (!valid)
+			{
 				_vertexShader(_vsPriv,(char*)_vertexBuffer + _vertexBufferStride * iter[i],
 						vt[i]->pos,vt[i]->attr );
 
@@ -175,7 +176,6 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 				if (pos.w() > 0)
 					vt[i]->posScr = NDC_to_DeviceSpace(&pos);
 			}
-
 
 			/* check clipping conditions */
 			if (pos.x() < -pos.w() * clip_x) {
@@ -191,23 +191,25 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			}
 		}
 
-		/* trivial reject - all vertices are out*/
-		if (rightside == vtCount || bottomside == vtCount || leftside == vtCount || topside == vtCount)
-			continue;
-
-		/* some vertexes are in - need to do clipping*/
+		/* clipping */
 		if (needclip)
 		{
+			/* trivial reject - all vertices are out on same side */
+			if (rightside == vtCount || bottomside == vtCount || leftside == vtCount || topside == vtCount)
+				continue;
+
+			/* otherwise do the clipping */
 			TVertex* vt2[128];
 			vtCount = clipAgainstPlane(cache, vt,  vtCount, vt2, Vector4(-1, 0, 0,clip_x));
 			vtCount = clipAgainstPlane(cache, vt2, vtCount, vt,  Vector4( 0, 1, 0,clip_y));
 			vtCount = clipAgainstPlane(cache, vt,  vtCount, vt2, Vector4( 1, 0, 0,clip_x));
 			vtCount = clipAgainstPlane(cache, vt2, vtCount, vt,  Vector4( 0,-1, 0,clip_y));
+
+			/* its still possible that we clipped everything */
 			if (!vtCount) continue;
 		}
 
-
-		/* determine back-face */
+		/* determine back-face and do face cull */
 		vt[vtCount] = vt[0];
 		double z = 0;
 
