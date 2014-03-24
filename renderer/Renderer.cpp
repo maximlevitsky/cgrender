@@ -295,11 +295,6 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 
 void Renderer::shadePixel()
 {
-	/* do clipping to fix slight (and normal) numeric errors in original clipping */
-	if (_psInputs.x < 0 || _psInputs.y < 0 ||
-		_psInputs.x >= _viewportSizeX || _psInputs.y >= _viewportSizeY)
-		return;
-
 	/* do the (early Z test)*/
 	if (_zBuffer) {
 		if (!_zBuffer->zTest(_psInputs.x,_psInputs.y, _psInputs.d))
@@ -371,8 +366,8 @@ void Renderer::updateNDCToDisplayTransform()
 		mat_DeviceToNDCTransform = mat_NDCtoDeviceTransform.inv();
 
 
-	clip_x = (double)_viewportSizeX / (2 * scaleFactorX);
-	clip_y = (double)_viewportSizeY / (2 * scaleFactorY);
+	clip_x = ((double)_viewportSizeX-0.5) / (2 * scaleFactorX);
+	clip_y = ((double)_viewportSizeY-0.5) / (2 * scaleFactorY);
 }
 
 

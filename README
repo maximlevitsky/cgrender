@@ -8,9 +8,6 @@ To build the application on mac you need to:
 	you can grab it from 
 	http://download.qt-project.org/official_releases/qt/4.8/4.8.5/qt-mac-opensource-4.8.5.dmg
 
-*. run the build_mac.sh script
-*. the standalone application will be in cgrender.app
-
 --------------------------------------------------------------------------------------------------
 To build app on Linux you need to:
 
@@ -23,5 +20,3 @@ To build app on Linux you need to:
 	zlib1g-dev (needed for zlib)
 
 
-* run build_linux.sh script
-* the application will be cgrender

@@ -115,16 +115,20 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		while (!_line1.ended() && !_line2.ended())
 		{
 			_psInputs.y = _line1.y1_int;
+
+			_line.setup(_line1, _line2);
+
+			_line1.stepY();
+			_line2.stepY();
+
 			/* rasterize the horizontal line now */
-			for (_line.setup(_line1, _line2); !_line.ended(); _line.stepX())
+			for (; !_line.ended(); _line.stepX())
 			{
 				_psInputs.x = _line.x1_int;
 				_psInputs.d = _line.z1;
 				shadePixel();
 			}
 			/* step two lines */
-			_line1.stepY();
-			_line2.stepY();
 		}
 
 		/* switch bottom to top trapezoid */

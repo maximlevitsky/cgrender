@@ -24,6 +24,8 @@ renderer:
 	* optimizations in rasterizer, there are a lot of stuff that can be improved there
 	* add proper LOD calculations
 	* add tri-linear sampling
+	* collect statistics
+	* add rendering statistics to GUI
 
 * gui/misc: 
 	* ambient light panel
@@ -34,6 +36,7 @@ renderer:
 	* add drag-drop of colors for colorchooser
 	
 * build system:
+	* fix deployment on mac and update README
 	* switch to CMAKE
 	* build on windows
 	* add script to copy files between mac<->linux
