@@ -49,9 +49,12 @@ bool MtlLoader::loadMaterials(std::string file)
 	if (f == NULL)
 		return false;
 
+	cout << "Loading MTL file from " << file << std::endl;
+
 	yyscan_t scanner;
 	mtl_lex_init(&scanner);
 	mtl_set_in(f, scanner);
+	mtl_set_out(stdout, scanner);
 	int retval = mtl_parse(this, scanner);
 	mtl_lex_destroy(scanner);
 	return retval == 0;

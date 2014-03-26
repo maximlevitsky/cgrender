@@ -35,6 +35,13 @@ Ka|Kd|Ks|Ns|Tf|Ni						{
 										  return TOK_colorchannel;
 										}
 
+map_(Ka|Kd|Ks|Ns|Tf|Ni)					{
+										  yylval->str = strndup(yytext, yyleng);
+										  return TOK_mapChannel;
+										}
+
+
+
 newmtl									{ return TOK_newmtl; }
 illum									{ return TOK_illum; }
 -type									{ return TOK_type; }
