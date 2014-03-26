@@ -21,27 +21,53 @@
 #define STRUTILITES_H
 
 #include <utility>
-#include <vector>
+#include <list>
 #include <string>
 #include <sstream>
 #include <algorithm>
 
-static inline std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems)
+static inline std::list<std::string> tokenize(std::string str, const char* delims = "\n\r\t ", bool includeempty = false )
 {
-	std::stringstream ss(s);
-	std::string item;
-	while (std::getline(ss, item, delim)) {
-		elems.push_back(item);
+	size_t token_end = 0, token_start = 0, token_len;
+	bool first_iteration = true;
+	std::list<std::string> result;
+
+	do
+	{
+		/* find start of the token */
+		if (!includeempty) {
+
+			token_start = str.find_first_not_of(delims, token_end);
+			if (token_start == std::string::npos)
+				break;
+
+		}
+		else if (!first_iteration)
+		{
+			token_start = token_end + 1;
+
+			if (token_start >= str.length())
+				break;
+		}
+
+		/* find the end of the token*/
+		token_end = str.find_first_of(delims, token_start);
+
+		if (token_end == std::string::npos)
+			token_len = std::string::npos;
+		else
+			token_len = token_end - token_start;
+
+		/* and put it there */
+		result.push_back(str.substr(token_start, token_len));
+
+		first_iteration = false;
 	}
-	return elems;
+
+	while (token_end != std::string::npos);
+
+	return result;
 }
 
-
-static inline std::vector<std::string> split(const std::string &s, char delim)
-{
-	std::vector<std::string> elems;
-	split(s, delim, elems);
-	return elems;
-}
 
 #endif

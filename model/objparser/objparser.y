@@ -27,6 +27,9 @@
 /* source preamble */
 /************************************************************************************/
 %{
+	
+	#define YY_HEADER_EXPORT_START_CONDITIONS
+	
 	#include "ObjLoader.h"
 	#include "objparser.h"
 	#include "objparser.l.hpp"
@@ -39,6 +42,9 @@
 		std::cout << "syntax error at " << obj_get_lineno(scanner) << std::endl;
 		return -1;
 	}
+	
+	void obj_push_state (int new_state ,yyscan_t yyscanner);
+	void obj_pop_state(yyscan_t yyscanner);
 %}
 
 /************************************************************************************/
@@ -47,7 +53,7 @@
 %token TOK_GROUP TOK_OBJECT TOK_SMOOTHGROUP
 %token TOK_USEMTL TOK_MTLLIB
 %token TOK_VERTEX TOK_VERTEX_NORMAL TOK_VERTEX_UV TOK_FACE
-%token TOK_NUMBER TOK_INTEGER TOK_ID
+%token TOK_REAL TOK_INTEGER TOK_ID
 %token NEWLINE
 %token END 0
 
@@ -65,29 +71,29 @@ Statement : VertexPosStatement | VertexNormalStatement |
 			SmoothGroupStmnt | NEWLINE;
 
 VertexPosStatement:
-	TOK_VERTEX TOK_NUMBER TOK_NUMBER TOK_NUMBER Sep
+	TOK_VERTEX EXPECT_REAL TOK_REAL TOK_REAL TOK_REAL END_EXPECT Sep
 	{
-		loader->addVertexPosition(Vector3($2.real, $3.real, $4.real));
+		loader->addVertexPosition(Vector3($3.real, $4.real, $5.real));
 	};
 	
 VertexNormalStatement:
-	TOK_VERTEX_NORMAL TOK_NUMBER TOK_NUMBER TOK_NUMBER Sep
+	TOK_VERTEX_NORMAL EXPECT_REAL TOK_REAL TOK_REAL TOK_REAL END_EXPECT Sep
 	{
 		/* TODO */
-		loader->addVertexNormal(Vector3($2.real, $3.real, $4.real));
+		loader->addVertexNormal(Vector3($3.real, $4.real, $5.real));
 	};
 	
 VertexUVStatement:
-	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER Sep
+	TOK_VERTEX_UV EXPECT_REAL TOK_REAL TOK_REAL END_EXPECT Sep
 	{
-		loader->addTexCoord(Vector3($2.real, $3.real, 0));
+		loader->addTexCoord(Vector3($3.real, $4.real, 0));
 	};
 	
 VertexUVStatement:
-	TOK_VERTEX_UV TOK_NUMBER TOK_NUMBER TOK_NUMBER Sep
+	TOK_VERTEX_UV EXPECT_REAL TOK_REAL TOK_REAL TOK_REAL END_EXPECT Sep
 	{
 		/* TODO */
-		loader->addTexCoord(Vector3($2.real, $3.real, 0));
+		loader->addTexCoord(Vector3($3.real, $4.real, 0));
 	};
 
 	
@@ -100,42 +106,37 @@ FaceStatement:
 	};
 	
 ObjectStatement:
-	TOK_OBJECT TOK_ID Sep
+	TOK_OBJECT EXPECT_ID TOK_ID END_EXPECT Sep
 	{
-		loader->setObjectName($2.str);
-		free($2.str);
+		loader->setObjectName($3.str);
+		free($3.str);
 	};
 	
 GroupStatement:
-	TOK_GROUP IdList Sep
+	TOK_GROUP  IdList  Sep
 	{
 		loader->setGroupName($2.str);
 		free($2.str);
-	} |
-	TOK_GROUP Sep
-	{
-		loader->setGroupName();
 	};
 	
 MaterialStatement:
-	TOK_USEMTL TOK_ID Sep
+	TOK_USEMTL EXPECT_ID TOK_ID END_EXPECT Sep
 	{
-		loader->setMaterialName($2.str);
-		free($2.str);
+		loader->setMaterialName($3.str);
+		free($3.str);
 	};
 	
 MatrialLibStatement: 
-	TOK_MTLLIB TOK_ID Sep
+	TOK_MTLLIB EXPECT_ID TOK_ID END_EXPECT Sep
 	{
-		loader->setMatrialLib($2.str);
-		free($2.str);
+		loader->setMatrialLib($3.str);
+		free($3.str);
 	};
 	
-SmoothGroupStmnt: 
-	TOK_SMOOTHGROUP TOK_INTEGER Sep | 
-	TOK_SMOOTHGROUP TOK_ID Sep 
+SmoothGroupStmnt:
+	TOK_SMOOTHGROUP EXPECT_ID TOK_ID END_EXPECT Sep 
 	{
-		free($2.str);
+		free($3.str);
 	};
 	/* ignore */
 
@@ -193,16 +194,30 @@ VertexItems:
  /*********************************************************************************/
 
 	/* for now take first group*/
-IdList : IdList TOK_ID 
+IdList :
+	IdList EXPECT_ID TOK_ID END_EXPECT
 	{
-		$$.str = $1.str;
-		free($2.str);
+		$$.str = $3.str;
+		free($3.str);
 	}
 
-	| TOK_ID 
+	| EXPECT_ID TOK_ID END_EXPECT
 	{
-		$$.str = $1.str;
-	};
+		$$.str = $2.str;
+	} |
+	
+	EXPECT_ID END_EXPECT
+	{ 
+		$$.str = strdup("");
+	}
+;
+
+EXPECT_ID:
+	{ obj_push_state(IDENTIFER_EXPECTED, scanner); };
+EXPECT_REAL:
+	{ obj_push_state(REAL_EXPECTED, scanner); };
+END_EXPECT:
+	{obj_pop_state(scanner);};
 	
 Sep: END | NEWLINE;
 	

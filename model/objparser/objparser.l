@@ -16,11 +16,9 @@
     You should have received a copy of the GNU General Public License
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
- /************************************************************************************/
- /* declaration section */
- /************************************************************************************/
+%option nounput yylineno reentrant  noyywrap never-interactive  nounistd bison-bridge stack prefix="obj_"
+%x IDENTIFER_EXPECTED
+%s REAL_EXPECTED
 
 %{
 	#include "ObjLoader.h"
@@ -29,31 +27,8 @@
 	#include <stdlib.h>
 %}
 
-%option nounput
-%option yylineno
-%option reentrant 
-%option noyywrap
-%option never-interactive 
-%option nounistd
-%option bison-bridge
-%option prefix="obj_"
-
-%x IDENTIFER
-%s DOUBLE_NUMBERS_EXPECTED
-
-
+ /*********************************************************************************************/
 %%
- /************************************************************************************/
- /* rules section */
- /************************************************************************************/
- 
- /*
- 	yytext - text of last token
- 	yyleng - length of last token
- 	yylineno - last line number of the input
- 	yyval = output for the grammar parser
- */
-
 
  /* ignored comment lines*/
 <*>#[^\n]*								{}
@@ -69,24 +44,29 @@
 
 
  /* commands*/
-o										{ BEGIN(IDENTIFER);  return TOK_OBJECT; }
-g										{ BEGIN(IDENTIFER);  return TOK_GROUP; }
-s										{ BEGIN(IDENTIFER);  return TOK_SMOOTHGROUP; }
-usemtl									{ BEGIN(IDENTIFER);  return TOK_USEMTL; }
-mtllib									{ BEGIN(IDENTIFER);  return TOK_MTLLIB; }
+o										{ return TOK_OBJECT; }
+g										{ return TOK_GROUP; }
+s										{ return TOK_SMOOTHGROUP; }
+usemtl									{ return TOK_USEMTL; }
+mtllib									{ return TOK_MTLLIB; }
 
  /* mesh data declaration */
-v										{ BEGIN(DOUBLE_NUMBERS_EXPECTED); return TOK_VERTEX; }
-vn										{ BEGIN(DOUBLE_NUMBERS_EXPECTED); return TOK_VERTEX_NORMAL; }
-vt										{ BEGIN(DOUBLE_NUMBERS_EXPECTED); return TOK_VERTEX_UV; }
+v										{ return TOK_VERTEX; }
+vn										{ return TOK_VERTEX_NORMAL; }
+vt										{ return TOK_VERTEX_UV; }
 f										{ return TOK_FACE; }
 
  /*********************************************************************************************/
 
  /* integer in vertex data - have seen it in the wild :-(*/
-<DOUBLE_NUMBERS_EXPECTED>[+-]?[0-9]*	{
+<REAL_EXPECTED>[+-]?[0-9]*				{
 											yylval->real = strtod(yytext, NULL); 
-											return TOK_NUMBER;
+											return TOK_REAL;
+										}
+ /* identifier */
+<IDENTIFER_EXPECTED>[^\n\r\t ]*			{
+											yylval->str = strndup(yytext, yyleng);
+											return TOK_ID;
 										}
  /*integer number */
 [+-]?[0-9]*								{
@@ -96,22 +76,26 @@ f										{ return TOK_FACE; }
  /* double numbers */
 [+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?	{
 											yylval->real = strtod(yytext, NULL); 
-											return TOK_NUMBER;
+											return TOK_REAL;
 										}
-
- /* identifier */
-<IDENTIFER>[^\n\r\t ]*					{
-											yylval->str = strndup(yytext, yyleng);
-											return TOK_ID;
-										}
-
- /*********************************************************************************************/
 
  /* used in face declarations */
 "/"										{ return '/'; }
+
+ /*********************************************************************************************/
 
 <*>.									{ 
 											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
 											return -1;
 										}
 %%
+
+void obj_push_state (int new_state ,yyscan_t yyscanner) 
+{
+	return yy_push_state(new_state, yyscanner);
+}
+
+void obj_pop_state(yyscan_t yyscanner) 
+{
+	return yy_pop_state(yyscanner);
+}

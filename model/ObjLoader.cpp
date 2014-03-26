@@ -19,9 +19,11 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 #include <assert.h>
 #include <algorithm>
 #include "ObjLoader.h"
+#include "common/StringUtils.h"
 
 using std::cout;
 
@@ -94,6 +96,7 @@ bool ObjLoader::load(std::string file)
 
 	int retval = obj_parse(this, scanner);
 	obj_lex_destroy(scanner);
+
 
 	finishCurrentModel();
 	return retval == 0;

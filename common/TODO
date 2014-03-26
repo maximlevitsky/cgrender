@@ -50,3 +50,7 @@ renderer:
 	* build on windows
 	* add script to copy files between mac<->linux
 	
+	
+why bison/lex is better that hand made parser even for simple line by line files
+	1. automatic error handling
+	2. no mess with tokens

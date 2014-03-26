@@ -16,45 +16,75 @@
     You should have received a copy of the GNU General Public License
     along with CG4.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
- /************************************************************************************/
- /* declaration section */
- /************************************************************************************/
+%option nounput yylineno reentrant  noyywrap never-interactive  nounistd bison-bridge prefix="mtl_"
 
 %{
 	#include "ObjLoader.h"
 	#include "mtlparser.h"
 	#include "mtlparser.y.hpp"
 	#include <stdlib.h>
+	
 %}
 
-%option reentrant
-%option noyywrap
-%option never-interactive
-%option nounistd
-%option bison-bridge
-%option nounput
-%option prefix="mtl_"
 
 %%
- /************************************************************************************/
- /* rules section */
- /************************************************************************************/
- 
- /*
- 	yytext - text of last token
- 	mtl_lval = output for the grammar parser
- */
+ /*********************************************************************************************/
+
+Ka|Kd|Ks|Ns|Tf|Ni						{
+										  yylval->str = strndup(yytext, yyleng);
+										  return TOK_colorchannel;
+										}
+
+newmtl									{ return TOK_newmtl; }
+illum									{ return TOK_illum; }
+-type									{ return TOK_type; }
+-options								{ return TOK_options; }
+-o										{ return TOK_o; }
+-s										{ return TOK_s; }
+-mm										{ return TOK_mm; }
+-clamp									{ return TOK_clamp; }
+-bm										{ return TOK_bm; }
+-imfchan								{ return TOK_imfchan; }
+-blendu									{ return TOK_blendu; }
+-blendv									{ return TOK_blendv; }
+-cc										{ return TOK_cc; }
+-t										{ return TOK_t; }
+-boost									{ return TOK_boost; }
+-texres									{ return TOK_texres; }
+-on										{ return TOK_on; }
+-off									{ return TOK_off; }
+
+spectral								{ return TOK_spectral; }
+factor									{ return TOK_factor; }
+xyz										{ return TOK_xyz; }
 
 
- /* ignored stuff - comments/etc */
-"#"[^\n]*\n											{}
-[ \t\n\r]+											{}
+
+ /* ignored comment lines*/
+<*>#[^\n]*								{}
+
+ /* ignored non newline whitespace */
+<*>[ \t\r]+								{}
+
+ /* ignored escaped newlines - why I have to go through this :-(*/
+<*>[\\][\r]?[\n]						{}
+
+ /* newline - this is importaint to grammar */
+<*>[\n]									{  return NEWLINE; }
 
 
+ /* other token */
+[^\n\r\t\- ][^\n\r\t ]*					{
+											yylval->str = strndup(yytext, yyleng);
+											yylval->integer = strtol(yytext, NULL, 10);
+											yylval->real = strtod(yytext, NULL);
+											
+											return TOKEN;
+										}
 
-.													{ 
-														printf("parser: unknown data detected: %s", yytext);
-													}
+<*>.									{ 
+											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
+											return -1;
+										}
+ /*********************************************************************************************/
 %%

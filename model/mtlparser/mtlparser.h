@@ -22,7 +22,9 @@
 
 struct myYYSTYPE
 {
-	std::string str;
+	double real;
+	int integer;
+	char* str;
 };
 
 #define YYSTYPE myYYSTYPE
