@@ -85,7 +85,7 @@ f										{ return TOK_FACE; }
  /*********************************************************************************************/
 
 <*>.									{ 
-											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
+											printf("objparser: parse error detected at %i: %s\n", yylineno, yytext);
 											return -1;
 										}
 %%

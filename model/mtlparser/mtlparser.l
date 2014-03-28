@@ -90,7 +90,7 @@ xyz										{ return TOK_xyz; }
 										}
 
 <*>.									{ 
-											printf("parser: unknown data detected at %i: %s\n", yylineno, yytext);
+											printf("mtlparser: parse error detected at %i: %s\n", yylineno, yytext);
 											return -1;
 										}
  /*********************************************************************************************/

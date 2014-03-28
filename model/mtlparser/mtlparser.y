@@ -36,7 +36,7 @@
 	
 	int yyerror(MtlLoader *loader, yyscan_t scanner, const char* p) 
 	{ 
-		std::cout << "syntax error at " << mtl_get_lineno(scanner) << std::endl;
+		std::cout << "mtlparser: syntax error at " << mtl_get_lineno(scanner) << std::endl;
 		return -1;
 	}
 %}
