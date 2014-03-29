@@ -117,13 +117,16 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		std::swap(p3, p2);
 
 	// find the order of two lines
-	const double p1p3_dx = p1->posScr.x() - p3->posScr.x();
 	const double p1p3_dy = p1->posScr.y() - p3->posScr.y();
 
-	if (p1p3_dy && p2->posScr.x() > p1->posScr.x() + ((p2->posScr.y() - p1->posScr.y()) * p1p3_dx) / p1p3_dy)
-	{
-		std::swap(p3, p2);
-		two_edges_side = 2;
+	if (p1p3_dy) {
+		const double p1p3_dx = p1->posScr.x() - p3->posScr.x();
+
+		if (p2->posScr.x() > p1->posScr.x() + ((p2->posScr.y() - p1->posScr.y()) * p1p3_dx) / p1p3_dy)
+		{
+			std::swap(p3, p2);
+			two_edges_side = 2;
+		}
 	}
 
 	// setup side line rasterizers
@@ -175,24 +178,17 @@ void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
 
 	const Vector3* attr1 = p1.attr + flatAttribCount;
 	const Vector3* attr2 = p2.attr + flatAttribCount;
+	int i = 0;
 
-	x1 = p1.posScr.x(); double x2 = p2.posScr.x();
-	z1 = p1.posScr.z(); double z2 = p2.posScr.z();
-	w1 = 1.0 / p1.posScr.w(); double w2 = 1.0 / p2.posScr.w();
+	x1 = p1.posScr.x(); const double x2 = p2.posScr.x();
+	z1 = p1.posScr.z(); const double z2 = p2.posScr.z();
+	w1 = 1.0 / p1.posScr.w(); const double w2 = 1.0 / p2.posScr.w();
 
 	//setup attributes
-	int i = 0;
-	for (; i < smoothAttribCount ; i++)
-	{
+	for (i=0; i < smoothAttribCount ; i++)
 		attribs[i] = attr1[i] * w1;
-		attrib_steps[i] = ( attr2[i] * w2 - attribs[i] ) / dy;
-	}
-
 	for (; i < smoothAndNoPerspectiveCount ; i++)
-	{
 		attribs[i] = attr1[i];
-		attrib_steps[i] = (attr2[i] - attr1[i]) / dy;
-	}
 
 	// calculates integer X,Y values we will go from to
 	y1_int = (int)ceil(y1); y2_int = (int)floor(y2);
@@ -200,6 +196,11 @@ void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
 	// setup steps
 	if(dy)
 	{
+		for ( i=0; i < smoothAttribCount ; i++)
+			attrib_steps[i] = ( attr2[i] * w2 - attribs[i] ) / dy;
+		for (; i < smoothAndNoPerspectiveCount ; i++)
+			attrib_steps[i] = (attr2[i] - attr1[i]) / dy;
+
 		x_step = (x2 - x1)/dy;
 		z_step = (z2 - z1)/dy;
 		w_step = (w2 - w1)/dy;
@@ -235,7 +236,7 @@ void VerticalLineRasterizer::stepY()
 
 void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const VerticalLineRasterizer &line2 )
 {
-	double dx = line2.x1 - line1.x1;
+	const double dx = line2.x1 - line1.x1;
 	z1 = line1.z1;
 	w1 = line1.w1;
 
