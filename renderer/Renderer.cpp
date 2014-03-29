@@ -191,6 +191,8 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			}
 		}
 
+		vt[vtCount] = vt[0];
+
 		/* clipping */
 		if (needclip)
 		{
@@ -210,7 +212,6 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 		}
 
 		/* determine back-face and do face cull */
-		vt[vtCount] = vt[0];
 		double z = 0;
 
 		for (int i = 0 ; i < vtCount ; i++)
@@ -231,11 +232,12 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			for (int i = 1 ; i < vtCount - 1 ; i++)
 				drawTriangle(vt[0], vt[i], vt[i+1]);
 
-		Color c =  (mode & WIREFRAME_COLOR) ? _wireframeColor : vt[0]->attr[0];
-
 		if (mode & Renderer::WIREFRAME)
+		{
+			Color c =  (mode & WIREFRAME_COLOR) ? _wireframeColor : vt[0]->attr[0];
 			for (int i = 0 ; i < vtCount ; i++)
 				drawLine(vt[i], vt[i+1], c);
+		}
 	}
 }
 
@@ -244,9 +246,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane)
 {
 	int out_count = 0;
-
 	int attrCount = _vertexFlatAttributeCount+ _vertexSmoothAttributeCount+_vertexNoPerspectiveCount;
-	input[point_count] = input[0];
 
 	for (int i = 0 ; i < point_count ; i++)
 	{
@@ -282,9 +282,12 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 		}
 	}
 
-	if (out_count)
+	if (out_count) {
 		for (int j =  0; j < _vertexFlatAttributeCount ;j++)
 			output[0]->attr[j] = input[0]->attr[j];
+
+		output[out_count] = output[0];
+	}
 
 	return out_count;
 }

@@ -26,6 +26,28 @@
 
 #include <assert.h>
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void VerticalLineRasterizer::setAttributesCount(unsigned char flatcount, unsigned char smoothcount, unsigned char noPerspectiveCount )
+{
+	assert (flatcount + smoothcount + noPerspectiveCount <= 8);
+	flatAttribCount = flatcount;
+	smoothAttribCount = smoothcount;
+	noPerspectiveAttribCount = noPerspectiveCount;
+	smoothAndNoPerspectiveCount = (unsigned char)(smoothcount + noPerspectiveCount);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void HorizintalLineRasterizer::setAttributesCount(
+	unsigned char flatCount, unsigned char smoothcount, unsigned char noPerspectiveCount )
+{
+	assert (flatCount + smoothcount + noPerspectiveCount <= 8);
+	flatAttribCount = flatCount;
+	smoothAttribCount = smoothcount;
+	noPerspectiveAttribCount = noPerspectiveCount;
+	attribCount = smoothAttribCount + noPerspectiveAttribCount;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw line between points
@@ -35,8 +57,8 @@ void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 	if (p1->posScr.isBadFP() || p2->posScr.isBadFP())
 		return;
 
-	int x1 = (int)p1->posScr.x(), x2 = (int)p2->posScr.x();
-	int y1 = (int)p1->posScr.y(), y2 = (int)p2->posScr.y();
+	int x1 = (int)round(p1->posScr.x()), x2 = (int)round(p2->posScr.x());
+	int y1 = (int)round(p1->posScr.y()), y2 = (int)round(p2->posScr.y());
 
 	// add small bias to Z so that wireframe is rendered above the model
 	double z1 = p1->posScr.z() - 0.05, z2 = p2->posScr.z() - 0.05;
@@ -95,8 +117,8 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		std::swap(p3, p2);
 
 	// find the order of two lines
-	double p1p3_dx = p1->posScr.x() - p3->posScr.x();
-	double p1p3_dy = p1->posScr.y() - p3->posScr.y();
+	const double p1p3_dx = p1->posScr.x() - p3->posScr.x();
+	const double p1p3_dy = p1->posScr.y() - p3->posScr.y();
 
 	if (p1p3_dy && p2->posScr.x() > p1->posScr.x() + ((p2->posScr.y() - p1->posScr.y()) * p1p3_dx) / p1p3_dy)
 	{
@@ -145,20 +167,11 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void VerticalLineRasterizer::setAttributesCount(unsigned char flatcount, unsigned char smoothcount, unsigned char noPerspectiveCount )
-{
-	assert (flatcount + smoothcount + noPerspectiveCount <= 8);
-	flatAttribCount = flatcount;
-	smoothAttribCount = smoothcount;
-	noPerspectiveAttribCount = noPerspectiveCount;
-	smoothAndNoPerspectiveCount = (unsigned char)(smoothcount + noPerspectiveCount);
-}
-
 void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
 {
 	// calculate initial values
-	double y1 = p1.posScr.y(); double y2 = p2.posScr.y();
-	double dy = y2 - y1;
+	const double y1 = p1.posScr.y(); const double y2 = p2.posScr.y();
+	const double dy = y2 - y1;
 
 	const Vector3* attr1 = p1.attr + flatAttribCount;
 	const Vector3* attr2 = p2.attr + flatAttribCount;
@@ -167,33 +180,33 @@ void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
 	z1 = p1.posScr.z(); double z2 = p2.posScr.z();
 	w1 = 1.0 / p1.posScr.w(); double w2 = 1.0 / p2.posScr.w();
 
-	if (dy)
-	{
-		x_step = (x2 - x1)/dy;
-		z_step = (z2 - z1)/dy;
-		w_step = (w2 - w1)/dy;
-	}
-
 	//setup attributes
 	int i = 0;
 	for (; i < smoothAttribCount ; i++)
 	{
 		attribs[i] = attr1[i] * w1;
-		if (dy) attrib_steps[i] = ( attr2[i] * w2 - attr1[i] *w1 ) / dy;
+		attrib_steps[i] = ( attr2[i] * w2 - attribs[i] ) / dy;
 	}
 
 	for (; i < smoothAndNoPerspectiveCount ; i++)
 	{
 		attribs[i] = attr1[i];
-		if (dy) attrib_steps[i] = (attr2[i] - attr1[i]) / dy;
+		attrib_steps[i] = (attr2[i] - attr1[i]) / dy;
 	}
 
-	// calculate steps, advance by Y, etc
-	if (dy)
+	// calculates integer X,Y values we will go from to
+	y1_int = (int)ceil(y1); y2_int = (int)floor(y2);
+
+	// setup steps
+	if(dy)
 	{
+		x_step = (x2 - x1)/dy;
+		z_step = (z2 - z1)/dy;
+		w_step = (w2 - w1)/dy;
+
 		double y1_fraction = ceil(y1) - y1;
-		if (y1_fraction)
-		{
+
+		if (y1_fraction) {
 			x1 += y1_fraction * x_step;
 			z1 += y1_fraction * z_step;
 			w1 += y1_fraction * w_step;
@@ -202,35 +215,23 @@ void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
 				attribs[i] += (attrib_steps[i] * y1_fraction);
 		}
 	}
-
-	// calculates integer X,Y values we will go from to
-	y1_int = (int)ceil(y1); y2_int = (int)floor(y2);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void VerticalLineRasterizer::stepY()
 {
-	// step X,Z exactly
 	x1 += x_step;
 	w1 += w_step;
 	z1 += z_step;
-
 	y1_int++;
 
 	for (int i = 0 ; i < smoothAndNoPerspectiveCount ; i++)
 		attribs[i] += attrib_steps[i];
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void HorizintalLineRasterizer::setAttributesCount(
-	unsigned char flatCount, unsigned char smoothcount, unsigned char noPerspectiveCount )
-{
-	assert (flatCount + smoothcount + noPerspectiveCount <= 8);
-	flatAttribCount = flatCount;
-	smoothAttribCount = smoothcount;
-	noPerspectiveAttribCount = noPerspectiveCount;
-}
 
 void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const VerticalLineRasterizer &line2 )
 {
@@ -238,36 +239,38 @@ void HorizintalLineRasterizer::setup( const VerticalLineRasterizer &line1, const
 	z1 = line1.z1;
 	w1 = line1.w1;
 
+	// setup pixel bounds
+	x1_int = (int)ceil(line1.x1);
+	x2_int = (int)floor(line2.x1);
+
+	// setup attributes
+	for (int i = 0 ; i < attribCount ; i++)
+		attributes[i] = line1.attribs[i];
+
+	// setup steps
 	if (dx)
 	{
+		for (int i = 0 ; i < attribCount ; i++)
+			attribute_steps[i] = (line2.attribs[i] - line1.attribs[i])/dx;
+
 		z_step = (line2.z1 - line1.z1)/dx;
 		w_step = (line2.w1 - line1.w1)/dx;
-	}
 
-	for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++)
-	{
-		attributes[i] = line1.attribs[i];
-		if (dx) attribute_steps[i] = (line2.attribs[i] - line1.attribs[i])/dx;
-	}
-
-	// account for fractional X
-	if (dx)
-	{
+		// account for fractional X
 		double x1_frac = ceil(line1.x1)  - line1.x1;
 
-		if (x1_frac)
-		{
+		if (x1_frac) {
 			z1 += x1_frac * z_step;
 			w1 += x1_frac* w_step;
 
-			for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount ; i++)
+			for (int i = 0 ; i < attribCount ; i++)
 				attributes[i] += (attribute_steps[i] * x1_frac);
 		}
 	}
-
-	x1_int = (int)ceil(line1.x1);
-	x2_int = (int)floor(line2.x1);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void HorizintalLineRasterizer::stepX()
 {
@@ -276,9 +279,11 @@ void HorizintalLineRasterizer::stepX()
 	w1 += w_step;
 	x1_int++;
 
-	for (int i = 0 ; i < smoothAttribCount + noPerspectiveAttribCount; i++)
+	for (int i = 0 ; i < attribCount; i++)
 		attributes[i] += attribute_steps[i];
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void HorizintalLineRasterizer::setupPSInputs(PS_INPUTS &inputs)
 {

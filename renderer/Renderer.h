@@ -159,6 +159,8 @@ private:
 	unsigned char flatAttribCount;
 	unsigned char smoothAttribCount;
 	unsigned char noPerspectiveAttribCount;
+	unsigned char attribCount;
+
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

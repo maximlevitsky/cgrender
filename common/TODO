@@ -54,3 +54,16 @@ renderer:
 why bison/lex is better that hand made parser even for simple line by line files
 	1. automatic error handling
 	2. no mess with tokens
+	
+	
+	
+renderer threading:
+
+currently we have following global state:
+	1. vertical rasterizers - used in drawtriangle and have attributes attached
+		only globally
+	2. horizontal rasterizer
+		set up in drawtriangle but used for lod queries.
+		
+	3. ps_inputs.
+		
