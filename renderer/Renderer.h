@@ -30,6 +30,9 @@ class Texture;
 class DepthTexture;
 class IntegerTexture;
 
+#define MAX_ATTRIBUTES 5
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* An input to pixel shader*/
@@ -37,7 +40,7 @@ class IntegerTexture;
 class Renderer;
 struct PS_INPUTS {
 	/* all attributes (flat/smooth/noperspective)*/
-	Vector3 attributes[8];
+	Vector3 attributes[MAX_ATTRIBUTES];
 
 	/* Pixel position*/
 	int x;
@@ -69,7 +72,6 @@ struct DEVICE_PIXEL
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define MAX_ATTRIBUTES 5
 
 struct TVertex
 {
@@ -298,7 +300,7 @@ private:
 	void* _vsPriv;
 	void* _psPriv;
 
-	// temp buffer for vertices transform
+	// vertex buffer
 	void* _vertexBuffer;
 	int _vertexBufferStride;
 

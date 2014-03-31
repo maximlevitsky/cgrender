@@ -302,6 +302,7 @@ void Renderer::shadePixel()
 		_zBuffer->setPixelValue(_psInputs.x,_psInputs.y,_psInputs.d);
 	}
 
+
 	/* update the selection buffer */
 	if (_selBuffer)
 		_selBuffer->setPixelValue(_psInputs.x,_psInputs.y, _objectID);
@@ -335,11 +336,11 @@ Vector4 Renderer::NDC_to_DeviceSpace( const Vector4* input )
 {
 	Vector4 output = *input * mat_NDCtoDeviceTransform;
 
-	double w = output.w();
-	output.x() /= w;
-	output.y() /= w;
-	output.z() /= w;
-	output.w() =  1.0 / w;
+	double w = 1.0 / output.w();
+	output.x() *= w;
+	output.y() *= w;
+	output.z() *= w;
+	output.w()  = w;
 	return output;
 }
 
