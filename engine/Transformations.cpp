@@ -33,7 +33,6 @@ void Engine::setupTransformationShaderData( int objectID )
 	_shaderData.mat_objectToCameraSpace =
 		objectTransform *  _mainTR.getMat() * _cameraTR.getMat();
 
-
 	_shaderData.mat_objectToClipSpaceTransform =  
 		_shaderData.mat_objectToCameraSpace * _projTR.getMatrix();
 
@@ -41,7 +40,6 @@ void Engine::setupTransformationShaderData( int objectID )
 		_mainTR.getNormalTransformMatrix() * _cameraTR.getNormalTransformMatrix();
 
 	_shaderData.mat_cameraToWorldSpace = _cameraTR.getMat().inv();
-	_shaderData.mat_cameraToObjectSpace = (_shaderData.mat_cameraToWorldSpace * _mainTR.getMat()).inv();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

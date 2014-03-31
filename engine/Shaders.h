@@ -71,10 +71,8 @@ public:
 	Mat4 mat_objectToCameraSpaceNormalTransform;
 	Mat4 mat_objectToCameraSpace;
 	Mat4 mat_objectToClipSpaceTransform;
-	Mat4 mat_cameraToObjectSpace;
 	Mat4 mat_cameraToWorldSpace;
 
-	Mat4 projNormaltransform;
 	// lighting
 	Color kA;
 	ShaderLightData lights[8];
@@ -92,7 +90,6 @@ public:
 
 	// fog - for now just pass through it
 	ShaderFogData fogParams;
-
 	struct ShadowParams shadowParams;
 };
 

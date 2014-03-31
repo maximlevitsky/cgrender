@@ -156,8 +156,8 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 		cache.newPolygon();
 		int vtCount = iter.vertexCount();
 
-		int leftside = 0,rightside = 0,topside = 0,bottomside = 0;
-		bool needclip = false;
+		int clipx = 0,clipy = 0;
+		bool clip = false;
 
 		/* first pass over vertices - run vertex shader, do perspective divide and test trivial clipping*/
 		for (int i = 0 ; i < iter.vertexCount() ; i++)
@@ -178,26 +178,25 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			}
 
 			/* check clipping conditions */
-			if (pos.x() < -pos.w() * clip_x) {
-				leftside++; needclip = true;
-			} else if (pos.x() > pos.w() * clip_x) {
-				rightside++; needclip = true;
+			if (std::abs(pos.x()) > pos.w() * clip_x) {
+				clipx += pos.x() > 0;
+				clip  = true;
 			}
 
-			if (pos.y() < -pos.w() * clip_y) {
-				bottomside++; needclip = true;
-			} else if (pos.y() > pos.w() * clip_y) {
-				topside++; needclip = true;
+
+			if (std::abs(pos.y()) > pos.w() * clip_y) {
+				clipy  += pos.y() > 0;
+				clip = true;
 			}
 		}
 
 		vt[vtCount] = vt[0];
 
 		/* clipping */
-		if (needclip)
+		if (clip)
 		{
 			/* trivial reject - all vertices are out on same side */
-			if (rightside == vtCount || bottomside == vtCount || leftside == vtCount || topside == vtCount)
+			if (abs(clipx) == vtCount || abs(clipy) == vtCount)
 				continue;
 
 			/* otherwise do the clipping */
@@ -226,12 +225,13 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 		for (int i = 0 ; i < _vertexFlatAttributeCount ; i++)
 			_psInputs.attributes[i] = vt[0]->attr[i];
 
-		/* and now render the polygon by turning it to triangles*/
+		/* and now render the polygon by turning them to triangles*/
 
 		if (mode & Renderer::SOLID)
 			for (int i = 1 ; i < vtCount - 1 ; i++)
 				drawTriangle(vt[0], vt[i], vt[i+1]);
 
+		/* and render the wireframe */
 		if (mode & Renderer::WIREFRAME)
 		{
 			Color c =  (mode & WIREFRAME_COLOR) ? _wireframeColor : vt[0]->attr[0];
@@ -243,12 +243,12 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane)
+int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_count, TVertex* output[], Vector4 plane)
 {
 	int out_count = 0;
 	int attrCount = _vertexFlatAttributeCount+ _vertexSmoothAttributeCount+_vertexNoPerspectiveCount;
 
-	for (int i = 0 ; i < point_count ; i++)
+	for (int i = 0 ; i < in_count ; i++)
 	{
 		// find the edge to clip
 		TVertex* p1 = input[i], *p2 = input[i+1];
@@ -285,13 +285,11 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_c
 	if (out_count) {
 		for (int j =  0; j < _vertexFlatAttributeCount ;j++)
 			output[0]->attr[j] = input[0]->attr[j];
-
 		output[out_count] = output[0];
 	}
 
 	return out_count;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
