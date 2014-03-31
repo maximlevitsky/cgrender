@@ -69,6 +69,8 @@ struct DEVICE_PIXEL
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#define MAX_ATTRIBUTES 5
+
 struct TVertex
 {
 	int _ID;
@@ -79,7 +81,7 @@ struct TVertex
 	Vector4 posScr;
 
 	/* attributes */
-	Vector3 attr[8];
+	Vector3 attr[MAX_ATTRIBUTES];
 
 	TVertex() : _seq(0), _ID(-1) {};
 };
@@ -110,14 +112,14 @@ public:
 	double w1; double w_step;
 
 	// attributes
-	Vector3 attribs[8];
-	Vector3 attrib_steps[8];
+	Vector3 attribs[MAX_ATTRIBUTES];
+	Vector3 attrib_steps[MAX_ATTRIBUTES];
 private:
 	/* attributes count*/
 	unsigned char flatAttribCount;
 	unsigned char smoothAttribCount;
 	unsigned char noPerspectiveAttribCount;
-	unsigned char smoothAndNoPerspectiveCount;
+	unsigned char attribCount;
 };
 
 
@@ -133,7 +135,7 @@ public:
 	/* setup the class to interpolate horizontal line from current positions of two vertical lines
 	   always from line1 to line2
 	*/
-	void setup(const VerticalLineRasterizer &line1, const VerticalLineRasterizer &line2);
+	void setup(const VerticalLineRasterizer *line1, const VerticalLineRasterizer *line2);
 
 	/* step one pixel to the right*/
 	void stepX();
@@ -151,8 +153,8 @@ public:
 	bool ended() { return x1_int > x2_int; }
 
 	//attributes
-	Vector3 attributes[8];
-	Vector3 attribute_steps[8];
+	Vector3 attributes[MAX_ATTRIBUTES];
+	Vector3 attribute_steps[MAX_ATTRIBUTES];
 private:
 
 	//settings

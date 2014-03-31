@@ -341,6 +341,7 @@ Vector4 Renderer::NDC_to_DeviceSpace( const Vector4* input )
 	output.x() /= w;
 	output.y() /= w;
 	output.z() /= w;
+	output.w() =  1.0 / w;
 	return output;
 }
 
