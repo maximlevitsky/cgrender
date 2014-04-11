@@ -30,23 +30,17 @@
 Renderer::Renderer(void) : 
 
 	// output buffer
-	_viewportSizeX(0), _viewportSizeY(0), _outputTexture(NULL), _zBuffer(NULL), _selBuffer(NULL),
-	_aspectRatio(1.0), _objectID(0),
-	
+	_viewportSizeX(0), _viewportSizeY(0), _aspectRatio(1.0),
+	_outputTexture(NULL), _zBuffer(NULL),
+
 	// shaders
 	_vertexShader(NULL), _pixelShader(NULL),
 	// settings
-	_debugDepthRendering(false),_backFaceCulling(false), _frontFaceCulling(false),
+	_backFaceCulling(false), _frontFaceCulling(false),
 	_wireframeColor(0,0,0)
 {
 	_psInputs._renderer = this;
 	setVertexAttributes(0,0,0);
-}
-
-Renderer::~Renderer(void)
-{
-	delete _zBuffer;
-	delete _selBuffer;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,24 +74,19 @@ void Renderer::setZBuffer(DepthTexture *z)
 	assert (!z ||( z->getWidth() >=  _viewportSizeX && z->getHeight() >= _viewportSizeY));
 	_zBuffer = z;
 }
-void Renderer::setSelBuffer(IntegerTexture *s)
-{
-	assert (!s || (s->getWidth() >=  _viewportSizeX && s->getHeight() >= _viewportSizeY));
-	_selBuffer = s;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::setVertexAttributes( 
 	unsigned char flatCount, unsigned char smoothCount, unsigned char noPerspectiveCount )
 {
-	_vertexFlatAttributeCount = flatCount;
-	_vertexSmoothAttributeCount = smoothCount;
-	_vertexNoPerspectiveCount = noPerspectiveCount;
+	_vFlatACount = flatCount;
+	_vSmoothACount = smoothCount;
+	_vNoPersACount = noPerspectiveCount;
 
-	_line1.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
-	_line2.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
-	_line.setAttributesCount(_vertexFlatAttributeCount, _vertexSmoothAttributeCount, _vertexNoPerspectiveCount);
+	_line1.setAttributesCount(_vFlatACount, _vSmoothACount, _vNoPersACount);
+	_line2.setAttributesCount(_vFlatACount, _vSmoothACount, _vNoPersACount);
+	_line.setAttributesCount(_vFlatACount, _vSmoothACount, _vNoPersACount);
 }
 
 
@@ -112,13 +101,9 @@ void Renderer::uploadVertices(void* vertices, int vertexSize, int count)
 
 void Renderer::renderBackgroundColor(Color background) 
 {
-	for (int row = 0 ; row < _viewportSizeY ; row++) {
-		for(int column = 0 ; column < _viewportSizeX ; column++) {
-
+	for (int row = 0 ; row < _viewportSizeY ; row++)
+		for(int column = 0 ; column < _viewportSizeX ; column++)
 			drawPixel(column, row, background);
-			if (_selBuffer) _selBuffer->setPixelValue(column,row, 0);
-		}
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,24 +117,16 @@ void Renderer::renderBackground( const Texture &texture, double scaleX, double s
 	s.setScale(scaleX,scaleY);
 
 	for (int y=0; y<_viewportSizeY ; y++)
-	{
 		for (int x=0; x<_viewportSizeX ; x++)
-		{
 			drawPixel(x, y, s.sampleBiLinear((double)x/_viewportSizeX, (double)y/_viewportSizeY));
-			if (_selBuffer) _selBuffer->setPixelValue(x,y, 0);
-		}
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,enum Renderer::RENDER_MODE mode)
+void Renderer::renderPolygons( unsigned int* geometry, int count, enum Renderer::RENDER_MODE mode)
 {
 	VertexCache cache;
 	TVertex* vt[128];
-
-
-	if (objectID != -1 && _selBuffer) _objectID = objectID;
 
 	for (polygonIterator iter(geometry, count); iter.hasmore() ; iter.next())
 	{
@@ -222,7 +199,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 			continue;
 
 		/* setup flat attributes*/
-		for (int i = 0 ; i < _vertexFlatAttributeCount ; i++)
+		for (int i = 0 ; i < _vFlatACount ; i++)
 			_psInputs.attributes[i] = vt[0]->attr[i];
 
 		/* and now render the polygon by turning them to triangles*/
@@ -246,7 +223,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, int objectID ,
 int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_count, TVertex* output[], Vector4 plane)
 {
 	int out_count = 0;
-	int attrCount = _vertexFlatAttributeCount+ _vertexSmoothAttributeCount+_vertexNoPerspectiveCount;
+	int attrCount = _vFlatACount+ _vSmoothACount+_vNoPersACount;
 
 	for (int i = 0 ; i < in_count ; i++)
 	{
@@ -263,7 +240,7 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_coun
 
 		if (in1 != in2)
 		{
-			TVertex* nv = cache.allocateTemp();
+			TVertex* newVertex = cache.allocateTemp();
 
 			if (in1 == false) {
 				swap(p1,p2);
@@ -272,18 +249,18 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_coun
 
 			double t = dot1 / (dot1 - dot2);
 
-			nv->pos = p1->pos + (p2->pos - p1->pos) * t;
-			nv->posScr = NDC_to_DeviceSpace(&nv->pos);
+			newVertex->pos = p1->pos + (p2->pos - p1->pos) * t;
+			newVertex->posScr = NDC_to_DeviceSpace(&newVertex->pos);
 
-			for (int j = _vertexFlatAttributeCount ; j < attrCount ;j++)
-				nv->attr[j] = p1->attr[j] + (p2->attr[j] - p1->attr[j]) * t;
+			for (int j = _vFlatACount ; j < attrCount ;j++)
+				newVertex->attr[j] = p1->attr[j] + (p2->attr[j] - p1->attr[j]) * t;
 
-			output[out_count++] = nv;
+			output[out_count++] = newVertex;
 		}
 	}
 
 	if (out_count) {
-		for (int j =  0; j < _vertexFlatAttributeCount ;j++)
+		for (int j =  0; j < _vFlatACount ;j++)
 			output[0]->attr[j] = input[0]->attr[j];
 		output[out_count] = output[0];
 	}
@@ -291,36 +268,6 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_coun
 	return out_count;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void Renderer::shadePixel()
-{
-	/* do the (early Z test)*/
-	if (_zBuffer) {
-		if (!_zBuffer->zTest(_psInputs.x,_psInputs.y, _psInputs.d))
-			return;
-		_zBuffer->setPixelValue(_psInputs.x,_psInputs.y,_psInputs.d);
-	}
-
-
-	/* update the selection buffer */
-	if (_selBuffer)
-		_selBuffer->setPixelValue(_psInputs.x,_psInputs.y, _objectID);
-
-	if (!_outputTexture)
-		return;
-
-	// debug depth print
-	if (_debugDepthRendering && _zBuffer)
-	{
-		drawPixel(_psInputs.x, _psInputs.y, _zBuffer->debugGetPixel(_psInputs.x,_psInputs.y));
-		return;
-	}
-
-	/* run pixel shader if we have output buffer */
-	_line.setupPSInputs(_psInputs);
-	drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -377,12 +324,12 @@ void Renderer::queryLOD( int attributeIndex, double &x_step, double &y_step ) co
 {
 	// this is called from pixel shader to get approximate LOD based on an attribute deltas
 	// TODO: for now we assume 2d texture coordinate
-	assert(attributeIndex > _vertexFlatAttributeCount);
-	attributeIndex -= _vertexFlatAttributeCount;
+	assert(attributeIndex > _vFlatACount);
+	attributeIndex -= _vFlatACount;
 
 	Vector3 horStep = _line.attribute_steps[attributeIndex];
 
-	if (attributeIndex < _vertexSmoothAttributeCount) 
+	if (attributeIndex < _vSmoothACount) 
 	{
 		x_step = horStep.x() / _line.w1;
 		y_step = horStep.y() / _line.w1;

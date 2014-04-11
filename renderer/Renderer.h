@@ -23,7 +23,7 @@
 #include "common/Mat4.h"
 #include "common/Vector4.h"
 #include "common/Vector3.h"
-#include "common/Utilities.h"
+#include "common/Math.h"
 #include "common/Iterators.h"
 
 class Texture;
@@ -242,7 +242,6 @@ public:
 	// set output buffers
 	void setOutputTexture(Texture *t);
 	void setZBuffer(DepthTexture *z);
-	void setSelBuffer(IntegerTexture *z);
 
 	// set rendering window
 	void setViewport(int width, int height);
@@ -259,7 +258,6 @@ public:
 		unsigned char smoothCount, unsigned char noPerspectiveCount);
 
 	// settings
-	void setDebugDepthRendering(bool enable)  { _debugDepthRendering = enable; }
 	void setBackFaceCulling(bool enable) { _backFaceCulling = enable; }
 	void setFrontFaceCulling(bool enable) { _frontFaceCulling = enable; }
 	void setWireframeColor(Color c) { _wireframeColor = c; }
@@ -269,13 +267,12 @@ public:
 	void renderBackground(const Texture &texture, double scaleX, double scaleY);
 
 	void uploadVertices(void* vertices, int vertexSize, int count);
-	void renderPolygons(unsigned int* geometry, int count, int objectID, enum RENDER_MODE mode);
+	void renderPolygons(unsigned int* geometry, int count, enum RENDER_MODE mode);
 
 	// used for pixel shaders
 	void queryLOD(int attributeIndex, double &x_step, double &y_step) const;
 
 	Renderer();
-	~Renderer(void);
 private:
 
 	// rasterizers helpers
@@ -287,8 +284,6 @@ private:
 	// output buffer
 	Texture* _outputTexture;
 	DepthTexture *_zBuffer;
-	IntegerTexture *_selBuffer;
-	int _objectID;
 
 	int _viewportSizeX;
 	int _viewportSizeY;
@@ -300,6 +295,12 @@ private:
 	void* _vsPriv;
 	void* _psPriv;
 
+	// vertex and pixel shader options
+	unsigned char _vFlatACount;
+	unsigned char _vSmoothACount;
+	unsigned char _vNoPersACount;
+
+
 	// vertex buffer
 	void* _vertexBuffer;
 	int _vertexBufferStride;
@@ -310,25 +311,19 @@ private:
 
 	double clip_x;
 	double clip_y;
-	void updateNDCToDisplayTransform();
 
-	// vertex and pixel shader options
-	unsigned char _vertexFlatAttributeCount;
-	unsigned char _vertexSmoothAttributeCount;
-	unsigned char _vertexNoPerspectiveCount;
 
 	// settings
 	bool _backFaceCulling;
 	bool _frontFaceCulling;
-	bool _debugDepthRendering;
 	Color _wireframeColor;
 private:
 
 	void drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3);
-	void shadePixel();
 	void drawLine(TVertex *p1, TVertex *p2, const Color &c);
 	void drawPixel(int x, int y, const Color &value);
 
+	void updateNDCToDisplayTransform();
 	Vector4 NDC_to_DeviceSpace(const Vector4* input);
 	int clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane);
 };

@@ -91,6 +91,9 @@ public:
 	// fog - for now just pass through it
 	ShaderFogData fogParams;
 	struct ShadowParams shadowParams;
+
+	IntegerTexture* _selBuffer;
+	int _selObject;
 };
 
 
@@ -108,5 +111,7 @@ void useSimpleShader(Renderer *render, UniformBuffer *u);
 
 void phongVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_out[] );
 Color phongPixelShader( void* priv, const PS_INPUTS &in);
+
+Color visualizeDepth(double d);
 
 #endif

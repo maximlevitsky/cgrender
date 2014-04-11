@@ -54,11 +54,8 @@ void HorizintalLineRasterizer::setAttributesCount(
 
 void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 {
-	if (p1->posScr.isBadFP() || p2->posScr.isBadFP())
-		return;
-
-	int x1 = (int)round(p1->posScr.x()), x2 = (int)round(p2->posScr.x());
-	int y1 = (int)round(p1->posScr.y()), y2 = (int)round(p2->posScr.y());
+	int x1 = (int)(p1->posScr.x()), x2 = (int)(p2->posScr.x());
+	int y1 = (int)(p1->posScr.y()), y2 = (int)(p2->posScr.y());
 
 	// add small bias to Z so that wireframe is rendered above the model
 	double z1 = p1->posScr.z() - 0.05, z2 = p2->posScr.z() - 0.05;
@@ -73,12 +70,8 @@ void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 
 	while (1)
 	{
-		if (x1 >= 0 && x1 < _viewportSizeX && y1 >= 0 && y1 < _viewportSizeY
-			&& (!_zBuffer || _zBuffer->zTest(x1,y1, z1)))
-		{
-			if (_zBuffer) _zBuffer->setPixelValue(x1,y1,z1);
+		if (!_zBuffer || _zBuffer->zTest(x1,y1, z1))
 			drawPixel(x1, y1, c);
-		}
 
 		if (x1 == x2 && y1 == y2)
 			break;
@@ -131,9 +124,20 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 			/* rasterize the horizontal line now */
 			for (; !_line.ended(); _line.stepX())
 			{
-				_psInputs.x = _line.x1_int;
-				_psInputs.d = _line.z1;
-				shadePixel();
+				/* do the (early Z test)*/
+				if (_zBuffer && !_zBuffer->zTest(_line.x1_int,_line1.y1_int, _line.z1))
+					continue;
+
+				/* run pixel shader if we have output buffer */
+				if (_outputTexture)
+				{
+					_psInputs.x = _line.x1_int;
+					_psInputs.d = _line.z1;
+					_line.setupPSInputs(_psInputs);
+
+					drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
+				}
+
 			}
 			/* step two lines */
 			_line1.stepY();

@@ -21,7 +21,6 @@
 
 #include "common/Mat4.h"
 #include "common/Vector4.h"
-#include "common/Utilities.h"
 
 class Texture;
 

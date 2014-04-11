@@ -19,7 +19,7 @@
 #ifndef VECTOR4_H
 #define VECTOR4_H
 
-#include "common/Utilities.h"
+#include "common/Math.h"
 #include "common/Mat4.h"
 #include "Vector3.h"
 
@@ -32,27 +32,9 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	Vector4() {}
 
-	bool operator<(const  Vector4& other) const
-	{
-		if (x() != other.x())
-			return x() < other.x();
-
-		if (y() != other.y())
-			return y() < other.y();
-
-
-		if (z() != other.z())
-			return z() < other.z();
-
-		return w() < other.w();
-	}
-
 	Vector4(double x, double y, double z, double w)
 	{
-		data[0] = x;
-		data[1] = y;
-		data[2] = z;
-		data[3] = w;
+		data[0] = x;data[1] = y;data[2] = z;data[3] = w;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,10 +51,6 @@ public:
 	double &z() { return data[2]; }
 	double &w() { return data[3]; }
 
-	bool isBadFP() const
-	{
-		return !isfinite(data[0]) || !isfinite(data[1]) || !isfinite(data[2]) || !isfinite(data[3]);
-	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void canonicalize() 
@@ -88,30 +66,6 @@ public:
 		return sqrt( data[0] * data[0] +  data[1] * data[1] +  data[2] * data[2] +  data[3] * data[3]);
 	}
 
-	Vector4& makeNormal() 
-	{
-		double length = len();
-		data[0] /= length;
-		data[1] /= length;
-		data[2] /= length;
-		data[3] /= length;
-		return *this;
-	}
-
-	Vector4 returnNormal() const
-	{
-		double length = len();
-		return Vector4(data[0] / length, data[1] / length, data[2] / length, data[3] / length);
-	}
-
-	Vector4 cross (const Vector4 &v) const 
-	{
-		double x = data[1] * v.data[2] - data[2] * v.data[1];
-		double y = data[2] * v.data[0] - data[0] * v.data[2];
-		double z = data[0] * v.data[1] - data[1] * v.data[0];
-		return Vector4(x,y,z,0);
-	}
-
 	double dot (const Vector4 &v) const
 	{
 		return 
@@ -119,24 +73,6 @@ public:
 			data[1] * v.data[1] + 
 			data[2] * v.data[2] + 
 			data[3] * v.data[3];
-	}
-
-	Vector4 minimum(const Vector4 &other) const
-	{
-		return Vector4 (
-			min(data[0], other.data[0]), 
-			min(data[1], other.data[1]), 
-			min(data[2], other.data[2]), 
-			min(data[3], other.data[3]));
-	}
-
-	Vector4 maximum(const Vector4 &other) const
-	{
-		return Vector4 (
-			max(data[0], other.data[0]), 
-			max(data[1], other.data[1]), 
-			max(data[2], other.data[2]), 
-			max(data[3], other.data[3]));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@
 #ifndef VECTOR3_H
 #define VECTOR3_H
 
-#include "common/Utilities.h"
+#include "common/Math.h"
 
 class Vector3 
 {
@@ -32,10 +32,7 @@ public:
 
 	Vector3(double x, double y, double z)
 	{
-
-		data[0] = x;
-		data[1] = y;
-		data[2] = z;
+		data[0] = x; data[1] = y; data[2] = z;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,11 +52,6 @@ public:
 	double len() const {
 		return sqrt( data[0] * data[0] +  data[1] * data[1] +  data[2] * data[2]);
 	}
-
-	bool isBadFP() const {
-		return !isfinite(data[0]) || !isfinite(data[1]) || !isfinite(data[2]);
-	}
-
 
 	Vector3& makeNormal() 
 	{

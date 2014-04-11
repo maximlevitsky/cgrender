@@ -100,10 +100,8 @@ void Engine::setOutput(Texture* output, int width, int height)
 	// reallocate Z buffer
 	if (!_outputZBuffer || width > _outputZBuffer->getWidth() || height > _outputZBuffer->getHeight())
 	{
-		if (_outputZBuffer)
-			delete _outputZBuffer;
+		if (_outputZBuffer) delete _outputZBuffer;
 		_outputZBuffer = new DepthTexture(width, height);
-		/* no need to clear the Z buffer as it will not be used by anyone but the render portion where it will be cleared */
 	}
 
 	if (!_drawSeparateObjects) 
@@ -114,38 +112,26 @@ void Engine::setOutput(Texture* output, int width, int height)
 		_outputSelBuffer = NULL;
 
 	} else {
-
 		// allocate or reallocate the selection buffer if needed
 		if (!_outputSelBuffer || width > _outputSelBuffer->getWidth() || height > _outputSelBuffer->getHeight())
 		{
-			if (_outputSelBuffer)
-				delete _outputSelBuffer;
+			if (_outputSelBuffer) delete _outputSelBuffer;
 			_outputSelBuffer = new IntegerTexture(width, height);
-			_outputSelBuffer->clear();
 		}
 	}
 
 	_outputSizeX = width;
 	_outputSizeY = height;
-	updateOutputs();
 }
-
-
-
-void Engine::updateOutputs()
-{
-	_renderer->setViewport(_outputSizeX, _outputSizeY);
-	_renderer->setZBuffer(_outputZBuffer);
-	_renderer->setSelBuffer(_outputSelBuffer);
-	_renderer->setOutputTexture(_outputTexture);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Engine::~Engine( void )
 {
 	resetScene();
+	delete _outputSelBuffer;
+	delete _outputZBuffer;
+
 	delete _light_dir_model;
 	delete _light_point_model;
 	delete _light_spot_model;

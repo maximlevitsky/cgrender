@@ -240,8 +240,6 @@ private:
 	void createNormalModels();
 	void invalidateNormalModels();
 	void recomputeBoundingBox();
-	void recomputeDepth();
-	void updateOutputs();
 	void reloadTextures();
 
 	void createShadowMap(int i, const Vector3 &direction, const Vector3 &position, bool projective, double maxFov);

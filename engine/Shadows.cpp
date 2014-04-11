@@ -190,13 +190,11 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 
 
 	// 5. setup common render settings
-	_renderer->setDebugDepthRendering(false);
 	_renderer->setViewport(_shadowParams.shadowMapRes, _shadowParams.shadowMapRes);
 	_renderer->setAspectRatio(1);
 	_renderer->setBackFaceCulling(false);
 	_renderer->setFrontFaceCulling(false);
 	_renderer->setOutputTexture(NULL);
-	_renderer->setSelBuffer(NULL);
 	_renderer->setZBuffer(_shadowMaps[i]);
 
 	// 6. setup shaders 
@@ -211,7 +209,7 @@ void Engine::createShadowMap( int i, const Vector3 &direction, const Vector3 &po
 		SceneItem &item = _sceneItems[i];
 		uniforms.mat_objectToLightSpace = item._itemTR.getMat() * _mainTR.getMat() * cameraMatrix * proj;
 		_renderer->uploadVertices(item._mainModel->vertices, sizeof(Model::Vertex), item._mainModel->getNumberOfVertices());
-		_renderer->renderPolygons(item._mainModel->polygons, item._mainModel->getNumberOfPolygons(),-1, Renderer::SOLID);
+		_renderer->renderPolygons(item._mainModel->polygons, item._mainModel->getNumberOfPolygons(), Renderer::SOLID);
 	}
 }
 

@@ -171,8 +171,13 @@ public:
 		TextureBase::clear(std::numeric_limits<float>::infinity());
 	}
 
-	bool zTest(int x, int y, double d) const 
-	{ return d < getPixelValue(x,y); }
+	bool zTest(int x, int y, double d)
+	{
+		if (d >= getPixelValue(x,y))
+			return false;
+		setPixelValue(x,y,d);
+		return true;
+	}
 
 	Color debugGetPixel(int x, int y) const override
 	{

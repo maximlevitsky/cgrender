@@ -49,6 +49,9 @@ static Color flatPixelShader( void* priv, const PS_INPUTS &in)
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 
+	/* update the selection buffer */
+	if (u->_selBuffer) u->_selBuffer->setPixelValue(in.x,in.y, u->_selObject);
+
 	/* here no need to use u->facesReversed as polygonNormal that is used for lighting is reverserd too */
 	bool frontFace = u->forceFrontFaces ? true : in.frontface;
 
@@ -91,8 +94,11 @@ static void gouraldVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3
 static Color gouraldPixelShader( void* priv, const PS_INPUTS &in)
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
-	bool frontFace = u->forceFrontFaces ? true : (in.frontface ^ u->facesReversed);
 
+	/* update the selection buffer */
+	if (u->_selBuffer) u->_selBuffer->setPixelValue(in.x,in.y, u->_selObject);
+
+	bool frontFace = u->forceFrontFaces ? true : (in.frontface ^ u->facesReversed);
 	Color c = frontFace ? in.attributes[0] : in.attributes[1];
 	return !u->fogParams.enabled ? c : applyFog(u, in.d, c);
 }
@@ -152,7 +158,7 @@ void useSimpleShader(Renderer *render, UniformBuffer *u)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-static void simpleWireFrameShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_out[] )
+static void simpleWireFrameVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_out[] )
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
 	const WireFrameModel::Vertex& v = *(const WireFrameModel::Vertex*)in;
@@ -163,21 +169,51 @@ static void simpleWireFrameShader( void* priv, void* in, Vector4 &pos_out, Vecto
 void useSimpleWireframeShader(Renderer *render, UniformBuffer *u)
 {
 	render->setVertexAttributes(1, 0, 0);
-	render->setVertexShader(simpleWireFrameShader, u);
+	render->setVertexShader(simpleWireFrameVertexShader, u);
 	render->setPixelShader(simplePixelShader, u);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static Color depthDebugPixelShader( void* priv, const PS_INPUTS &in)
+{
+	return visualizeDepth(in.d);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Color visualizeDepth(double d)
+{
+	if (d == std::numeric_limits<double>::infinity())
+		return Color(0,0,1);
+
+	double depth = 1.0-d;
+
+	if (depth > 1)
+		return Color(1, 0,0);
+	else if (depth < 0)
+		return Color(0, 1,0);
+	else
+		return Color(depth, depth, depth);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Engine::render()
 {
 
 	if (_shadingMode != SHADING_NONE)
 		updateShadowMaps();
 
-	updateOutputs();
+	_renderer->setViewport(_outputSizeX, _outputSizeY);
+	_renderer->setZBuffer(_outputZBuffer);
+	_renderer->setOutputTexture(_outputTexture);
 
-	// clear Z buffer
+	// clear buffers
 	_outputZBuffer->clear();
+
+	if (_outputSelBuffer)
+		_outputSelBuffer->clear();
 
 	renderBackground();
 
@@ -185,7 +221,6 @@ void Engine::render()
 
 	// global settings
 	_renderer->setAspectRatio(_initialsceneBox.getSizes().x() / _initialsceneBox.getSizes().y() );
-	_renderer->setDebugDepthRendering(_flags.depthBufferVisualization);
 
 	createNormalModels();
 	setupFogShaderData();
@@ -200,6 +235,9 @@ void Engine::render()
 		setupMaterialsShaderData(i);
 		setupLightingShaderData(i);
 		setupShadowMapShaderData(i);
+
+		_shaderData._selBuffer = _outputSelBuffer;
+		_shaderData._selObject = i+1;
 
 		/* setup shaders */
 		switch(_shadingMode) 
@@ -217,6 +255,9 @@ void Engine::render()
 			useSimpleShader(_renderer, &_shaderData);
 			break;
 		}
+
+		if (_flags.depthBufferVisualization)
+			_renderer->setPixelShader(depthDebugPixelShader, &_shaderData);
 
 		// setup culling
 		if (_flags.backFaceCulling)
@@ -242,7 +283,7 @@ void Engine::render()
 			mode |= Renderer::WIREFRAME | Renderer::WIREFRAME_COLOR;
 
 		_renderer->setOutputTexture(_outputTexture );
-		_renderer->renderPolygons(m.polygons, m.getNumberOfPolygons(), i+1, (Renderer::RENDER_MODE)mode);
+		_renderer->renderPolygons(m.polygons, m.getNumberOfPolygons(), (Renderer::RENDER_MODE)mode);
 
 		// Now render the misc stuff
 		_renderer->setBackFaceCulling(false);
@@ -304,7 +345,7 @@ void Engine::renderMiscModelWireframe( const WireFrameModel *m, Color c /*= Colo
 	if (colorValid)
 		mode |= Renderer::WIREFRAME_COLOR;
 
-	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(), -1, (Renderer::RENDER_MODE)(mode));
+	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(), (Renderer::RENDER_MODE)(mode));
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -322,6 +363,6 @@ void Engine::renderMiscModelPolygonWireframe(const WireFrameModel *m, Color c, b
 	if (colorValid)
 		mode |= Renderer::WIREFRAME_COLOR;
 
-	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(), -1, (Renderer::RENDER_MODE)(mode));
+	_renderer->renderPolygons(m->polygons, m->getNumberOfPolygons(), (Renderer::RENDER_MODE)(mode));
 
 }

@@ -73,7 +73,6 @@ void Engine::resetTransformations()
 	_cameraTR.setMoveFactors(Vector3(0,0, boxSizes.x()+depth/2));
 
 	recomputeBoundingBox();
-	recomputeDepth();
 
 	invalidateNormalModels();
 	invalidateShadowMaps();
@@ -109,7 +108,6 @@ void Engine::scaleObject( int axis, double delta )
 	if (_drawSeparateObjects && _selObj != -1)
 		recomputeBoundingBox();
 
-	recomputeDepth();
 	invalidateShadowMaps();
 
 }
@@ -138,7 +136,6 @@ void Engine::rotateObject( int axis, double angleDelta )
 		);
 	}
 
-	recomputeDepth();
 	invalidateShadowMaps();
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,21 +227,6 @@ void Engine::recomputeBoundingBox()
 	/* and create wireframe model for it*/
 	delete _sceneBoxModel;
 	_sceneBoxModel = WireFrameModel::createBoxModel(_sceneBox, Color(0,0,1));
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void Engine::recomputeDepth() 
-{
-#if 0
-	Vector3 sizes = (_initialsceneBox * _mainTR.getMat()).getSizes();
-	double depth = sizes.z();
-
-	Vector3 move = _cameraTR.getMoveFactors();
-	move.z() -= (_projTR.getDepth() / 2);
-	move.z() += (depth / 2);
-	_cameraTR.setMoveFactors(move);
-	_projTR.setDepth(depth);
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

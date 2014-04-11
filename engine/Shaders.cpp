@@ -18,7 +18,7 @@
 */
 #include "Shaders.h"
 #include "model/Model.h"
-#include "common/Utilities.h"
+#include "common/Math.h"
 
 #include <cmath>
 
@@ -42,6 +42,9 @@ void phongVertexShader( void* priv, void* in, Vector4 &pos_out, Vector3 attribs_
 Color phongPixelShader( void* priv, const PS_INPUTS &in)
 {
 	const UniformBuffer *u = (const UniformBuffer*)priv;
+
+	/* update the selection buffer */
+	if (u->_selBuffer) u->_selBuffer->setPixelValue(in.x,in.y, u->_selObject);
 
 	const Vector3 &position = in.attributes[0];
 	Vector3 normal = in.attributes[1].returnNormal();

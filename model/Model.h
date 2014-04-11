@@ -20,7 +20,7 @@
 #define MODEL_H
 
 #include "common/Vector4.h"
-#include "common/Utilities.h"
+#include "common/Math.h"
 #include "common/BBox.h"
 #include "Material.h"
 #include <string>
