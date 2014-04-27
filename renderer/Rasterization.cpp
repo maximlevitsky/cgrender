@@ -27,38 +27,15 @@
 #include <assert.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void VerticalLineRasterizer::setAttributesCount(unsigned char flatcount, unsigned char smoothcount, unsigned char noPerspectiveCount )
-{
-	assert (flatcount + smoothcount + noPerspectiveCount <= MAX_ATTRIBUTES);
-	flatAttribCount = flatcount;
-	smoothAttribCount = smoothcount;
-	noPerspectiveAttribCount = noPerspectiveCount;
-	attribCount = (unsigned char)(smoothcount + noPerspectiveCount);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void HorizintalLineRasterizer::setAttributesCount(
-	unsigned char flatCount, unsigned char smoothcount, unsigned char noPerspectiveCount )
-{
-	assert (flatCount + smoothcount + noPerspectiveCount <= MAX_ATTRIBUTES);
-	flatAttribCount = flatCount;
-	smoothAttribCount = smoothcount;
-	noPerspectiveAttribCount = noPerspectiveCount;
-	attribCount = (unsigned char)(smoothAttribCount + noPerspectiveAttribCount);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw line between points
 
 void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 {
-	int x1 = (int)(p1->posScr.x()), x2 = (int)(p2->posScr.x());
-	int y1 = (int)(p1->posScr.y()), y2 = (int)(p2->posScr.y());
+	int x1 = (int)(p1->sp.x()), x2 = (int)(p2->sp.x());
+	int y1 = (int)(p1->sp.y()), y2 = (int)(p2->sp.y());
 
 	// add small bias to Z so that wireframe is rendered above the model
-	double z1 = p1->posScr.z() - 0.05, z2 = p2->posScr.z() - 0.05;
+	double z1 = p1->sp.z() - 0.05, z2 = p2->sp.z() - 0.05;
 
     int dx = (int)abs(x2 - x1);
 	int dy = (int)abs(y2 - y1);
@@ -94,202 +71,185 @@ void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 	}
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TriangleSetup
+{
+public:
+	TriangleSetup(const TVertex* p1, const TVertex* p2, const TVertex* p3, int start, int end)
+	{
+		// general triangle setup
+		double dx1 = (p1->sp.x() - p2->sp.x());
+		double dx2 = (p3->sp.x() - p1->sp.x());
+		double dy1 = (p1->sp.y() - p2->sp.y());
+		double dy2 = (p3->sp.y() - p1->sp.y());
+
+		double ooa  = 1.0 / (dx1 * dy2 - dy1 * dx2);
+		double dy1_ooa  = dy1 * ooa, dy2_ooa  = dy2 * ooa;
+		double dx1_ooa  = dx1 * ooa, dx2_ooa  = dx2 * ooa;
+
+		// z and w setup
+		double dw1 = (p1->sp.w() - p2->sp.w());
+		double dw2 = (p3->sp.w() - p1->sp.w());
+		dwx = dw1 * dy2_ooa - dw2 * dy1_ooa;
+		dwy = dw2 * dx1_ooa - dw1 * dx2_ooa;
+
+		double dz1 = (p1->sp.z() - p2->sp.z());
+		double dz2 = (p3->sp.z() - p1->sp.z());
+		dzx = dz1 * dy2_ooa - dz2 * dy1_ooa;
+		dzy = dz2 * dx1_ooa - dz1 * dx2_ooa;
+
+		for (int i = start ; i < end ; i++)
+		{
+			Vector3 da1 = (p1->attr[i] * p1->sp.w() - p2->attr[i] * p2->sp.w());
+			Vector3 da2 = (p3->attr[i] * p3->sp.w() - p1->attr[i] * p1->sp.w());
+			dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
+			day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
+		}
+	}
+public:
+
+	// steps for all attributes
+	Vector3 dax[MAX_ATTRIBUTES];
+	Vector3 day[MAX_ATTRIBUTES];
+
+	double dwx; double dwy;
+	double dzx; double dzy;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class PixelState
+{
+public:
+
+	PixelState(TriangleSetup &s, const TVertex* p1, int start, int end)
+	{
+		double y_delta = ceil(p1->sp.y()) - p1->sp.y();
+		z = p1->sp.z() + s.dzy * y_delta;
+		w = p1->sp.w() + s.dwy * y_delta;
+
+		for (int i = start ; i < end ; i++)
+			attrbs[i] = p1->attr[i] * p1->sp.w() + s.day[i] * y_delta;
+	}
+
+
+	void stepX(TriangleSetup &s, int start, int end)
+	{
+		z += s.dzx;
+		w += s.dwx;
+
+		for (int i = start ; i < end ; i++)
+			attrbs[i] += s.dax[i];
+	}
+
+	void stepYX(TriangleSetup &s, int x_steps, int start, int end)
+	{
+		z += s.dzy + s.dzx * x_steps;
+		w += s.dwy + s.dwx * x_steps;
+
+		for (int i = start ; i < end ; i++) {
+			attrbs[i] += s.day[i];
+			attrbs[i] += s.dax[i] * x_steps;
+		}
+	}
+
+	void setupPSInputs(PS_INPUTS &ps, int start, int end)
+	{
+		for (int i = start ; i < end ; i++)
+			ps.attributes[i] = attrbs[i] / w;
+	}
+
+public:
+	double z;
+	double w;
+	Vector3 attrbs[MAX_ATTRIBUTES];
+};
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw triangle between points
+
+double make_step(const TVertex* p1, const TVertex* p2)
+{
+	const double y1 = p1->sp.y(); const double y2 = p2->sp.y();
+	const double dy = y2 - y1;
+
+	double x1 = p1->sp.x();
+	double x2 = p2->sp.x();
+
+	return dy ? ((x2 - x1)/dy) : 0;
+}
 
 void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
 	// sort the points from bottom to top by Y (do the simple bubble sort)
-	if (p2->posScr.y() > p3->posScr.y())
+	if (p2->sp.y() > p3->sp.y())
 		std::swap(p3, p2);
-	if (p1->posScr.y() > p2->posScr.y())
+	if (p1->sp.y() > p2->sp.y())
 		std::swap(p2, p1);
-	if (p2->posScr.y() > p3->posScr.y())
+	if (p2->sp.y() > p3->sp.y())
 		std::swap(p3, p2);
 
+	TriangleSetup setup(p1,p2,p3, _vFlatACount, _vSmoothACount);
 
-	// setup side line rasterizers
-	_line1.setup(*p1, *p2);
-	_line2.setup(*p1, *p3);
+	int y_start = ceil(p1->sp.y());
+	int y_middle = ceil(p2->sp.y());
+	int y_end = floor(p3->sp.y());
 
-	// now do the rasterization....
-	for (int stage = 0; stage < 2; stage++)
+	double x1 = p1->sp.x();
+	double x2 = p1->sp.x();
+
+	double x1_step = make_step(p1,p3);
+	double x2_step = make_step(p1,p2);
+
+	int x_first = ceil(x1), x_last = floor(x1);
+
+	PixelState state(setup, p1, _vFlatACount, _vSmoothACount);
+
+	for (_psInputs.y = y_start ; _psInputs.y < y_end ; _psInputs.y++)
 	{
-		/* loop that runs from bottom up on both lines */
-		while (!_line1.ended() && !_line2.ended())
+		PixelState stateRow(state);
+		int x_first_old = x_first;
+
+		/* rasterize the horizontal line now */
+		for (_psInputs.x = x_first ; _psInputs.x < x_last ; _psInputs.x++)
 		{
-			_line.setup(&_line1, &_line2);
-			_psInputs.y = _line1.y1_int;
 
-			/* rasterize the horizontal line now */
-			for (; !_line.ended(); _line.stepX())
+			if (_psInputs.x <0 || _psInputs.x >= _viewportSizeX)
+				continue;
+
+			if (_psInputs.y <0 || _psInputs.y >= _viewportSizeY)
+				continue;
+
+
+			/* do the (early Z test)*/
+			if (_zBuffer && !_zBuffer->zTest(_psInputs.x,_psInputs.y, stateRow.z))
+				continue;
+
+			/* run pixel shader if we have output buffer */
+			if (_outputTexture)
 			{
-				/* do the (early Z test)*/
-				if (_zBuffer && !_zBuffer->zTest(_line.x1_int,_line1.y1_int, _line.z1))
-					continue;
-
-				/* run pixel shader if we have output buffer */
-				if (_outputTexture)
-				{
-					_psInputs.x = _line.x1_int;
-					_psInputs.d = _line.z1;
-					_line.setupPSInputs(_psInputs);
-
-					drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
-				}
-
+				_psInputs.d = stateRow.z;
+				stateRow.setupPSInputs(_psInputs,  _vFlatACount, _vSmoothACount);
+				drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
 			}
-			/* step two lines */
-			_line1.stepY();
-			_line2.stepY();
+
+			stateRow.stepX(setup, _vFlatACount, _vSmoothACount);
+
 		}
 
-		/* switch bottom to top trapezoid */
-		if (stage == 0) {
+		x1 += x1_step; x2 += x2_step;
 
-			_line1.setup(*p2, *p3);
-
-			if (_line1.y1_int > _line2.y1_int)
-				_line2.stepY();
-			else if (_line1.y1_int < _line2.y1_int)
-				_line1.stepY();
+		if (_psInputs.y == y_middle)
+		{
+			x2 = p2->sp.x();
+			x2_step = make_step(p2,p3);
 		}
+
+		x_first = ceil(min(x1,x2));
+		x_last = floor(max(x1,x2));
+
+		state.stepYX(setup, x_first - x_first_old, _vFlatACount, _vSmoothACount);
 	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void VerticalLineRasterizer::setup(const TVertex& p1, const TVertex &p2 )
-{
-	int i = 0; double y1;
-	// calculate initial values
-	x1 = p1.posScr.x(); const double x2 = p2.posScr.x();
-	y1 = p1.posScr.y(); const double y2 = p2.posScr.y();
-	z1 = p1.posScr.z(); const double z2 = p2.posScr.z();
-	w1 = p1.posScr.w(); const double w2 = p2.posScr.w();
-
-	const Vector3* attr1 = p1.attr + flatAttribCount;
-	const Vector3* attr2 = p2.attr + flatAttribCount;
-
-	//setup attributes
-	for (i=0; i < smoothAttribCount ; i++)
-		attribs[i] = attr1[i] * w1;
-	for (; i < attribCount ; i++)
-		attribs[i] = attr1[i];
-
-	// calculates integer X,Y values we will go from to
-	y1_int = (int)ceil(y1); y2_int = (int)floor(y2);
-
-	// setup steps
-	const double dy = y2 - y1;
-	if(dy)
-	{
-		for ( i=0; i < smoothAttribCount ; i++)
-			attrib_steps[i] = ( attr2[i] * w2 - attribs[i] ) / dy;
-		for (; i < attribCount ; i++)
-			attrib_steps[i] = (attr2[i] - attr1[i]) / dy;
-
-		x_step = (x2 - x1)/dy;
-		z_step = (z2 - z1)/dy;
-		w_step = (w2 - w1)/dy;
-
-		double y1_fraction = ceil(y1) - y1;
-
-		if (y1_fraction) {
-			x1 += y1_fraction * x_step;
-			z1 += y1_fraction * z_step;
-			w1 += y1_fraction * w_step;
-
-			for (int i = 0 ; i < attribCount ; i++)
-				attribs[i] += (attrib_steps[i] * y1_fraction);
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void HorizintalLineRasterizer::setup( const VerticalLineRasterizer *line1, const VerticalLineRasterizer *line2 )
-{
-	double dx = line2->x1 - line1->x1;
-
-	if (dx < 0) {
-		swap(line1,line2);
-		dx = -dx;
-	}
-
-	z1 = line1->z1;
-	w1 = line1->w1;
-
-	// setup pixel bounds
-	x1_int = (int)ceil(line1->x1);
-	x2_int = (int)floor(line2->x1);
-
-	// setup attributes
-	for (int i = 0 ; i < attribCount ; i++)
-		attributes[i] = line1->attribs[i];
-
-	// setup steps
-	if (dx)
-	{
-		for (int i = 0 ; i < attribCount ; i++)
-			attribute_steps[i] = (line2->attribs[i] - line1->attribs[i])/dx;
-
-		z_step = (line2->z1 - line1->z1)/dx;
-		w_step = (line2->w1 - line1->w1)/dx;
-
-		// account for fractional X
-		double x1_frac = ceil(line1->x1)  - line1->x1;
-
-		if (x1_frac) {
-			z1 += x1_frac * z_step;
-			w1 += x1_frac* w_step;
-
-			for (int i = 0 ; i < attribCount ; i++)
-				attributes[i] += (attribute_steps[i] * x1_frac);
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-void VerticalLineRasterizer::stepY()
-{
-	x1 += x_step;
-	w1 += w_step;
-	z1 += z_step;
-	y1_int++;
-
-	for (int i = 0 ; i < attribCount ; i++)
-		attribs[i] += attrib_steps[i];
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void HorizintalLineRasterizer::stepX()
-{
-	// step the attributes
-	z1 += z_step;
-	w1 += w_step;
-	x1_int++;
-
-	for (int i = 0 ; i < attribCount; i++)
-		attributes[i] += attribute_steps[i];
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void HorizintalLineRasterizer::setupPSInputs(PS_INPUTS &inputs)
-{
-	int i = 0;
-
-	Vector3 *attribs = inputs.attributes + flatAttribCount;
-
-	for (; i < smoothAttribCount ; i++)
-		attribs[i] = attributes[i] / w1;
-
-	for (; i < smoothAttribCount+noPerspectiveAttribCount ; i++)
-		attribs[i] = attributes[i];
 }

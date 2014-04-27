@@ -80,91 +80,12 @@ struct TVertex
 
 	/* location of the vertex in clip and screen spaces */
 	Vector4 pos;
-	Vector4 posScr;
+	Vector4 sp;
 
 	/* attributes */
 	Vector3 attr[MAX_ATTRIBUTES];
 
 	TVertex() : _seq(0), _ID(-1) {};
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-class VerticalLineRasterizer
-{
-public:
-
-	/* Initial setup to do when attribute counts change*/
-	void setAttributesCount(unsigned char flatAttribCount, unsigned char smoothcount, unsigned char noPerspectiveCount);
-
-	/* Setup the class for for interpolation of one line of which p1 is the low end and p2 the high one*/
-	void setup(const TVertex& p1, const TVertex &p2);
-
-	/* step one pixel up */
-	void stepY();
-
-	/* check if we reached the last pixel of this line */
-	bool ended() { return (y1_int > y2_int); }
-
-	/* integer positions of current and last pixel y*/
-	int y1_int; int y2_int;
-
-	// position and steps 
-	double x1; double x_step; 
-	double z1; double z_step; 
-	double w1; double w_step;
-
-	// attributes
-	Vector3 attribs[MAX_ATTRIBUTES];
-	Vector3 attrib_steps[MAX_ATTRIBUTES];
-private:
-	/* attributes count*/
-	unsigned char flatAttribCount;
-	unsigned char smoothAttribCount;
-	unsigned char noPerspectiveAttribCount;
-	unsigned char attribCount;
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class HorizintalLineRasterizer 
-{
-public:
-
-	/* attributes count setup */
-	void setAttributesCount(unsigned char flatCount, unsigned char smoothcount, unsigned char noPerspectiveCount);
-
-	/* setup the class to interpolate horizontal line from current positions of two vertical lines
-	   always from line1 to line2
-	*/
-	void setup(const VerticalLineRasterizer *line1, const VerticalLineRasterizer *line2);
-
-	/* step one pixel to the right*/
-	void stepX();
-
-	/* put current state of the rasterizers to pixel shader inputs*/
-	void setupPSInputs(PS_INPUTS &inputs);
-public:
-
-	// position and steps
-	double z1; double z_step;
-	double w1; double w_step;
-
-	int x1_int; int x2_int;
-
-	bool ended() { return x1_int > x2_int; }
-
-	//attributes
-	Vector3 attributes[MAX_ATTRIBUTES];
-	Vector3 attribute_steps[MAX_ATTRIBUTES];
-private:
-
-	//settings
-	unsigned char flatAttribCount;
-	unsigned char smoothAttribCount;
-	unsigned char noPerspectiveAttribCount;
-	unsigned char attribCount;
-
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +144,7 @@ private:
 	TVertex _storage[128];
 };
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Renderer
@@ -276,9 +198,6 @@ public:
 private:
 
 	// rasterizers helpers
-	HorizintalLineRasterizer _line;
-	VerticalLineRasterizer _line1;
-	VerticalLineRasterizer _line2;
 	PS_INPUTS _psInputs;
 
 	// output buffer

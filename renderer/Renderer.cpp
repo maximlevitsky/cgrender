@@ -83,10 +83,6 @@ void Renderer::setVertexAttributes(
 	_vFlatACount = flatCount;
 	_vSmoothACount = smoothCount;
 	_vNoPersACount = noPerspectiveCount;
-
-	_line1.setAttributesCount(_vFlatACount, _vSmoothACount, _vNoPersACount);
-	_line2.setAttributesCount(_vFlatACount, _vSmoothACount, _vNoPersACount);
-	_line.setAttributesCount(_vFlatACount, _vSmoothACount, _vNoPersACount);
 }
 
 
@@ -151,7 +147,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, enum Renderer:
 
 				/* do perspective divide - might be redundant if clipped later*/
 				if (pos.w() > 0)
-					vt[i]->posScr = NDC_to_DeviceSpace(&pos);
+					vt[i]->sp = NDC_to_DeviceSpace(&pos);
 			}
 
 			/* check clipping conditions */
@@ -191,7 +187,7 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, enum Renderer:
 		double z = 0;
 
 		for (int i = 0 ; i < vtCount ; i++)
-			z += (vt[i]->posScr.x() - vt[i+1]->posScr.x()) * (vt[i]->posScr.y()+vt[i+1]->posScr.y());
+			z += (vt[i]->sp.x() - vt[i+1]->sp.x()) * (vt[i]->sp.y()+vt[i+1]->sp.y());
 
 		_psInputs.frontface = z < 0;
 
@@ -250,7 +246,7 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_coun
 			double t = dot1 / (dot1 - dot2);
 
 			newVertex->pos = p1->pos + (p2->pos - p1->pos) * t;
-			newVertex->posScr = NDC_to_DeviceSpace(&newVertex->pos);
+			newVertex->sp = NDC_to_DeviceSpace(&newVertex->pos);
 
 			for (int j = _vFlatACount ; j < attrCount ;j++)
 				newVertex->attr[j] = p1->attr[j] + (p2->attr[j] - p1->attr[j]) * t;
@@ -322,22 +318,6 @@ void Renderer::updateNDCToDisplayTransform()
 
 void Renderer::queryLOD( int attributeIndex, double &x_step, double &y_step ) const
 {
-	// this is called from pixel shader to get approximate LOD based on an attribute deltas
-	// TODO: for now we assume 2d texture coordinate
-	assert(attributeIndex > _vFlatACount);
-	attributeIndex -= _vFlatACount;
-
-	Vector3 horStep = _line.attribute_steps[attributeIndex];
-
-	if (attributeIndex < _vSmoothACount) 
-	{
-		x_step = horStep.x() / _line.w1;
-		y_step = horStep.y() / _line.w1;
-	} else {
-		x_step = horStep.x();
-		y_step = horStep.y();
-
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
