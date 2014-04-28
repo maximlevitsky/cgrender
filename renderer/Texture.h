@@ -179,7 +179,7 @@ public:
 		return true;
 	}
 
-	Color debugGetPixel(int x, int y) const override
+	Color debugGetPixel(int x, int y) const
 	{
 
 		if (getPixelValue(x,y) == std::numeric_limits<double>::infinity())

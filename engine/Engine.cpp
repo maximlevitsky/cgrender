@@ -146,16 +146,27 @@ void Engine::loadDebugScene()
 	_sceneItems = new SceneItem[10];
 
 	// one triangle 
-	Vector3 v4(-1,0.5,0), v5(1,0.5,0.1), v6(0, -1, 0);
-	Model* m = Model::createTriangleModel(v4, v5, v6);
-	_sceneItems[_itemCount++]._mainModel = m;
+	{
+		Vector3 v4(-1,0.5,0), v5(1,0.5,0.1), v6(0, -1, 0);
+		Model* m = Model::createTriangleModel(v4, v5, v6);
+		_sceneItems[_itemCount++]._mainModel = m;
 
-	m->_defaultMaterial.setObjectColor(Color(0,255,0));
+		m->_defaultMaterial.setObjectColor(Color(0,255,0));
+		m->vertices[0].texCoord = Vector3(0,0,0);
+		m->vertices[1].texCoord = Vector3(1,0,0);
+		m->vertices[2].texCoord = Vector3(1,1,0);
+	}
 
-	m->vertices[0].texCoord = Vector3(0,0,0);
-	m->vertices[1].texCoord = Vector3(1,0,0);
-	m->vertices[2].texCoord = Vector3(1,1,0);
+	{
+		Vector3 v4(-1,0.5,0.1), v5(1,0.5,0.2), v6(0, -1, 0.1);
+		Model* m = Model::createTriangleModel(v4, v5, v6);
+		_sceneItems[_itemCount++]._mainModel = m;
 
+		m->_defaultMaterial.setObjectColor(Color(255,0,0));
+		m->vertices[0].texCoord = Vector3(0,0,0);
+		m->vertices[1].texCoord = Vector3(1,0,0);
+		m->vertices[2].texCoord = Vector3(1,1,0);
+	}
 
 	processScene();
 	resetTransformations();

@@ -26,6 +26,15 @@
 
 #include <assert.h>
 
+static double make_step(const TVertex* p1, const TVertex* p2)
+{
+	const double y1 = p1->sp.y(); const double y2 = p2->sp.y();
+	const double dy = y2 - y1;
+	double x1 = p1->sp.x();
+	double x2 = p2->sp.x();
+	return ((x2 - x1)/dy);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw line between points
 
@@ -123,41 +132,41 @@ public:
 class PixelState
 {
 public:
+	PixelState(int start, int end) : first_attr(start), last_attr(end) {}
 
-	PixelState(TriangleSetup &s, const TVertex* p1, int start, int end)
+	void start(TriangleSetup &s, const TVertex* p1, int x_start, int y_start)
 	{
-		double y_delta = ceil(p1->sp.y()) - p1->sp.y();
-		z = p1->sp.z() + s.dzy * y_delta;
-		w = p1->sp.w() + s.dwy * y_delta;
+		double x_delta = ((double)x_start) - p1->sp.x();
+		double y_delta = ((double)y_start) - p1->sp.y();
 
-		for (int i = start ; i < end ; i++)
-			attrbs[i] = p1->attr[i] * p1->sp.w() + s.day[i] * y_delta;
+		z = p1->sp.z() + s.dzy * y_delta + s.dzx * x_delta;
+		w = p1->sp.w() + s.dwy * y_delta + s.dwx * x_delta;
+
+		for (int i = first_attr ; i < last_attr ; i++)
+			attrbs[i] = p1->attr[i] * p1->sp.w() + s.day[i] * y_delta + s.dax[i] * x_delta;
 	}
 
-
-	void stepX(TriangleSetup &s, int start, int end)
+	void stepX(TriangleSetup &s)
 	{
 		z += s.dzx;
 		w += s.dwx;
 
-		for (int i = start ; i < end ; i++)
+		for (int i = first_attr ; i < last_attr ; i++)
 			attrbs[i] += s.dax[i];
 	}
 
-	void stepYX(TriangleSetup &s, int x_steps, int start, int end)
+	void stepYX(TriangleSetup &s, int x_steps)
 	{
-		z += s.dzy + s.dzx * x_steps;
-		w += s.dwy + s.dwx * x_steps;
+		z += (s.dzy + s.dzx * x_steps);
+		w += (s.dwy + s.dwx * x_steps);
 
-		for (int i = start ; i < end ; i++) {
-			attrbs[i] += s.day[i];
-			attrbs[i] += s.dax[i] * x_steps;
-		}
+		for (int i = first_attr ; i < last_attr ; i++)
+			attrbs[i] += (s.day[i] + s.dax[i] * x_steps);
 	}
 
-	void setupPSInputs(PS_INPUTS &ps, int start, int end)
+	void setupPSInputs(PS_INPUTS &ps)
 	{
-		for (int i = start ; i < end ; i++)
+		for (int i = first_attr ; i < last_attr ; i++)
 			ps.attributes[i] = attrbs[i] / w;
 	}
 
@@ -165,24 +174,18 @@ public:
 	double z;
 	double w;
 	Vector3 attrbs[MAX_ATTRIBUTES];
+private:
+	int first_attr;
+	int last_attr;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw triangle between points
 
-double make_step(const TVertex* p1, const TVertex* p2)
-{
-	const double y1 = p1->sp.y(); const double y2 = p2->sp.y();
-	const double dy = y2 - y1;
-
-	double x1 = p1->sp.x();
-	double x2 = p2->sp.x();
-
-	return dy ? ((x2 - x1)/dy) : 0;
-}
-
 void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
+	PixelState firstColumnPixel(_vFlatACount, _vSmoothACount);
+
 	// sort the points from bottom to top by Y (do the simple bubble sort)
 	if (p2->sp.y() > p3->sp.y())
 		std::swap(p3, p2);
@@ -191,65 +194,75 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 	if (p2->sp.y() > p3->sp.y())
 		std::swap(p3, p2);
 
-	TriangleSetup setup(p1,p2,p3, _vFlatACount, _vSmoothACount);
-
+	/* and find the Ys of interest */
 	int y_start = ceil(p1->sp.y());
 	int y_middle = ceil(p2->sp.y());
 	int y_end = floor(p3->sp.y());
+	if (y_start > y_end)
+		return;
 
-	double x1 = p1->sp.x();
-	double x2 = p1->sp.x();
-
+	/* find steps on both sides*/
 	double x1_step = make_step(p1,p3);
 	double x2_step = make_step(p1,p2);
 
-	int x_first = ceil(x1), x_last = floor(x1);
+	/* find initial X on both sides */
+	double y_fraction = ((double)y_start) - p1->sp.y();
+	double x1 = p1->sp.x() + x1_step * y_fraction;
+	double x2 = p1->sp.x() + x2_step * y_fraction;
 
-	PixelState state(setup, p1, _vFlatACount, _vSmoothACount);
+	/* and switch sides if necessarily*/
+	bool right_side_long = x1_step < x2_step;
+	if (!right_side_long) {
+		std::swap(x1_step,x2_step);
+		std::swap(x1,x2);
+	}
 
-	for (_psInputs.y = y_start ; _psInputs.y < y_end ; _psInputs.y++)
+	TriangleSetup setup(p1,p2,p3, _vFlatACount, _vSmoothACount);
+
+	int x_start = ceil(x1), x_end = floor(x2);
+	firstColumnPixel.start(setup, p1, x_start, y_start);
+
+	for (_psInputs.y = y_start ;  ; _psInputs.y++)
 	{
-		PixelState stateRow(state);
-		int x_first_old = x_first;
-
-		/* rasterize the horizontal line now */
-		for (_psInputs.x = x_first ; _psInputs.x < x_last ; _psInputs.x++)
+		/* switch to bottom trapezoid if necessary*/
+		if (_psInputs.y == y_middle)
 		{
+			double x_step = make_step(p2,p3);
+			double y_fraction = ((double)y_middle) - p2->sp.y();
+			double x = p2->sp.x() + x_step * y_fraction;
 
-			if (_psInputs.x <0 || _psInputs.x >= _viewportSizeX)
-				continue;
+			if (!right_side_long) {
+				x1 = x; x1_step = x_step; x_start = ceil(x1);
+				firstColumnPixel.start(setup, p2, x_start, y_middle);
+			} else {
+				x2 = x; x2_step = x_step; x_end = floor(x2);
+			}
+		}
 
-			if (_psInputs.y <0 || _psInputs.y >= _viewportSizeY)
-				continue;
-
-
+		/* rasterize the scan line now */
+		PixelState pixel(firstColumnPixel);
+		for (_psInputs.x = x_start ; _psInputs.x <= x_end ; _psInputs.x++, pixel.stepX(setup))
+		{
 			/* do the (early Z test)*/
-			if (_zBuffer && !_zBuffer->zTest(_psInputs.x,_psInputs.y, stateRow.z))
+			if (_zBuffer && !_zBuffer->zTest(_psInputs.x,_psInputs.y, pixel.z))
 				continue;
 
 			/* run pixel shader if we have output buffer */
 			if (_outputTexture)
 			{
-				_psInputs.d = stateRow.z;
-				stateRow.setupPSInputs(_psInputs,  _vFlatACount, _vSmoothACount);
+				_psInputs.d = pixel.z;
+				pixel.setupPSInputs(_psInputs);
 				drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
 			}
-
-			stateRow.stepX(setup, _vFlatACount, _vSmoothACount);
-
 		}
 
+		/* advance one scan line */
+		if (_psInputs.y == y_end)
+			break;
+
+		int x_start_old = x_start;
 		x1 += x1_step; x2 += x2_step;
-
-		if (_psInputs.y == y_middle)
-		{
-			x2 = p2->sp.x();
-			x2_step = make_step(p2,p3);
-		}
-
-		x_first = ceil(min(x1,x2));
-		x_last = floor(max(x1,x2));
-
-		state.stepYX(setup, x_first - x_first_old, _vFlatACount, _vSmoothACount);
+		x_start = ceil(x1); x_end = floor(x2);
+		firstColumnPixel.stepYX(setup, x_start - x_start_old);
 	}
 }

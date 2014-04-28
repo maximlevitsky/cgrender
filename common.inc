@@ -46,11 +46,10 @@ unix:!macx {
 
 	########################################################################################
 
-	QMAKE_CXXFLAGS+=  -std=c++11 -Wall -Wno-reorder
+	QMAKE_CXXFLAGS+= -std=gnu++0x -Wall -Wno-reorder
 
 	OPTIMIZATIONS = -march=native -O3 -ffast-math -mfpmath=sse  \
-		-malign-double -ftree-loop-distribution -fstrict-aliasing -floop-interchange \
-		-ftree-vectorize -ftree-slp-vectorize
+		-malign-double -fstrict-aliasing
 
 
 	QMAKE_CXXFLAGS_RELEASE += -g -flto $$OPTIMIZATIONS
@@ -58,7 +57,7 @@ unix:!macx {
 
 	########################################################################################
 
-	#QMAKE_CXXFLAGS_DEBUG += -Og - needs gcc 4.8
+	QMAKE_CXXFLAGS_DEBUG += -O0 -g
 }
 
 QMAKE_CXXFLAGS += $(FLAGS)
