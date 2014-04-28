@@ -83,108 +83,95 @@ void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class TriangleSetup
+void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
-public:
-	TriangleSetup(const TVertex* p1, const TVertex* p2, const TVertex* p3, int start, int end)
+	// general triangle setup
+	double dx1 = (p1->sp.x() - p2->sp.x());
+	double dx2 = (p3->sp.x() - p1->sp.x());
+	double dy1 = (p1->sp.y() - p2->sp.y());
+	double dy2 = (p3->sp.y() - p1->sp.y());
+
+	double ooa  = 1.0 / (dx1 * dy2 - dy1 * dx2);
+	double dy1_ooa  = dy1 * ooa, dy2_ooa  = dy2 * ooa;
+	double dx1_ooa  = dx1 * ooa, dx2_ooa  = dx2 * ooa;
+
+	// z and w setup
+	double dw1 = (p1->sp.w() - p2->sp.w());
+	double dw2 = (p3->sp.w() - p1->sp.w());
+	dwx = dw1 * dy2_ooa - dw2 * dy1_ooa;
+	dwy = dw2 * dx1_ooa - dw1 * dx2_ooa;
+
+	double dz1 = (p1->sp.z() - p2->sp.z());
+	double dz2 = (p3->sp.z() - p1->sp.z());
+	dzx = dz1 * dy2_ooa - dz2 * dy1_ooa;
+	dzy = dz2 * dx1_ooa - dz1 * dx2_ooa;
+
+	for (int i = first_attr ; i < first_no_persp ; i++)
 	{
-		// general triangle setup
-		double dx1 = (p1->sp.x() - p2->sp.x());
-		double dx2 = (p3->sp.x() - p1->sp.x());
-		double dy1 = (p1->sp.y() - p2->sp.y());
-		double dy2 = (p3->sp.y() - p1->sp.y());
-
-		double ooa  = 1.0 / (dx1 * dy2 - dy1 * dx2);
-		double dy1_ooa  = dy1 * ooa, dy2_ooa  = dy2 * ooa;
-		double dx1_ooa  = dx1 * ooa, dx2_ooa  = dx2 * ooa;
-
-		// z and w setup
-		double dw1 = (p1->sp.w() - p2->sp.w());
-		double dw2 = (p3->sp.w() - p1->sp.w());
-		dwx = dw1 * dy2_ooa - dw2 * dy1_ooa;
-		dwy = dw2 * dx1_ooa - dw1 * dx2_ooa;
-
-		double dz1 = (p1->sp.z() - p2->sp.z());
-		double dz2 = (p3->sp.z() - p1->sp.z());
-		dzx = dz1 * dy2_ooa - dz2 * dy1_ooa;
-		dzy = dz2 * dx1_ooa - dz1 * dx2_ooa;
-
-		for (int i = start ; i < end ; i++)
-		{
-			Vector3 da1 = (p1->attr[i] * p1->sp.w() - p2->attr[i] * p2->sp.w());
-			Vector3 da2 = (p3->attr[i] * p3->sp.w() - p1->attr[i] * p1->sp.w());
-			dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
-			day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
-		}
+		Vector3 da1 = (p1->attr[i] * p1->sp.w() - p2->attr[i] * p2->sp.w());
+		Vector3 da2 = (p3->attr[i] * p3->sp.w() - p1->attr[i] * p1->sp.w());
+		dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
+		day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
 	}
-public:
 
-	// steps for all attributes
-	Vector3 dax[MAX_ATTRIBUTES];
-	Vector3 day[MAX_ATTRIBUTES];
-
-	double dwx; double dwy;
-	double dzx; double dzy;
-};
+	for (int i = first_no_persp ; i < last_attr ; i++)
+	{
+		Vector3 da1 = (p1->attr[i]  - p2->attr[i]);
+		Vector3 da2 = (p3->attr[i] - p1->attr[i]);
+		dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
+		day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class PixelState
+void PixelState::start(const TriangleSetup &s, const TVertex* p1, const int x_start, const int y_start)
 {
-public:
-	PixelState(int start, int end) : first_attr(start), last_attr(end) {}
+	double x_delta = ((double)x_start) - p1->sp.x();
+	double y_delta = ((double)y_start) - p1->sp.y();
 
-	void start(TriangleSetup &s, const TVertex* p1, int x_start, int y_start)
-	{
-		double x_delta = ((double)x_start) - p1->sp.x();
-		double y_delta = ((double)y_start) - p1->sp.y();
+	z = p1->sp.z() + s.dzy * y_delta + s.dzx * x_delta;
+	w = p1->sp.w() + s.dwy * y_delta + s.dwx * x_delta;
 
-		z = p1->sp.z() + s.dzy * y_delta + s.dzx * x_delta;
-		w = p1->sp.w() + s.dwy * y_delta + s.dwx * x_delta;
+	for (int i = s.first_attr ; i < s.first_no_persp ; i++)
+		attrbs[i] = p1->attr[i] * p1->sp.w() + s.day[i] * y_delta + s.dax[i] * x_delta;
 
-		for (int i = first_attr ; i < last_attr ; i++)
-			attrbs[i] = p1->attr[i] * p1->sp.w() + s.day[i] * y_delta + s.dax[i] * x_delta;
-	}
+	for (int i = s.first_no_persp ; i < s.last_attr ; i++)
+		attrbs[i] = p1->attr[i] + s.day[i] * y_delta + s.dax[i] * x_delta;
+}
 
-	void stepX(TriangleSetup &s)
-	{
-		z += s.dzx;
-		w += s.dwx;
+void PixelState::stepX(const TriangleSetup &s)
+{
+	z += s.dzx;
+	w += s.dwx;
 
-		for (int i = first_attr ; i < last_attr ; i++)
-			attrbs[i] += s.dax[i];
-	}
+	for (int i = s.first_attr ; i < s.last_attr ; i++)
+		attrbs[i] += s.dax[i];
+}
 
-	void stepYX(TriangleSetup &s, int x_steps)
-	{
-		z += (s.dzy + s.dzx * x_steps);
-		w += (s.dwy + s.dwx * x_steps);
+void PixelState::stepYX(const TriangleSetup &s, const int x_steps)
+{
+	z += (s.dzy + s.dzx * x_steps);
+	w += (s.dwy + s.dwx * x_steps);
 
-		for (int i = first_attr ; i < last_attr ; i++)
-			attrbs[i] += (s.day[i] + s.dax[i] * x_steps);
-	}
+	for (int i = s.first_attr ; i < s.last_attr ; i++)
+		attrbs[i] += (s.day[i] + s.dax[i] * x_steps);
+}
 
-	void setupPSInputs(PS_INPUTS &ps)
-	{
-		for (int i = first_attr ; i < last_attr ; i++)
-			ps.attributes[i] = attrbs[i] / w;
-	}
-
-public:
-	double z;
-	double w;
-	Vector3 attrbs[MAX_ATTRIBUTES];
-private:
-	int first_attr;
-	int last_attr;
-};
+void PixelState::setupPSInputs(const TriangleSetup &s, PS_INPUTS &ps)
+{
+	for (int i = s.first_attr ; i < s.first_no_persp ; i++)
+		ps.attributes[i] = attrbs[i] / w;
+	for (int i = s.first_no_persp ; i < s.first_no_persp ; i++)
+		ps.attributes[i] = attrbs[i] / w;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw triangle between points
 
 void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
-	PixelState firstColumnPixel(_vFlatACount, _vSmoothACount);
+	PixelState firstColumnPixel;
 
 	// sort the points from bottom to top by Y (do the simple bubble sort)
 	if (p2->sp.y() > p3->sp.y())
@@ -217,10 +204,10 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		std::swap(x1,x2);
 	}
 
-	TriangleSetup setup(p1,p2,p3, _vFlatACount, _vSmoothACount);
+	_setup.setup(p1,p2,p3);
 
 	int x_start = ceil(x1), x_end = floor(x2);
-	firstColumnPixel.start(setup, p1, x_start, y_start);
+	firstColumnPixel.start(_setup, p1, x_start, y_start);
 
 	for (_psInputs.y = y_start ;  ; _psInputs.y++)
 	{
@@ -233,7 +220,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 
 			if (!right_side_long) {
 				x1 = x; x1_step = x_step; x_start = ceil(x1);
-				firstColumnPixel.start(setup, p2, x_start, y_middle);
+				firstColumnPixel.start(_setup, p2, x_start, y_middle);
 			} else {
 				x2 = x; x2_step = x_step; x_end = floor(x2);
 			}
@@ -241,7 +228,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 
 		/* rasterize the scan line now */
 		PixelState pixel(firstColumnPixel);
-		for (_psInputs.x = x_start ; _psInputs.x <= x_end ; _psInputs.x++, pixel.stepX(setup))
+		for (_psInputs.x = x_start ; _psInputs.x <= x_end ; _psInputs.x++, pixel.stepX(_setup))
 		{
 			/* do the (early Z test)*/
 			if (_zBuffer && !_zBuffer->zTest(_psInputs.x,_psInputs.y, pixel.z))
@@ -251,7 +238,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 			if (_outputTexture)
 			{
 				_psInputs.d = pixel.z;
-				pixel.setupPSInputs(_psInputs);
+				pixel.setupPSInputs(_setup, _psInputs);
 				drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
 			}
 		}
@@ -263,6 +250,6 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		int x_start_old = x_start;
 		x1 += x1_step; x2 += x2_step;
 		x_start = ceil(x1); x_end = floor(x2);
-		firstColumnPixel.stepYX(setup, x_start - x_start_old);
+		firstColumnPixel.stepYX(_setup, x_start - x_start_old);
 	}
 }

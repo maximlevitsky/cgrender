@@ -83,6 +83,7 @@ void Renderer::setVertexAttributes(
 	_vFlatACount = flatCount;
 	_vSmoothACount = smoothCount;
 	_vNoPersACount = noPerspectiveCount;
+	_setup.setAttributes(_vFlatACount, _vFlatACount+_vSmoothACount, _vFlatACount + _vSmoothACount + _vNoPersACount);
 }
 
 
@@ -318,6 +319,7 @@ void Renderer::updateNDCToDisplayTransform()
 
 void Renderer::queryLOD( int attributeIndex, double &x_step, double &y_step ) const
 {
+	/*TODO*/
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

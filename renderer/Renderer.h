@@ -144,6 +144,47 @@ private:
 	TVertex _storage[128];
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TriangleSetup
+{
+public:
+	void setup(const TVertex* p1, const TVertex* p2, const TVertex* p3);
+
+	void setAttributes(int start, int mid, int end) {
+		first_attr = start;
+		first_no_persp = mid;
+		last_attr = end;
+	}
+public:
+	// steps for all attributes
+	Vector3 dax[MAX_ATTRIBUTES];
+	Vector3 day[MAX_ATTRIBUTES];
+
+	double dwx; double dwy;
+	double dzx; double dzy;
+
+	int first_attr;
+	int first_no_persp;
+	int last_attr;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class PixelState
+{
+public:
+	void start(const TriangleSetup &s, const TVertex* p1, const int x_start, const int y_start);
+	void stepX(const TriangleSetup &s);
+	void stepYX(const TriangleSetup &s, const int x_steps);
+	void setupPSInputs(const TriangleSetup &s, PS_INPUTS &ps);
+
+public:
+	double z;
+	double w;
+	Vector3 attrbs[MAX_ATTRIBUTES];
+};
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -199,6 +240,8 @@ private:
 
 	// rasterizers helpers
 	PS_INPUTS _psInputs;
+
+	TriangleSetup _setup;
 
 	// output buffer
 	Texture* _outputTexture;
