@@ -116,7 +116,7 @@ void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p
 
 	for (int i = first_no_persp ; i < last_attr ; i++)
 	{
-		Vector3 da1 = (p1->attr[i]  - p2->attr[i]);
+		Vector3 da1 = (p1->attr[i] - p2->attr[i]);
 		Vector3 da2 = (p3->attr[i] - p1->attr[i]);
 		dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
 		day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
@@ -163,7 +163,7 @@ void PixelState::setupPSInputs(const TriangleSetup &s, PS_INPUTS &ps)
 	for (int i = s.first_attr ; i < s.first_no_persp ; i++)
 		ps.attributes[i] = attrbs[i] / w;
 	for (int i = s.first_no_persp ; i < s.first_no_persp ; i++)
-		ps.attributes[i] = attrbs[i] / w;
+		ps.attributes[i] = attrbs[i];
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
