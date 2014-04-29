@@ -26,15 +26,6 @@
 
 #include <assert.h>
 
-static double make_step(const TVertex* p1, const TVertex* p2)
-{
-	const double y1 = p1->sp.y(); const double y2 = p2->sp.y();
-	const double dy = y2 - y1;
-	double x1 = p1->sp.x();
-	double x2 = p2->sp.x();
-	return ((x2 - x1)/dy);
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw line between points
 
@@ -83,6 +74,19 @@ void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+template<typename T>
+static void inline setup_attribute(
+		const double dy1_ooa, const double dy2_ooa, const double dx1_ooa, const double dx2_ooa,
+		const T& a1, const T& a2, const T& a3,
+		T& dx, T&dy)
+{
+	const T da1 = (a1 - a2);
+	const T da2 = (a3 - a1);
+
+	dx = da1 * dy2_ooa - da2 * dy1_ooa;
+	dy = da2 * dx1_ooa - da1 * dx2_ooa;
+}
+
 void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
 	// general triangle setup
@@ -96,31 +100,22 @@ void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p
 	double dx1_ooa  = dx1 * ooa, dx2_ooa  = dx2 * ooa;
 
 	// z and w setup
-	double dw1 = (p1->sp.w() - p2->sp.w());
-	double dw2 = (p3->sp.w() - p1->sp.w());
-	dwx = dw1 * dy2_ooa - dw2 * dy1_ooa;
-	dwy = dw2 * dx1_ooa - dw1 * dx2_ooa;
+	setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa, p1->sp.w(), p2->sp.w(), p3->sp.w(), dwx, dwy);
+	setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa, p1->sp.z(), p2->sp.z(), p3->sp.z(), dzx, dzy);
 
-	double dz1 = (p1->sp.z() - p2->sp.z());
-	double dz2 = (p3->sp.z() - p1->sp.z());
-	dzx = dz1 * dy2_ooa - dz2 * dy1_ooa;
-	dzy = dz2 * dx1_ooa - dz1 * dx2_ooa;
-
+	// perspective corrected attributes setup
 	for (int i = first_attr ; i < first_no_persp ; i++)
-	{
-		Vector3 da1 = (p1->attr[i] * p1->sp.w() - p2->attr[i] * p2->sp.w());
-		Vector3 da2 = (p3->attr[i] * p3->sp.w() - p1->attr[i] * p1->sp.w());
-		dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
-		day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
-	}
+		setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa,
+				p1->attr[i] * p1->sp.w(),
+				p2->attr[i] * p2->sp.w(),
+				p3->attr[i] * p3->sp.w(),
+				dax[i], day[i]);
 
+	// linear attributes setup
 	for (int i = first_no_persp ; i < last_attr ; i++)
-	{
-		Vector3 da1 = (p1->attr[i] - p2->attr[i]);
-		Vector3 da2 = (p3->attr[i] - p1->attr[i]);
-		dax[i] = da1 * dy2_ooa - da2 * dy1_ooa;
-		day[i] = da2 * dx1_ooa - da1 * dx2_ooa;
-	}
+		setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa,
+				p1->attr[i], p2->attr[i], p3->attr[i],
+				dax[i], day[i]);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +164,9 @@ void PixelState::setupPSInputs(const TriangleSetup &s, PS_INPUTS &ps)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // draw triangle between points
 
+static inline double slope(const TVertex* p1, const TVertex* p2)
+{return (p2->sp.x() - p1->sp.x())/ (p2->sp.y() - p1->sp.y());}
+
 void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
 	PixelState firstColumnPixel;
@@ -185,22 +183,22 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 	int y_start = ceil(p1->sp.y());
 	int y_middle = ceil(p2->sp.y());
 	int y_end = floor(p3->sp.y());
+
 	if (y_start > y_end)
 		return;
 
 	/* find steps on both sides*/
-	double x1_step = make_step(p1,p3);
-	double x2_step = make_step(p1,p2);
+	double dxdy1 = slope(p1,p3), dxdy2 = slope(p1,p2);
 
 	/* find initial X on both sides */
-	double y_fraction = ((double)y_start) - p1->sp.y();
-	double x1 = p1->sp.x() + x1_step * y_fraction;
-	double x2 = p1->sp.x() + x2_step * y_fraction;
+	double y_fraction = (double)y_start - p1->sp.y();
+	double x1 = p1->sp.x() + dxdy1 * y_fraction;
+	double x2 = p1->sp.x() + dxdy2 * y_fraction;
 
 	/* and switch sides if necessarily*/
-	bool right_side_long = x1_step > x2_step;
+	bool right_side_long = dxdy1 > dxdy2;
 	if (right_side_long) {
-		std::swap(x1_step,x2_step);
+		std::swap(dxdy1,dxdy2);
 		std::swap(x1,x2);
 	}
 
@@ -214,15 +212,15 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		/* switch to bottom trapezoid if necessary*/
 		if (_psInputs.y == y_middle)
 		{
-			double x_step = make_step(p2,p3);
+			double dxdy = slope(p2,p3);
 			double y_fraction = ((double)y_middle) - p2->sp.y();
-			double x = p2->sp.x() + x_step * y_fraction;
+			double x = p2->sp.x() + dxdy * y_fraction;
 
 			if (right_side_long) {
-				x1 = x; x1_step = x_step; x_start = ceil(x1);
+				x1 = x; dxdy1 = dxdy; x_start = ceil(x1);
 				firstColumnPixel.start(_setup, p2, x_start, y_middle);
 			} else {
-				x2 = x; x2_step = x_step; x_end = floor(x2);
+				x2 = x; dxdy2 = dxdy; x_end = floor(x2);
 			}
 		}
 
@@ -235,8 +233,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 				continue;
 
 			/* run pixel shader if we have output buffer */
-			if (_outputTexture)
-			{
+			if (_outputTexture) {
 				_psInputs.d = pixel.z;
 				pixel.setupPSInputs(_setup, _psInputs);
 				drawPixel(_psInputs.x, _psInputs.y, _pixelShader(_psPriv, _psInputs));
@@ -248,7 +245,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 			break;
 
 		int x_start_old = x_start;
-		x1 += x1_step; x2 += x2_step;
+		x1 += dxdy1; x2 += dxdy2;
 		x_start = ceil(x1); x_end = floor(x2);
 		firstColumnPixel.stepYX(_setup, x_start - x_start_old);
 	}
