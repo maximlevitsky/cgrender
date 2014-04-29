@@ -198,8 +198,8 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 	double x2 = p1->sp.x() + x2_step * y_fraction;
 
 	/* and switch sides if necessarily*/
-	bool right_side_long = x1_step < x2_step;
-	if (!right_side_long) {
+	bool right_side_long = x1_step > x2_step;
+	if (right_side_long) {
 		std::swap(x1_step,x2_step);
 		std::swap(x1,x2);
 	}
@@ -218,7 +218,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 			double y_fraction = ((double)y_middle) - p2->sp.y();
 			double x = p2->sp.x() + x_step * y_fraction;
 
-			if (!right_side_long) {
+			if (right_side_long) {
 				x1 = x; x1_step = x_step; x_start = ceil(x1);
 				firstColumnPixel.start(_setup, p2, x_start, y_middle);
 			} else {

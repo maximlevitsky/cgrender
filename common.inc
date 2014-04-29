@@ -36,11 +36,9 @@ macx {
 	QMAKE_CXXFLAGS+= -march=core2  -std=c++11 -Wall -Wno-reorder -Wno-unneeded-internal-declaration
 	QMAKE_CXXFLAGS_RELEASE += -g -O3 -ffast-math
 	########################################################################################
-
 }
 
 unix:!macx {
-
 
 	EXTRA_LIBS= -lpng -lz
 
@@ -57,7 +55,7 @@ unix:!macx {
 
 	########################################################################################
 
-	QMAKE_CXXFLAGS_DEBUG += -O0 -g
+	#QMAKE_CXXFLAGS_DEBUG += -Og
 }
 
 QMAKE_CXXFLAGS += $(FLAGS)
