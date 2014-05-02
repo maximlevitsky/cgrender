@@ -161,7 +161,7 @@ public:
 	Vector3 dax[MAX_ATTRIBUTES];
 	Vector3 day[MAX_ATTRIBUTES];
 
-	double dwx; double dwy;
+	double d_inv_wx; double d_inv_wy;
 	double dzx; double dzy;
 
 	int first_attr;
@@ -181,7 +181,7 @@ public:
 
 public:
 	double z;
-	double w;
+	double inv_w;
 	Vector3 attrbs[MAX_ATTRIBUTES];
 };
 

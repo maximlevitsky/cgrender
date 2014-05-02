@@ -95,7 +95,6 @@ void Renderer::uploadVertices(void* vertices, int vertexSize, int count)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 void Renderer::renderBackgroundColor(Color background) 
 {
 	for (int row = 0 ; row < _viewportSizeY ; row++)
@@ -108,7 +107,6 @@ void Renderer::renderBackgroundColor(Color background)
 
 void Renderer::renderBackground( const Texture &texture, double scaleX, double scaleY )
 {
-
 	TextureSampler s;
 	s.bindTexture(&texture);
 	s.setScale(scaleX,scaleY);

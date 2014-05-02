@@ -81,22 +81,24 @@ void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p
 	// general triangle setup
 	double dx1 = (p1->sp.x() - p2->sp.x()); double dx2 = (p3->sp.x() - p1->sp.x());
 	double dy1 = (p1->sp.y() - p2->sp.y()); double dy2 = (p3->sp.y() - p1->sp.y());
-
 	double ooa  = 1.0 / (dx1 * dy2 - dy1 * dx2);
+
+	// these coefficients represent the inverse of position matrix
 	double dy1_ooa  = dy1 * ooa, dy2_ooa  = dy2 * ooa;
 	double dx1_ooa  = dx1 * ooa, dx2_ooa  = dx2 * ooa;
 
-	// z and w setup
-	setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa, p1->sp.w(), p2->sp.w(), p3->sp.w(), dwx, dwy);
+	// 1/w interpolation setup - the initial 1/w is already in sp.w()
+	setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa, p1->sp.w(), p2->sp.w(), p3->sp.w(), d_inv_wx, d_inv_wy);
+	// z interpolation setup
 	setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa, p1->sp.z(), p2->sp.z(), p3->sp.z(), dzx, dzy);
 
-	// perspective corrected attributes setup
+	// perspective corrected attributes interpolation setup (we in essence divide here by w all the attributes)
 	for (int i = first_attr ; i < first_no_persp ; i++)
 		setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa,
 				p1->attr[i] * p1->sp.w(), p2->attr[i] * p2->sp.w(), p3->attr[i] * p3->sp.w(),
 				dax[i], day[i]);
 
-	// linear attributes setup
+	// linear attributes interpolation setup
 	for (int i = first_no_persp ; i < last_attr ; i++)
 		setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa,
 				p1->attr[i], p2->attr[i], p3->attr[i], dax[i], day[i]);
@@ -110,7 +112,7 @@ void PixelState::start(const TriangleSetup &s, const TVertex* p1, const int x_st
 	double y_delta = ((double)y_start) - p1->sp.y();
 
 	z = p1->sp.z() + s.dzy * y_delta + s.dzx * x_delta;
-	w = p1->sp.w() + s.dwy * y_delta + s.dwx * x_delta;
+	inv_w = p1->sp.w() + s.d_inv_wy * y_delta + s.d_inv_wx * x_delta;
 
 	for (int i = s.first_attr ; i < s.first_no_persp ; i++)
 		attrbs[i] = p1->attr[i] * p1->sp.w() + s.day[i] * y_delta + s.dax[i] * x_delta;
@@ -122,7 +124,7 @@ void PixelState::start(const TriangleSetup &s, const TVertex* p1, const int x_st
 void PixelState::stepX(const TriangleSetup &s)
 {
 	z += s.dzx;
-	w += s.dwx;
+	inv_w += s.d_inv_wx;
 
 	for (int i = s.first_attr ; i < s.last_attr ; i++)
 		attrbs[i] += s.dax[i];
@@ -131,7 +133,7 @@ void PixelState::stepX(const TriangleSetup &s)
 void PixelState::stepYX(const TriangleSetup &s, const int x_steps)
 {
 	z += (s.dzy + s.dzx * x_steps);
-	w += (s.dwy + s.dwx * x_steps);
+	inv_w += (s.d_inv_wy + s.d_inv_wx * x_steps);
 
 	for (int i = s.first_attr ; i < s.last_attr ; i++)
 		attrbs[i] += (s.day[i] + s.dax[i] * x_steps);
@@ -140,7 +142,7 @@ void PixelState::stepYX(const TriangleSetup &s, const int x_steps)
 void PixelState::setupPSInputs(const TriangleSetup &s, PS_INPUTS &ps)
 {
 	for (int i = s.first_attr ; i < s.first_no_persp ; i++)
-		ps.attributes[i] = attrbs[i] / w;
+		ps.attributes[i] = attrbs[i] / inv_w;
 	for (int i = s.first_no_persp ; i < s.first_no_persp ; i++)
 		ps.attributes[i] = attrbs[i];
 }
@@ -155,7 +157,7 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 {
 	PixelState firstColumnPixel;
 	double x1, x2, dxdy1 ,dxdy2;
-	bool right_side_long;
+	bool swap_x;
 
 	// sort the points from bottom to top by Y (do the simple bubble sort)
 	if (p2->sp.y() > p3->sp.y()) std::swap(p3, p2);
@@ -165,32 +167,33 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 	/* and find the Y's of interest */
 	int y_start = ceil(p1->sp.y()), y_middle = ceil(p2->sp.y()), y_end = floor(p3->sp.y());
 
+	/* setup slopes and start/end locations */
 	if (y_start < y_middle) {
 		/* normal case - we start from top trapezoid and switch later to bottom one*/
 		dxdy1 = slope(p1,p3); dxdy2 = slope(p1,p2);
 		double y_fraction = (double)y_start - p1->sp.y();
 		x1 = p1->sp.x() + dxdy1 * y_fraction;
 		x2 = p1->sp.x() + dxdy2 * y_fraction;
-		right_side_long = dxdy1 > dxdy2;
+		swap_x = dxdy1 > dxdy2;
 
 	} else if (y_start <= y_end) {
-
-		assert(y_start == y_middle);
 		/* we start right away from bottom trapezoid */
 		dxdy1 = slope(p1,p3); dxdy2 = slope(p2,p3);
 		x1 = p1->sp.x() + dxdy1 * ((double)y_start - p1->sp.y());
 		x2 = p2->sp.x() + dxdy2 * ((double)y_start - p2->sp.y());
-		right_side_long = dxdy1 < dxdy2; /* we don't really have right side here, but this will  swap correctly if set this way*/
+		swap_x = dxdy1 < dxdy2;
 	} else return;
 
-	/* and switch sides if necessarily*/
-	if (right_side_long) {
+	/* and swap x's if necessarily so start location is before the end location*/
+	if (swap_x) {
 		std::swap(dxdy1,dxdy2);
 		std::swap(x1,x2);
 	}
 
+	/* triangle setup */
 	_setup.setup(p1,p2,p3);
 
+	/* find discrete location of first pixel we will draw and setup our scan-line first time */
 	int x_start = ceil(x1), x_end = floor(x2);
 	firstColumnPixel.start(_setup, p1, x_start, y_start);
 	_psInputs.y = y_start;
@@ -219,20 +222,27 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 		/* advance one scan-line*/
 		if (++_psInputs.y == y_middle)
 		{
+			/* advance one edge and switch another to bottom trapezoid edge (p2->p3)*/
 			double dxdy = slope(p2,p3);
 			double x = p2->sp.x() + dxdy * (((double)y_middle) - p2->sp.y());
 
-			if (right_side_long) {
+			if (swap_x) {
+				/* same as  dxdy1 > dxdy2 which after swap became
+				 * dxdy2 > dxdy1 that is shorter line is on the left
+				 * so switch first edge
+				 */
 				x1 = x; dxdy1 = dxdy; x_start = ceil(x1);
 				firstColumnPixel.start(_setup, p2, x_start, y_middle);
 				x2 += dxdy2; x_end = floor(x2);
 			} else {
+				/* switch right edge otherwise */
 				int x_start_old = x_start;
 				x1 += dxdy1; x_start = ceil(x1);
 				firstColumnPixel.stepYX(_setup, x_start - x_start_old);
 				x2 = x; dxdy2 = dxdy; x_end = floor(x2);
 			}
 		} else {
+			/* advance both edges */
 			int x_start_old = x_start;
 			x1 += dxdy1; x2 += dxdy2;
 			x_start = ceil(x1); x_end = floor(x2);
