@@ -49,14 +49,14 @@ void Renderer::setViewport(int width, int height)
 {
 	_viewportSizeX = width;
 	_viewportSizeY = height;
-	updateNDCToDisplayTransform();
+	updateViewportDimisions();
 }
 
 void Renderer::setAspectRatio( double ratio )
 {
 	assert(ratio >= 0);
 	_aspectRatio = ratio;
-	updateNDCToDisplayTransform();
+	updateViewportDimisions();
 }
 
 
@@ -278,22 +278,20 @@ void Renderer::drawPixel( int x, int y, const Color &value )
 
 Vector4 Renderer::NDC_to_DeviceSpace( const Vector4* input )
 {
-	Vector4 output = *input * mat_NDCtoDeviceTransform;
-
-	double w = 1.0 / output.w();
-	output.x() *= w;
-	output.y() *= w;
-	output.z() *= w;
-	output.w()  = w;
-	return output;
+	double w = 1.0 / input->w();
+	return Vector4(
+			input->x() * scaleFactorX * w + moveFactorX,
+			input->y() * scaleFactorY * w + moveFactorY,
+			input->z() * 0.5 * w + 0.5,
+			w
+	);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Renderer::updateNDCToDisplayTransform() 
+void Renderer::updateViewportDimisions() 
 {
 	double viewportAspectRatio = (double)_viewportSizeX / _viewportSizeY;
-	double scaleFactorX, scaleFactorY;
 
 	if (_aspectRatio > viewportAspectRatio) {
 		// image is wider that screen
@@ -304,6 +302,14 @@ void Renderer::updateNDCToDisplayTransform()
 		scaleFactorX = scaleFactorY * _aspectRatio;
 	}
 
+	clip_x = ((double)_viewportSizeX-0.5) / (2 * scaleFactorX);
+	clip_y = ((double)_viewportSizeY-0.5) / (2 * scaleFactorY);
+
+	scaleFactorY = - scaleFactorY;
+	moveFactorX = _viewportSizeX / 2;
+	moveFactorY = _viewportSizeY / 2;
+
+	/* update the matrices we give users to do the transforms we do ourselves manually*/
 	mat_NDCtoDeviceTransform =
 			Mat4::getScaleMatrix(Vector3(scaleFactorX, -scaleFactorY, 0.5)) *
 			Mat4::getMoveMat(Vector3(_viewportSizeX / 2, _viewportSizeY / 2, 0.5));
@@ -311,9 +317,6 @@ void Renderer::updateNDCToDisplayTransform()
 	if (scaleFactorX >0 && scaleFactorY > 0)
 		mat_DeviceToNDCTransform = mat_NDCtoDeviceTransform.inv();
 
-
-	clip_x = ((double)_viewportSizeX-0.5) / (2 * scaleFactorX);
-	clip_y = ((double)_viewportSizeY-0.5) / (2 * scaleFactorY);
 }
 
 

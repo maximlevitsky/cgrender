@@ -267,25 +267,30 @@ private:
 	void* _vertexBuffer;
 	int _vertexBufferStride;
 
-	// matrices for output transform
-	Mat4 mat_NDCtoDeviceTransform;
-	Mat4 mat_DeviceToNDCTransform;
-
 	double clip_x;
 	double clip_y;
 
+	double scaleFactorX;
+	double scaleFactorY;
+	double moveFactorX;
+	double moveFactorY;
 
 	// settings
 	bool _backFaceCulling;
 	bool _frontFaceCulling;
 	Color _wireframeColor;
+
+	// matrices for output transform
+	Mat4 mat_NDCtoDeviceTransform;
+	Mat4 mat_DeviceToNDCTransform;
+
 private:
 
 	void drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3);
 	void drawLine(TVertex *p1, TVertex *p2, const Color &c);
 	void drawPixel(int x, int y, const Color &value);
 
-	void updateNDCToDisplayTransform();
+	void updateViewportDimisions();
 	Vector4 NDC_to_DeviceSpace(const Vector4* input);
 	int clipAgainstPlane(VertexCache &cache, TVertex* input[], int point_count, TVertex* output[], Vector4 plane);
 };

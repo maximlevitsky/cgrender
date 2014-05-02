@@ -289,6 +289,7 @@ bool Engine::rotationAxisEnabled(int axis)
 	case 2: return _rotMode & ROTATION_Z;
 	default:
 		assert(0);
+		return 0;
 	}
 }
 

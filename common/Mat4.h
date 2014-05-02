@@ -144,6 +144,7 @@ public:
 			}
 		}
 		assert(0);
+		return 0;
 	}
 
 	int getLeadingCol(int R) {
@@ -154,6 +155,7 @@ public:
 			}
 		}
 		assert(0);
+		return 0;
 	}
 
 	Mat4 inv() const {
