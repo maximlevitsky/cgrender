@@ -53,7 +53,7 @@ unix:!macx {
 		-malign-double -ftree-loop-distribution -fstrict-aliasing -floop-interchange \
 		-ftree-vectorize -ftree-slp-vectorize
 
-	QMAKE_CXXFLAGS_RELEASE += -g -flto $$OPTIMIZATIONS_GCC46
+	QMAKE_CXXFLAGS_RELEASE += -g -flto $$OPTIMIZATIONS_GCC46 -DNDEBUG
 	QMAKE_LFLAGS_RELEASE += -g -flto=4 $$OPTIMIZATIONS_GCC46
 
 	########################################################################################

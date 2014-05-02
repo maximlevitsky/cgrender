@@ -45,29 +45,18 @@ void Renderer::drawLine( TVertex *p1, TVertex *p2, const Color &c )
 	int sy = y1 < y2 ? 1 : -1;
 	int d = dx - dy;
 
-	while (1)
-	{
+	while (1) {
 		if (!_zBuffer || _zBuffer->zTest(x1,y1, z1))
 			drawPixel(x1, y1, c);
 
-		if (x1 == x2 && y1 == y2)
-			break;
+		if (x1 == x2 && y1 == y2) break;
 
 		z1 += dz;
 		int e2 = 2 * d;
 
-		if (e2 > -dy) {
-			d -= dy;
-			x1 += sx;
-		}
-
-		if (x1 == x2 && y1 == y2)
-			continue;
-
-		if (e2 < dx) {
-			d += dx;
-			y1 += sy;
-		}
+		if (e2 > -dy) { d -= dy; x1 += sx; }
+		if (x1 == x2 && y1 == y2) continue;
+		if (e2 < dx) { d += dx; y1 += sy; }
 	}
 }
 
@@ -90,10 +79,8 @@ static void inline setup_attribute(
 void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
 	// general triangle setup
-	double dx1 = (p1->sp.x() - p2->sp.x());
-	double dx2 = (p3->sp.x() - p1->sp.x());
-	double dy1 = (p1->sp.y() - p2->sp.y());
-	double dy2 = (p3->sp.y() - p1->sp.y());
+	double dx1 = (p1->sp.x() - p2->sp.x()); double dx2 = (p3->sp.x() - p1->sp.x());
+	double dy1 = (p1->sp.y() - p2->sp.y()); double dy2 = (p3->sp.y() - p1->sp.y());
 
 	double ooa  = 1.0 / (dx1 * dy2 - dy1 * dx2);
 	double dy1_ooa  = dy1 * ooa, dy2_ooa  = dy2 * ooa;
@@ -106,16 +93,13 @@ void TriangleSetup::setup(const TVertex* p1, const TVertex* p2, const TVertex* p
 	// perspective corrected attributes setup
 	for (int i = first_attr ; i < first_no_persp ; i++)
 		setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa,
-				p1->attr[i] * p1->sp.w(),
-				p2->attr[i] * p2->sp.w(),
-				p3->attr[i] * p3->sp.w(),
+				p1->attr[i] * p1->sp.w(), p2->attr[i] * p2->sp.w(), p3->attr[i] * p3->sp.w(),
 				dax[i], day[i]);
 
 	// linear attributes setup
 	for (int i = first_no_persp ; i < last_attr ; i++)
 		setup_attribute(dy1_ooa, dy2_ooa, dx1_ooa, dx2_ooa,
-				p1->attr[i], p2->attr[i], p3->attr[i],
-				dax[i], day[i]);
+				p1->attr[i], p2->attr[i], p3->attr[i], dax[i], day[i]);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,33 +154,36 @@ static inline double slope(const TVertex* p1, const TVertex* p2)
 void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex* p3)
 {
 	PixelState firstColumnPixel;
+	double x1, x2, dxdy1 ,dxdy2;
+	bool right_side_long;
 
 	// sort the points from bottom to top by Y (do the simple bubble sort)
-	if (p2->sp.y() > p3->sp.y())
-		std::swap(p3, p2);
-	if (p1->sp.y() > p2->sp.y())
-		std::swap(p2, p1);
-	if (p2->sp.y() > p3->sp.y())
-		std::swap(p3, p2);
+	if (p2->sp.y() > p3->sp.y()) std::swap(p3, p2);
+	if (p1->sp.y() > p2->sp.y()) std::swap(p2, p1);
+	if (p2->sp.y() > p3->sp.y()) std::swap(p3, p2);
 
-	/* and find the Ys of interest */
-	int y_start = ceil(p1->sp.y());
-	int y_middle = ceil(p2->sp.y());
-	int y_end = floor(p3->sp.y());
+	/* and find the Y's of interest */
+	int y_start = ceil(p1->sp.y()), y_middle = ceil(p2->sp.y()), y_end = floor(p3->sp.y());
 
-	if (y_start > y_end)
-		return;
+	if (y_start < y_middle) {
+		/* normal case - we start from top trapezoid and switch later to bottom one*/
+		dxdy1 = slope(p1,p3); dxdy2 = slope(p1,p2);
+		double y_fraction = (double)y_start - p1->sp.y();
+		x1 = p1->sp.x() + dxdy1 * y_fraction;
+		x2 = p1->sp.x() + dxdy2 * y_fraction;
+		right_side_long = dxdy1 > dxdy2;
 
-	/* find steps on both sides*/
-	double dxdy1 = slope(p1,p3), dxdy2 = slope(p1,p2);
+	} else if (y_start <= y_end) {
 
-	/* find initial X on both sides */
-	double y_fraction = (double)y_start - p1->sp.y();
-	double x1 = p1->sp.x() + dxdy1 * y_fraction;
-	double x2 = p1->sp.x() + dxdy2 * y_fraction;
+		assert(y_start == y_middle);
+		/* we start right away from bottom trapezoid */
+		dxdy1 = slope(p1,p3); dxdy2 = slope(p2,p3);
+		x1 = p1->sp.x() + dxdy1 * ((double)y_start - p1->sp.y());
+		x2 = p2->sp.x() + dxdy2 * ((double)y_start - p2->sp.y());
+		right_side_long = dxdy1 < dxdy2; /* we don't really have right side here, but this will  swap correctly if set this way*/
+	} else return;
 
 	/* and switch sides if necessarily*/
-	bool right_side_long = dxdy1 > dxdy2;
 	if (right_side_long) {
 		std::swap(dxdy1,dxdy2);
 		std::swap(x1,x2);
@@ -206,25 +193,11 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 
 	int x_start = ceil(x1), x_end = floor(x2);
 	firstColumnPixel.start(_setup, p1, x_start, y_start);
+	_psInputs.y = y_start;
 
-	for (_psInputs.y = y_start ;  ; _psInputs.y++)
+	while (1)
 	{
-		/* switch to bottom trapezoid if necessary*/
-		if (_psInputs.y == y_middle)
-		{
-			double dxdy = slope(p2,p3);
-			double y_fraction = ((double)y_middle) - p2->sp.y();
-			double x = p2->sp.x() + dxdy * y_fraction;
-
-			if (right_side_long) {
-				x1 = x; dxdy1 = dxdy; x_start = ceil(x1);
-				firstColumnPixel.start(_setup, p2, x_start, y_middle);
-			} else {
-				x2 = x; dxdy2 = dxdy; x_end = floor(x2);
-			}
-		}
-
-		/* rasterize the scan line now */
+		/* rasterize one scan line now */
 		PixelState pixel(firstColumnPixel);
 		for (_psInputs.x = x_start ; _psInputs.x <= x_end ; _psInputs.x++, pixel.stepX(_setup))
 		{
@@ -240,13 +213,30 @@ void Renderer::drawTriangle(const TVertex* p1, const TVertex* p2, const TVertex*
 			}
 		}
 
-		/* advance one scan line */
-		if (_psInputs.y == y_end)
-			break;
+		/* end condition */
+		if (_psInputs.y == y_end) break;
 
-		int x_start_old = x_start;
-		x1 += dxdy1; x2 += dxdy2;
-		x_start = ceil(x1); x_end = floor(x2);
-		firstColumnPixel.stepYX(_setup, x_start - x_start_old);
+		/* advance one scan-line*/
+		if (++_psInputs.y == y_middle)
+		{
+			double dxdy = slope(p2,p3);
+			double x = p2->sp.x() + dxdy * (((double)y_middle) - p2->sp.y());
+
+			if (right_side_long) {
+				x1 = x; dxdy1 = dxdy; x_start = ceil(x1);
+				firstColumnPixel.start(_setup, p2, x_start, y_middle);
+				x2 += dxdy2; x_end = floor(x2);
+			} else {
+				int x_start_old = x_start;
+				x1 += dxdy1; x_start = ceil(x1);
+				firstColumnPixel.stepYX(_setup, x_start - x_start_old);
+				x2 = x; dxdy2 = dxdy; x_end = floor(x2);
+			}
+		} else {
+			int x_start_old = x_start;
+			x1 += dxdy1; x2 += dxdy2;
+			x_start = ceil(x1); x_end = floor(x2);
+			firstColumnPixel.stepYX(_setup, x_start - x_start_old);
+		}
 	}
 }

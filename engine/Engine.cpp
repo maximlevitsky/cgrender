@@ -158,7 +158,7 @@ void Engine::loadDebugScene()
 	}
 
 	{
-		Vector3 v4(-1,0.5,0.1), v5(1,0.5,0.2), v6(0, -1, 0.1);
+		Vector3 v4(-1,0.5,0.001), v5(1,0.5,0.101), v6(0, -1, 0.001);
 		Model* m = Model::createTriangleModel(v4, v5, v6);
 		_sceneItems[_itemCount++]._mainModel = m;
 
