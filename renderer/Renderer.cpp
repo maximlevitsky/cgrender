@@ -269,7 +269,7 @@ int Renderer::clipAgainstPlane(VertexCache &cache, TVertex* input[], int in_coun
 void Renderer::drawPixel( int x, int y, const Color &value )
 {
 	_outputTexture->setPixelValue(x,y,
-		DEVICE_PIXEL((uint8_t)(value[0]*255), (uint8_t)(value[1]*255), (uint8_t)(value[2]*255)));
+		DEVICE_PIXEL((uint8_t)(value[0]*255+0.5), (uint8_t)(value[1]*255+0.5), (uint8_t)(value[2]*255+0.5)));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +303,6 @@ void Renderer::updateViewportDimisions()
 	clip_x = ((double)_viewportSizeX-0.5) / (2 * scaleFactorX);
 	clip_y = ((double)_viewportSizeY-0.5) / (2 * scaleFactorY);
 
-	scaleFactorY = - scaleFactorY;
 	moveFactorX = _viewportSizeX / 2;
 	moveFactorY = _viewportSizeY / 2;
 
@@ -315,6 +314,7 @@ void Renderer::updateViewportDimisions()
 	if (scaleFactorX >0 && scaleFactorY > 0)
 		mat_DeviceToNDCTransform = mat_NDCtoDeviceTransform.inv();
 
+	scaleFactorY = - scaleFactorY;
 }
 
 
