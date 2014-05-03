@@ -151,13 +151,13 @@ void Renderer::renderPolygons( unsigned int* geometry, int count, enum Renderer:
 
 			/* check clipping conditions */
 			if (std::abs(pos.x()) > pos.w() * clip_x) {
-				clipx += pos.x() > 0;
+				clipx += pos.x() > 0 ? 1 : -1;
 				clip  = true;
 			}
 
 
 			if (std::abs(pos.y()) > pos.w() * clip_y) {
-				clipy  += pos.y() > 0;
+				clipy  += pos.y() > 0 ? 1 : -1;
 				clip = true;
 			}
 		}
